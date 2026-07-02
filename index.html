@@ -86,10 +86,8 @@
   .detail-fit-title{font-family:var(--font-display);font-weight:800;font-size:34px;line-height:1;letter-spacing:-.03em;margin:0 0 30px;}
   .item-row{padding:18px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;}
   .item-row:last-child{border-bottom:1px solid var(--line);}
-  .item-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;}
   .item-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--text-dim);}
   .item-name{display:block;font-size:15px;font-weight:500;color:var(--text);margin:6px 0 0;line-height:1.35;}
-  .item-price{font-family:var(--font-mono);font-size:13px;color:var(--text-soft);white-space:nowrap;}
   .item-buy{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:12px;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);color:var(--text);padding:9px 14px;border-radius:100px;transition:background .18s, color .18s, border-color .18s;}
   .item-buy:hover{background:var(--text);color:var(--bg);border-color:var(--text);}
   .item-buy .arrow{transition:transform .18s;}
@@ -202,16 +200,16 @@
 <div class="modal-backdrop" id="bulkModal">
   <div class="modal-box wide">
     <h3 class="modal-title">Bulk import fits</h3>
-    <p class="hint" style="margin-bottom:14px;">Paste a block of fits below. Start each fit with <b>#</b> then its name. Each item is one line: <b>LABEL | name | price | link</b>. Covers stay blank — add thumbnails after via each fit's edit button.</p>
+    <p class="hint" style="margin-bottom:14px;">Paste a block of fits below. Start each fit with <b>#</b> then its name. Each item is one line: <b>LABEL | name | link</b>. Covers stay blank — add thumbnails after via each fit's edit button.</p>
     <div class="field">
       <textarea id="bulkInput" rows="12" placeholder="# Dark Aura
-OUTER | Oversized Wool Overshirt | $58 | https://...
-TOP | Boxy Tee | $18 | https://...
-BOTTOM | Baggy Denim | $46 | https://...
-SHOES | NB 550 | $110 | https://...
+OUTER | Oversized Wool Overshirt | https://...
+TOP | Boxy Tee | https://...
+BOTTOM | Baggy Denim | https://...
+SHOES | NB 550 | https://...
 
 # Soft Neutral
-OUTER | Cream Cardigan | $42 | https://..."></textarea>
+OUTER | Cream Cardigan | https://..."></textarea>
     </div>
     <div class="error-text" id="bulkError" style="display:none;"></div>
     <div id="bulkPreview" class="hint" style="display:none;"></div>
@@ -398,12 +396,9 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
       const row = document.createElement('div');
       row.className = 'item-row';
       row.innerHTML = `
-        <div class="item-top">
-          <span class="item-label">${escapeHtml(item.label)}</span>
-          <span class="item-price">${escapeHtml(item.price||'')}</span>
-        </div>
+        <span class="item-label">${escapeHtml(item.label)}</span>
         <span class="item-name">${escapeHtml(item.name)}</span>
-        <a class="item-buy" href="${escapeAttr(item.url)}" target="_blank" rel="noopener">Shop <span class="arrow">→</span></a>
+        <a class="item-buy" href="${escapeAttr(item.url)}" target="_blank" rel="noopener">Shop — see price <span class="arrow">→</span></a>
       `;
       list.appendChild(row);
     });
@@ -510,17 +505,11 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
       row.className = 'item-edit-row';
       row.innerHTML = `
         <button class="remove-item" data-idx="${idx}">remove</button>
-        <div class="item-edit-grid">
-          <div class="field">
-            <label>Label</label>
-            <select data-field="label" data-idx="${idx}">
-              ${LABELS.map(l=>`<option value="${l}" ${item.label===l?'selected':''}>${l}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field">
-            <label>Price</label>
-            <input type="text" data-field="price" data-idx="${idx}" value="${escapeAttr(item.price||'')}" placeholder="$38">
-          </div>
+        <div class="field">
+          <label>Label</label>
+          <select data-field="label" data-idx="${idx}">
+            ${LABELS.map(l=>`<option value="${l}" ${item.label===l?'selected':''}>${l}</option>`).join('')}
+          </select>
         </div>
         <div class="field">
           <label>Item name</label>
@@ -574,7 +563,7 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
   fitPhotoInput.addEventListener('blur', ()=> checkImageUrl(fitPhotoInput, document.getElementById('fitPhotoWarning')));
 
   document.getElementById('addItemBtn').addEventListener('click', ()=>{
-    itemDraft.push({ id: uid(), label:'TOP', name:'', price:'', url:'' });
+    itemDraft.push({ id: uid(), label:'TOP', name:'', url:'' });
     renderItemDraft();
   });
 
@@ -643,10 +632,14 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
       } else {
         if(!current){ errors.push(`Line ${i+1}: item "${line}" has no fit above it (start a fit with # first).`); return; }
         const parts = line.split('|').map(p=>p.trim());
-        if(parts.length < 4){ errors.push(`Line ${i+1}: needs 4 parts separated by | (LABEL | name | price | link).`); return; }
-        const [label, name, price, url] = parts;
+        if(parts.length < 3){ errors.push(`Line ${i+1}: needs 3 parts separated by | (LABEL | name | link).`); return; }
+        // format: LABEL | name | link  (also tolerates old LABEL | name | price | link)
+        const label = parts[0];
+        const name = parts[1];
+        const url = parts[parts.length - 1]; // link is always last
         if(!name || !url){ errors.push(`Line ${i+1}: name and link are required.`); return; }
-        current.items.push({ id: uid(), label: (label||'TOP').toUpperCase(), name, price, url });
+        if(!/^https?:\/\//i.test(url)){ errors.push(`Line ${i+1}: last part must be a link starting with http.`); return; }
+        current.items.push({ id: uid(), label: (label||'TOP').toUpperCase(), name, price:'', url });
       }
     });
     // drop fits with zero items
