@@ -98,10 +98,10 @@
   .overlay.open .detail-panel{transform:translateX(0);}
   .close-btn{position:fixed;top:14px;right:14px;width:40px;height:40px;background:rgba(12,12,11,.55);backdrop-filter:blur(8px);color:#fff;border:1px solid rgba(255,255,255,.2);font-size:16px;z-index:60;border-radius:50%;transition:background .15s, transform .15s;}
   .close-btn:hover{background:var(--text);color:var(--bg);transform:rotate(90deg);}
-  .detail-grid{display:grid;grid-template-columns:60% 40%;min-height:100%;}
-  @media (max-width:680px){.detail-grid{grid-template-columns:1fr;}}
-  .detail-photo{background:var(--surface);min-height:340px;position:relative;}
-  @media (max-width:680px){.detail-photo{order:1;aspect-ratio:3/4;min-height:0;max-height:56vh;}}
+  .detail-grid{display:grid;grid-template-columns:60% 40%;min-height:100%;width:100%;}
+  @media (max-width:680px){.detail-grid{grid-template-columns:1fr;width:100%;}}
+  .detail-photo{background:var(--surface);min-height:340px;position:relative;width:100%;}
+  @media (max-width:680px){.detail-photo{order:1;aspect-ratio:3/4;min-height:0;max-height:56vh;width:100%;}}
   .detail-photo img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;}
   .breakdown{padding:64px 34px 48px;display:flex;flex-direction:column;}
   @media (max-width:680px){.breakdown{order:2;padding:34px 24px 48px;}}
@@ -317,13 +317,29 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
   // ---------- storage (Firestore) ----------
+  const CACHE_KEY = 'maxedmethod-fits-cache';
+
   async function loadFits(){
+    // 1) instant paint from local cache if we have one (kills the blank-loading wait)
+    let paintedFromCache = false;
+    try{
+      const cached = localStorage.getItem(CACHE_KEY);
+      if(cached){
+        const parsed = JSON.parse(cached);
+        if(Array.isArray(parsed) && parsed.length){
+          fits = parsed;
+          render();
+          paintedFromCache = true;
+        }
+      }
+    }catch(e){ /* ignore cache errors */ }
+
+    // 2) fetch fresh data from Firebase and update
     try{
       const snap = await getDoc(CATALOG_DOC);
       if(snap.exists()){
         fits = snap.data().fits || [];
       } else {
-        // first ever load — seed with one example fit
         fits = [{
           id: uid(),
           title: "Example Fit — edit or delete me",
@@ -338,10 +354,13 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
         }];
         await saveFits();
       }
+      try{ localStorage.setItem(CACHE_KEY, JSON.stringify(fits)); }catch(e){}
     }catch(e){
       console.error('Load failed', e);
-      gridArea.innerHTML = '<div class="empty-state"><h2 class="title">COULD NOT LOAD</h2><p>Check your connection and refresh. If this keeps happening, double check the Firebase config pasted at the top of the file.</p></div>';
-      return;
+      if(!paintedFromCache){
+        gridArea.innerHTML = '<div class="empty-state"><h2 class="title">Could not load</h2><p>Check your connection and refresh.</p></div>';
+      }
+      return; // keep showing cached data if the network failed
     }
     render();
   }
@@ -350,6 +369,7 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
     retryCount = retryCount || 0;
     try{
       await setDoc(CATALOG_DOC, { fits });
+      try{ localStorage.setItem(CACHE_KEY, JSON.stringify(fits)); }catch(e){}
       return true;
     }catch(e){
       console.error('Storage save failed (attempt ' + (retryCount+1) + ')', e);
