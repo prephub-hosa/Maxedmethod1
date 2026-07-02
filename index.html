@@ -25,8 +25,8 @@
     --font-mono:'Space Mono', monospace;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
-  #app{min-height:100vh;padding-bottom:96px;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;width:100%;max-width:100vw;}
+  #app{min-height:100vh;padding-bottom:96px;overflow-x:hidden;}
   a{color:inherit;text-decoration:none;}
   button{font-family:var(--font-body);cursor:pointer;}
   ::selection{background:var(--text);color:var(--bg);}
@@ -43,6 +43,9 @@
   .title{font-family:var(--font-display);font-weight:800;font-size:clamp(46px,11vw,120px);line-height:.92;letter-spacing:-.03em;margin:0;}
   .title .thin{font-weight:600;color:var(--text-soft);}
   .subtitle{font-family:var(--font-body);font-size:15px;color:var(--text-soft);margin-top:24px;max-width:440px;line-height:1.6;}
+  .status-badge{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:8px 14px;border:1px solid var(--line);border-radius:100px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--text-soft);}
+  .status-dot{width:6px;height:6px;border-radius:50%;background:#8BAE7C;flex-shrink:0;animation:pulse-dot 2s ease-in-out infinite;}
+  @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.35;}}
 
   /* ---- Grid ---- */
   .tabbar{display:flex;align-items:center;justify-content:space-between;padding:8px 28px 0;border-bottom:1px solid var(--line-soft);margin-top:20px;}
@@ -52,6 +55,14 @@
   .tab.active{color:var(--text);border-bottom-color:var(--text);}
   .count{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--text-dim);}
   .fits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2px;padding:2px;background:var(--line-soft);}
+  @media (max-width:640px){
+    .fits-grid{grid-template-columns:repeat(2,1fr);}
+    .fit-card{aspect-ratio:3/4;}
+    .fit-title{font-size:15px;}
+    .fit-tag{font-size:9px;}
+    .fit-shop-cue{font-size:9px;}
+    .fit-card-footer{padding:12px 10px;}
+  }
   .fit-card{position:relative;background:var(--bg-2);overflow:hidden;cursor:pointer;aspect-ratio:3/4;}
   .fit-cover{width:100%;height:100%;object-fit:cover;display:block;background:var(--surface);transition:transform .6s cubic-bezier(.16,1,.3,1), filter .4s ease;filter:saturate(.96);}
   .fit-card:hover .fit-cover{transform:scale(1.05);filter:saturate(1.05);}
@@ -90,7 +101,7 @@
   .detail-grid{display:grid;grid-template-columns:60% 40%;min-height:100%;}
   @media (max-width:680px){.detail-grid{grid-template-columns:1fr;}}
   .detail-photo{background:var(--surface);min-height:340px;position:relative;}
-  @media (max-width:680px){.detail-photo{order:1;aspect-ratio:3/4;min-height:0;}}
+  @media (max-width:680px){.detail-photo{order:1;aspect-ratio:3/4;min-height:0;max-height:56vh;}}
   .detail-photo img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;}
   .breakdown{padding:64px 34px 48px;display:flex;flex-direction:column;}
   @media (max-width:680px){.breakdown{order:2;padding:34px 24px 48px;}}
@@ -153,6 +164,7 @@
     <div class="eyebrow">Curated fits, fully shoppable</div>
     <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
     <p class="subtitle">Tap any look to see every piece — outerwear, tops, bottoms, footwear — and shop the exact fit.</p>
+    <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
   </div>
   <div class="tabbar">
     <div class="tabs">
