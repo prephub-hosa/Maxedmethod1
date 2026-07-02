@@ -94,9 +94,9 @@
   /* ---- Detail overlay ---- */
   .overlay{position:fixed;inset:0;background:rgba(6,6,5,.66);backdrop-filter:blur(3px);display:flex;align-items:stretch;justify-content:flex-end;z-index:50;opacity:0;pointer-events:none;transition:opacity .28s ease;}
   .overlay.open{opacity:1;pointer-events:all;}
-  .detail-panel{background:var(--bg);width:min(940px,100%);height:100%;overflow-y:auto;transform:translateX(30px);transition:transform .38s cubic-bezier(.16,1,.3,1);position:relative;border-left:1px solid var(--line);}
+  .detail-panel{background:var(--bg);width:min(940px,100%);height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transform:translateX(30px);transition:transform .38s cubic-bezier(.16,1,.3,1);position:relative;border-left:1px solid var(--line);}
   .overlay.open .detail-panel{transform:translateX(0);}
-  .close-btn{position:absolute;top:18px;right:18px;width:40px;height:40px;background:rgba(12,12,11,.6);backdrop-filter:blur(8px);color:#fff;border:1px solid rgba(255,255,255,.16);font-size:16px;z-index:5;border-radius:50%;transition:background .15s, transform .15s;}
+  .close-btn{position:fixed;top:14px;right:14px;width:40px;height:40px;background:rgba(12,12,11,.55);backdrop-filter:blur(8px);color:#fff;border:1px solid rgba(255,255,255,.2);font-size:16px;z-index:60;border-radius:50%;transition:background .15s, transform .15s;}
   .close-btn:hover{background:var(--text);color:var(--bg);transform:rotate(90deg);}
   .detail-grid{display:grid;grid-template-columns:60% 40%;min-height:100%;}
   @media (max-width:680px){.detail-grid{grid-template-columns:1fr;}}
@@ -512,9 +512,25 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
       list.appendChild(row);
     });
     detailOverlay.classList.add('open');
+    // lock the background so touch-scroll stays inside the panel, not the homepage
+    scrollLockY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollLockY}px`;
+    document.body.style.width = '100%';
+    // start the panel scrolled to top each time
+    const panel = detailOverlay.querySelector('.detail-panel');
+    if(panel) panel.scrollTop = 0;
   }
-  document.getElementById('closeDetail').addEventListener('click', ()=> detailOverlay.classList.remove('open'));
-  detailOverlay.addEventListener('click', (e)=>{ if(e.target === detailOverlay) detailOverlay.classList.remove('open'); });
+  let scrollLockY = 0;
+  function closeDetail(){
+    detailOverlay.classList.remove('open');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, scrollLockY);
+  }
+  document.getElementById('closeDetail').addEventListener('click', closeDetail);
+  detailOverlay.addEventListener('click', (e)=>{ if(e.target === detailOverlay) closeDetail(); });
 
   // ---------- admin unlock ----------
   const passModal = document.getElementById('passModal');
