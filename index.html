@@ -96,6 +96,7 @@
   .item-buy:hover .arrow{transform:translateX(3px);}
 
   /* ---- Floating admin button ---- */
+  .corner-mark{position:fixed;bottom:22px;left:22px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.2em;color:var(--text-soft);z-index:40;pointer-events:none;mix-blend-mode:difference;}
   .fab{position:fixed;bottom:22px;right:22px;background:var(--text);color:var(--bg);border:none;padding:13px 20px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border-radius:100px;z-index:40;box-shadow:0 8px 30px rgba(0,0,0,.5);transition:transform .18s, background .18s;}
   .fab:hover{transform:translateY(-2px);}
   .fab.admin-on{background:var(--surface-2);color:var(--text);border:1px solid var(--line);}
@@ -150,6 +151,7 @@
 </div>
 
 <button class="fab" id="adminFab">Manage Fits</button>
+<div class="corner-mark">MAXEDMETHOD</div>
 
 <!-- Detail overlay -->
 <div class="overlay" id="detailOverlay">
