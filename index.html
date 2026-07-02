@@ -101,8 +101,11 @@
   .detail-grid{display:grid;grid-template-columns:60% 40%;min-height:100%;width:100%;}
   @media (max-width:680px){.detail-grid{grid-template-columns:1fr;width:100%;}}
   .detail-photo{background:var(--surface);min-height:340px;position:relative;width:100%;}
-  @media (max-width:680px){.detail-photo{order:1;aspect-ratio:3/4;min-height:0;max-height:56vh;width:100%;}}
   .detail-photo img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;}
+  @media (max-width:680px){
+    .detail-photo{order:1;min-height:0;max-height:none;aspect-ratio:auto;width:100%;background:#0C0C0B;}
+    .detail-photo img{position:static;width:100%;height:auto;object-fit:contain;max-height:70vh;inset:auto;}
+  }
   .breakdown{padding:64px 34px 48px;display:flex;flex-direction:column;}
   @media (max-width:680px){.breakdown{order:2;padding:34px 24px 48px;}}
   .breakdown .eyebrow{margin-bottom:20px;}
