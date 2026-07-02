@@ -63,6 +63,15 @@
   .admin-controls{position:absolute;top:10px;right:10px;display:flex;gap:6px;z-index:3;}
   .admin-icon-btn{width:30px;height:30px;background:rgba(12,12,11,.72);backdrop-filter:blur(6px);color:#fff;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:6px;transition:background .15s;}
   .admin-icon-btn:hover{background:var(--text);color:var(--bg);}
+  .fit-card[draggable="true"]{cursor:grab;}
+  .fit-card.dragging{opacity:.4;cursor:grabbing;}
+  .fit-card.drag-over{outline:2px solid var(--text);outline-offset:-2px;}
+  .fit-card.drag-over .fit-cover{filter:brightness(.7);}
+  .drag-hint{position:absolute;top:10px;left:10px;z-index:3;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:#fff;background:rgba(12,12,11,.72);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);padding:5px 8px;border-radius:6px;pointer-events:none;}
+  .move-controls{position:absolute;bottom:10px;right:10px;display:flex;gap:6px;z-index:3;}
+  .move-btn{width:32px;height:32px;background:rgba(12,12,11,.78);backdrop-filter:blur(6px);color:#fff;border:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:6px;transition:background .15s;}
+  .move-btn:hover:not(:disabled){background:var(--text);color:var(--bg);}
+  .move-btn:disabled{opacity:.3;cursor:not-allowed;}
 
   .empty-state{margin:80px auto;max-width:400px;text-align:center;padding:0 24px;}
   .empty-state .title{font-size:34px;}
@@ -352,6 +361,8 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
     fits.forEach((fit, i) => {
       const card = document.createElement('div');
       card.className = 'fit-card';
+      card.setAttribute('data-index', i);
+      if(isAdmin) card.setAttribute('draggable', 'true');
       const itemCount = (fit.items||[]).length;
       card.innerHTML = `
         <img class="fit-cover" src="${escapeAttr(fit.cover)}" alt="${escapeAttr(fit.title)}" onerror="this.style.background='#201F1D'">
@@ -360,13 +371,21 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
           <h3 class="fit-title">${escapeHtml(fit.title)}</h3>
           <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →</div>
         </div>
-        ${isAdmin ? `<div class="admin-controls">
+        ${isAdmin ? `
+        <div class="drag-hint" title="Drag to reorder">⠿ drag</div>
+        <div class="move-controls">
+          <button class="move-btn" data-move="up" data-idx="${i}" title="Move earlier" ${i===0?'disabled':''}>◀</button>
+          <button class="move-btn" data-move="down" data-idx="${i}" title="Move later" ${i===fits.length-1?'disabled':''}>▶</button>
+        </div>
+        <div class="admin-controls">
           <button class="admin-icon-btn" data-edit="${fit.id}" title="Edit">✎</button>
           <button class="admin-icon-btn" data-delete="${fit.id}" title="Delete">🗑</button>
         </div>` : ''}
       `;
       card.addEventListener('click', (e)=>{
         if(e.target.closest('.admin-controls')) return;
+        if(e.target.closest('.move-controls')) return;
+        if(e.target.closest('.drag-hint')) return;
         openDetail(fit);
       });
       grid.appendChild(card);
@@ -379,7 +398,57 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
       grid.querySelectorAll('[data-delete]').forEach(btn=>{
         btn.addEventListener('click', (e)=>{ e.stopPropagation(); openConfirmDelete(btn.getAttribute('data-delete')); });
       });
+      grid.querySelectorAll('[data-move]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const idx = +btn.getAttribute('data-idx');
+          const dir = btn.getAttribute('data-move');
+          moveFit(idx, dir === 'up' ? idx-1 : idx+1);
+        });
+      });
+      setupDragAndDrop(grid);
     }
+  }
+
+  // ---------- reordering ----------
+  async function moveFit(from, to){
+    if(to < 0 || to >= fits.length || from === to) return;
+    const prevFits = fits.map(f=>({...f}));
+    const [moved] = fits.splice(from, 1);
+    fits.splice(to, 0, moved);
+    render(); // instant visual update; numbers refresh
+    const ok = await saveFits();
+    if(!ok){ fits = prevFits; render(); }
+  }
+
+  let dragFromIndex = null;
+  function setupDragAndDrop(grid){
+    grid.querySelectorAll('.fit-card[draggable="true"]').forEach(card=>{
+      card.addEventListener('dragstart', (e)=>{
+        dragFromIndex = +card.getAttribute('data-index');
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', ()=>{
+        card.classList.remove('dragging');
+        grid.querySelectorAll('.drag-over').forEach(c=>c.classList.remove('drag-over'));
+      });
+      card.addEventListener('dragover', (e)=>{
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if(!card.classList.contains('dragging')) card.classList.add('drag-over');
+      });
+      card.addEventListener('dragleave', ()=> card.classList.remove('drag-over'));
+      card.addEventListener('drop', (e)=>{
+        e.preventDefault();
+        card.classList.remove('drag-over');
+        const to = +card.getAttribute('data-index');
+        if(dragFromIndex !== null && dragFromIndex !== to){
+          moveFit(dragFromIndex, to);
+        }
+        dragFromIndex = null;
+      });
+    });
   }
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
