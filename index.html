@@ -369,8 +369,13 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
 
     if(filtered.length === 0){
       const label = activeCat === 'women' ? "Women's" : "Men's";
-      gridArea.innerHTML = `<div class="empty-state"><h2 class="title">No ${activeCat} fits yet</h2><p>${isAdmin ? 'Add one with the buttons below, or use Bulk Import.' : label + ' looks are coming soon.'}</p></div>`;
-      if(isAdmin) showAddFitShortcut();
+      if(isAdmin){
+        gridArea.innerHTML = `<div class="empty-state"><h2 class="title">No ${activeCat} fits yet</h2><p>Add your first ${label} look below, or use Bulk Import.</p><button class="btn btn-primary" id="emptyAddBtn" style="margin-top:20px;">+ Add ${label} Fit</button></div>`;
+        const eb = document.getElementById('emptyAddBtn');
+        if(eb) eb.addEventListener('click', ()=> openFitForm(null));
+      } else {
+        gridArea.innerHTML = `<div class="empty-state"><h2 class="title">No ${activeCat} fits yet</h2><p>${label} looks are coming soon.</p></div>`;
+      }
       return;
     }
     gridArea.innerHTML = '<div class="fits-grid" id="fitsGrid"></div>';
