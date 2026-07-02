@@ -398,7 +398,7 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
       row.innerHTML = `
         <span class="item-label">${escapeHtml(item.label)}</span>
         <span class="item-name">${escapeHtml(item.name)}</span>
-        <a class="item-buy" href="${escapeAttr(item.url)}" target="_blank" rel="noopener">Shop — see price <span class="arrow">→</span></a>
+        <a class="item-buy" href="${escapeAttr(item.url)}" target="_blank" rel="noopener">Shop <span class="arrow">→</span></a>
       `;
       list.appendChild(row);
     });
