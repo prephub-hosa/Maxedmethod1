@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MaxedMethod — Shop The Fits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F1EFEA;
+    --ink:#14140F;
+    --ink-soft:#524E45;
+    --surface:#FFFFFF;
+    --line:#DEDAD0;
+    --stone:#A79C89;
+    --stone-dark:#8C8267;
+    --danger:#B23B3B;
+    --font-display:'Archivo Black', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'Space Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased;}
+  #app{min-height:100vh;padding-bottom:80px;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:var(--font-body);cursor:pointer;}
+
+  /* ---- Header ---- */
+  .header{padding:36px 24px 20px;border-bottom:1px solid var(--line);}
+  .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--stone-dark);text-transform:uppercase;margin-bottom:8px;}
+  .title{font-family:var(--font-display);font-size:clamp(28px,6vw,44px);line-height:1;letter-spacing:-.01em;margin:0;}
+  .subtitle{font-family:var(--font-body);font-size:14px;color:var(--ink-soft);margin-top:10px;max-width:520px;line-height:1.5;}
+
+  /* ---- Grid ---- */
+  .fits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;padding:24px;}
+  .fit-card{position:relative;background:var(--surface);border:1px solid var(--line);overflow:hidden;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;aspect-ratio:3/4;}
+  .fit-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(20,20,15,.10);}
+  .fit-cover{width:100%;height:100%;object-fit:cover;display:block;background:#e5e2da;transition:transform .35s ease;}
+  .fit-card:hover .fit-cover{transform:scale(1.04);}
+  .fit-card-footer{position:absolute;left:0;right:0;bottom:0;padding:12px;background:linear-gradient(180deg, rgba(20,20,15,0) 0%, rgba(20,20,15,.72) 100%);color:#fff;}
+  .fit-tag{display:inline-block;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);padding:2px 6px;margin-bottom:6px;}
+  .fit-title{font-family:var(--font-display);font-size:16px;margin:0;letter-spacing:-.01em;}
+
+  .admin-controls{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:2;}
+  .admin-icon-btn{width:28px;height:28px;background:rgba(20,20,15,.75);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:14px;border-radius:2px;}
+  .admin-icon-btn:hover{background:var(--ink);}
+
+  .empty-state{margin:60px auto;max-width:360px;text-align:center;padding:0 24px;}
+  .empty-state .title{font-size:22px;}
+  .empty-state p{color:var(--ink-soft);font-size:14px;line-height:1.6;}
+
+  /* ---- Detail overlay ---- */
+  .overlay{position:fixed;inset:0;background:rgba(20,20,15,.5);display:flex;align-items:stretch;justify-content:flex-end;z-index:50;opacity:0;pointer-events:none;transition:opacity .2s ease;}
+  .overlay.open{opacity:1;pointer-events:all;}
+  .detail-panel{background:var(--bg);width:min(880px,100%);height:100%;overflow-y:auto;transform:translateX(20px);transition:transform .25s ease;position:relative;}
+  .overlay.open .detail-panel{transform:translateX(0);}
+  .close-btn{position:absolute;top:16px;right:16px;width:36px;height:36px;background:var(--ink);color:#fff;border:none;font-size:18px;z-index:5;border-radius:2px;}
+  .detail-grid{display:grid;grid-template-columns:34% 66%;min-height:100%;}
+  @media (max-width:640px){.detail-grid{grid-template-columns:1fr;}}
+  .breakdown{padding:56px 22px 40px;border-right:1px solid var(--line);}
+  @media (max-width:640px){.breakdown{border-right:none;border-top:1px solid var(--line);order:2;padding:28px 22px 40px;}}
+  .breakdown .eyebrow{margin-bottom:18px;}
+  .detail-fit-title{font-family:var(--font-display);font-size:24px;margin:0 0 22px;}
+  .item-row{padding:14px 0;border-bottom:1px solid var(--line);}
+  .item-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--stone-dark);}
+  .item-name{display:block;font-size:14px;font-weight:600;margin:4px 0 2px;}
+  .item-price{font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);}
+  .item-buy{display:inline-block;margin-top:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;border:1px solid var(--ink);padding:6px 10px;transition:background .15s, color .15s;}
+  .item-buy:hover{background:var(--ink);color:#fff;}
+  .detail-photo{background:#e5e2da;min-height:280px;}
+  @media (max-width:640px){.detail-photo{order:1;}}
+  .detail-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+
+  /* ---- Floating admin button ---- */
+  .fab{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;border:none;padding:12px 16px;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;border-radius:2px;z-index:40;box-shadow:0 6px 18px rgba(20,20,15,.25);}
+  .fab.admin-on{background:var(--stone-dark);}
+
+  /* ---- Modal (passcode / confirm / form) ---- */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(20,20,15,.55);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .18s ease;padding:20px;}
+  .modal-backdrop.open{opacity:1;pointer-events:all;}
+  .modal-box{background:var(--surface);width:100%;max-width:420px;max-height:88vh;overflow-y:auto;border:1px solid var(--line);padding:26px;}
+  .modal-box.wide{max-width:640px;}
+  .modal-title{font-family:var(--font-display);font-size:18px;margin:0 0 16px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--stone-dark);margin-bottom:6px;text-transform:uppercase;}
+  .field input, .field select{width:100%;padding:9px 10px;border:1px solid var(--line);background:#fff;font-family:var(--font-body);font-size:13px;color:var(--ink);}
+  .field input:focus, .field select:focus{outline:1px solid var(--ink);}
+  .item-edit-row{border:1px solid var(--line);padding:12px;margin-bottom:10px;position:relative;}
+  .item-edit-row .remove-item{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--danger);font-size:12px;font-family:var(--font-mono);}
+  .item-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;padding:10px 14px;border:1px solid var(--ink);background:transparent;}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-primary:hover{background:#000;}
+  .btn-ghost:hover{background:var(--line);}
+  .btn-danger{border-color:var(--danger);color:var(--danger);}
+  .btn-danger:hover{background:var(--danger);color:#fff;}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+  .add-item-btn{width:100%;padding:10px;border:1px dashed var(--stone);background:none;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--stone-dark);}
+  .error-text{color:var(--danger);font-size:12px;margin-top:8px;}
+  .loading{padding:60px 24px;text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--stone-dark);letter-spacing:.06em;}
+  .hint{font-size:11px;color:var(--stone-dark);margin-top:-6px;margin-bottom:14px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="eyebrow">MAXEDMETHOD</div>
+    <h1 class="title">SHOP THE FITS</h1>
+    <p class="subtitle">Tap a fit to see the full breakdown — outer, top, bottoms, shoes — and shop each piece.</p>
+  </div>
+  <div id="gridArea"><div class="loading">LOADING FITS…</div></div>
+</div>
+
+<button class="fab" id="adminFab">MANAGE FITS</button>
+
+<!-- Detail overlay -->
+<div class="overlay" id="detailOverlay">
+  <div class="detail-panel">
+    <button class="close-btn" id="closeDetail">✕</button>
+    <div class="detail-grid">
+      <div class="breakdown">
+        <div class="eyebrow">BREAKDOWN</div>
+        <h2 class="detail-fit-title" id="detailTitle"></h2>
+        <div id="itemList"></div>
+      </div>
+      <div class="detail-photo"><img id="detailImg" src="" alt=""></div>
+    </div>
+  </div>
+</div>
+
+<!-- Passcode modal -->
+<div class="modal-backdrop" id="passModal">
+  <div class="modal-box">
+    <h3 class="modal-title">Manage fits</h3>
+    <div class="field">
+      <label>Passcode</label>
+      <input type="password" id="passInput" placeholder="Enter passcode">
+    </div>
+    <div class="error-text" id="passError" style="display:none;">Wrong passcode.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="passCancel">Cancel</button>
+      <button class="btn btn-primary" id="passSubmit">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal-box">
+    <h3 class="modal-title">Delete this fit?</h3>
+    <p style="font-size:13px;color:var(--ink-soft);">This can't be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
+      <button class="btn btn-danger" id="confirmDelete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit fit modal -->
+<div class="modal-backdrop" id="fitFormModal">
+  <div class="modal-box wide">
+    <h3 class="modal-title" id="fitFormTitle">Add a fit</h3>
+    <div class="field">
+      <label>Fit title</label>
+      <input type="text" id="fitTitleInput" placeholder="e.g. Dark Aura">
+    </div>
+    <div class="field">
+      <label>Cover / thumbnail image URL</label>
+      <input type="text" id="fitCoverInput" placeholder="https://...">
+      <div class="hint">This shows on the grid card. Use the same model shot from your carousel cover slide.</div>
+    </div>
+    <div class="field">
+      <label>Full-size photo URL (shown in the breakdown panel)</label>
+      <input type="text" id="fitPhotoInput" placeholder="https://... (leave blank to reuse cover image)">
+    </div>
+    <div id="itemsEditArea"></div>
+    <button class="add-item-btn" id="addItemBtn">+ Add item</button>
+    <div class="error-text" id="fitFormError" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="fitFormCancel">Cancel</button>
+      <button class="btn btn-primary" id="fitFormSave">Save fit</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+// ============================================================
+// PASTE YOUR FIREBASE CONFIG HERE (see setup steps in chat)
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyA5S4VQPh4u3_c6igr9D7fRDWJzcr_K1y8",
+  authDomain: "maxedmethod.firebaseapp.com",
+  projectId: "maxedmethod",
+  storageBucket: "maxedmethod.firebasestorage.app",
+  messagingSenderId: "445796723166",
+  appId: "1:445796723166:web:043022e676efd72439954f"
+};
+// ============================================================
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
+
+(function(){
+  const ADMIN_PASS = "maxedmethod2026"; // change this line to set your own passcode — this only gates the UI, see note in chat
+  const LABELS = ["OUTER","TOP","BOTTOM","SHOES","ACCESSORY"];
+
+  let fits = [];
+  let isAdmin = false;
+  let editingId = null; // id of fit currently being edited, null = new
+  let itemDraft = [];
+
+  const gridArea = document.getElementById('gridArea');
+  const adminFab = document.getElementById('adminFab');
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  // ---------- storage (Firestore) ----------
+  async function loadFits(){
+    try{
+      const snap = await getDoc(CATALOG_DOC);
+      if(snap.exists()){
+        fits = snap.data().fits || [];
+      } else {
+        // first ever load — seed with one example fit
+        fits = [{
+          id: uid(),
+          title: "Example Fit — edit or delete me",
+          cover: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&q=80",
+          photo: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=1200&q=80",
+          items: [
+            { id: uid(), label: "OUTER", name: "Oversized Knit Cardigan", price: "$38", url: "https://example.com" },
+            { id: uid(), label: "TOP", name: "Boxy Tee", price: "$14", url: "https://example.com" },
+            { id: uid(), label: "BOTTOM", name: "Baggy Cargo Pants", price: "$42", url: "https://example.com" },
+            { id: uid(), label: "SHOES", name: "NB 550", price: "$110", url: "https://example.com" }
+          ]
+        }];
+        await saveFits();
+      }
+    }catch(e){
+      console.error('Load failed', e);
+      gridArea.innerHTML = '<div class="empty-state"><h2 class="title">COULD NOT LOAD</h2><p>Check your connection and refresh. If this keeps happening, double check the Firebase config pasted at the top of the file.</p></div>';
+      return;
+    }
+    render();
+  }
+
+  async function saveFits(retryCount){
+    retryCount = retryCount || 0;
+    try{
+      await setDoc(CATALOG_DOC, { fits });
+      return true;
+    }catch(e){
+      console.error('Storage save failed (attempt ' + (retryCount+1) + ')', e);
+      if(retryCount < 2){
+        await new Promise(r => setTimeout(r, 600 * (retryCount+1)));
+        return saveFits(retryCount+1);
+      }
+      alertBox('Save failed after retrying — your edit was not saved. Try again in a moment.');
+      return false;
+    }
+  }
+
+  function alertBox(msg){
+    // lightweight inline alert since this runs in a sandboxed iframe
+    const el = document.createElement('div');
+    el.textContent = msg;
+    el.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#14140F;color:#fff;padding:10px 16px;font-family:Inter,sans-serif;font-size:13px;z-index:999;border-radius:2px;';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 2600);
+  }
+
+  // ---------- render grid ----------
+  function render(){
+    if(fits.length === 0){
+      gridArea.innerHTML = '<div class="empty-state"><h2 class="title">NO FITS YET</h2><p>Tap "Manage Fits" below to add your first one.</p></div>';
+      return;
+    }
+    gridArea.innerHTML = '<div class="fits-grid" id="fitsGrid"></div>';
+    const grid = document.getElementById('fitsGrid');
+    fits.forEach((fit, i) => {
+      const card = document.createElement('div');
+      card.className = 'fit-card';
+      card.innerHTML = `
+        <img class="fit-cover" src="${escapeAttr(fit.cover)}" alt="${escapeAttr(fit.title)}" onerror="this.style.background='#e5e2da'">
+        <div class="fit-card-footer">
+          <span class="fit-tag">FIT ${String(i+1).padStart(2,'0')}</span>
+          <h3 class="fit-title">${escapeHtml(fit.title)}</h3>
+        </div>
+        ${isAdmin ? `<div class="admin-controls">
+          <button class="admin-icon-btn" data-edit="${fit.id}" title="Edit">✎</button>
+          <button class="admin-icon-btn" data-delete="${fit.id}" title="Delete">🗑</button>
+        </div>` : ''}
+      `;
+      card.addEventListener('click', (e)=>{
+        if(e.target.closest('.admin-controls')) return;
+        openDetail(fit);
+      });
+      grid.appendChild(card);
+    });
+
+    if(isAdmin){
+      grid.querySelectorAll('[data-edit]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{ e.stopPropagation(); openFitForm(btn.getAttribute('data-edit')); });
+      });
+      grid.querySelectorAll('[data-delete]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{ e.stopPropagation(); openConfirmDelete(btn.getAttribute('data-delete')); });
+      });
+    }
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  // ---------- detail overlay ----------
+  const detailOverlay = document.getElementById('detailOverlay');
+  function openDetail(fit){
+    document.getElementById('detailTitle').textContent = fit.title;
+    document.getElementById('detailImg').src = fit.photo || fit.cover;
+    const list = document.getElementById('itemList');
+    list.innerHTML = '';
+    (fit.items||[]).forEach(item=>{
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML = `
+        <span class="item-label">${escapeHtml(item.label)}</span>
+        <span class="item-name">${escapeHtml(item.name)}</span>
+        <span class="item-price">${escapeHtml(item.price||'')}</span><br>
+        <a class="item-buy" href="${escapeAttr(item.url)}" target="_blank" rel="noopener">SHOP →</a>
+      `;
+      list.appendChild(row);
+    });
+    detailOverlay.classList.add('open');
+  }
+  document.getElementById('closeDetail').addEventListener('click', ()=> detailOverlay.classList.remove('open'));
+  detailOverlay.addEventListener('click', (e)=>{ if(e.target === detailOverlay) detailOverlay.classList.remove('open'); });
+
+  // ---------- admin unlock ----------
+  const passModal = document.getElementById('passModal');
+  adminFab.addEventListener('click', ()=>{
+    if(isAdmin){
+      isAdmin = false;
+      adminFab.textContent = 'MANAGE FITS';
+      adminFab.classList.remove('admin-on');
+      render();
+    } else {
+      document.getElementById('passInput').value = '';
+      document.getElementById('passError').style.display = 'none';
+      passModal.classList.add('open');
+      document.getElementById('passInput').focus();
+    }
+  });
+  document.getElementById('passCancel').addEventListener('click', ()=> passModal.classList.remove('open'));
+  document.getElementById('passSubmit').addEventListener('click', tryUnlock);
+  document.getElementById('passInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlock(); });
+  function tryUnlock(){
+    const val = document.getElementById('passInput').value;
+    if(val === ADMIN_PASS){
+      isAdmin = true;
+      adminFab.textContent = 'ADD FIT / EXIT MANAGE';
+      adminFab.classList.add('admin-on');
+      passModal.classList.remove('open');
+      render();
+      // if admin just unlocked and there are fits, offer add via long-press alt: just open form on second click of fab next time; also show add fit button in empty grid area
+      showAddFitShortcut();
+    } else {
+      document.getElementById('passError').style.display = 'block';
+    }
+  }
+  function showAddFitShortcut(){
+    // Add a persistent "+ add fit" tile at the start of the grid when in admin mode
+    if(!document.getElementById('addFitTile')){
+      const grid = document.getElementById('fitsGrid');
+      if(grid){
+        const tile = document.createElement('div');
+        tile.id = 'addFitTile';
+        tile.className = 'fit-card';
+        tile.style.cssText = 'display:flex;align-items:center;justify-content:center;border:1px dashed var(--stone);background:transparent;';
+        tile.innerHTML = '<span style="font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;color:var(--stone-dark);">+ ADD FIT</span>';
+        tile.addEventListener('click', ()=> openFitForm(null));
+        grid.prepend(tile);
+      }
+    }
+  }
+
+  // ---------- confirm delete ----------
+  const confirmModal = document.getElementById('confirmModal');
+  let pendingDeleteId = null;
+  function openConfirmDelete(id){ pendingDeleteId = id; confirmModal.classList.add('open'); }
+  document.getElementById('confirmCancel').addEventListener('click', ()=>{ confirmModal.classList.remove('open'); pendingDeleteId=null; });
+  document.getElementById('confirmDelete').addEventListener('click', async ()=>{
+    const prevFits = fits.map(f => ({...f}));
+    fits = fits.filter(f=>f.id !== pendingDeleteId);
+    const ok = await saveFits();
+    if(!ok){ fits = prevFits; }
+    confirmModal.classList.remove('open');
+    pendingDeleteId = null;
+    render();
+    if(isAdmin) showAddFitShortcut();
+  });
+
+  // ---------- add/edit fit form ----------
+  const fitFormModal = document.getElementById('fitFormModal');
+  function openFitForm(id){
+    editingId = id;
+    document.getElementById('fitFormError').style.display = 'none';
+    if(id){
+      const fit = fits.find(f=>f.id===id);
+      document.getElementById('fitFormTitle').textContent = 'Edit fit';
+      document.getElementById('fitTitleInput').value = fit.title;
+      document.getElementById('fitCoverInput').value = fit.cover;
+      document.getElementById('fitPhotoInput').value = fit.photo || '';
+      itemDraft = (fit.items||[]).map(it => ({...it}));
+    } else {
+      document.getElementById('fitFormTitle').textContent = 'Add a fit';
+      document.getElementById('fitTitleInput').value = '';
+      document.getElementById('fitCoverInput').value = '';
+      document.getElementById('fitPhotoInput').value = '';
+      itemDraft = [ { id: uid(), label:'OUTER', name:'', price:'', url:'' } ];
+    }
+    renderItemDraft();
+    fitFormModal.classList.add('open');
+  }
+  document.getElementById('fitFormCancel').addEventListener('click', ()=> fitFormModal.classList.remove('open'));
+
+  function renderItemDraft(){
+    const area = document.getElementById('itemsEditArea');
+    area.innerHTML = '';
+    itemDraft.forEach((item, idx)=>{
+      const row = document.createElement('div');
+      row.className = 'item-edit-row';
+      row.innerHTML = `
+        <button class="remove-item" data-idx="${idx}">remove</button>
+        <div class="item-edit-grid">
+          <div class="field">
+            <label>Label</label>
+            <select data-field="label" data-idx="${idx}">
+              ${LABELS.map(l=>`<option value="${l}" ${item.label===l?'selected':''}>${l}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Price</label>
+            <input type="text" data-field="price" data-idx="${idx}" value="${escapeAttr(item.price||'')}" placeholder="$38">
+          </div>
+        </div>
+        <div class="field">
+          <label>Item name</label>
+          <input type="text" data-field="name" data-idx="${idx}" value="${escapeAttr(item.name||'')}" placeholder="Oversized Knit Cardigan">
+        </div>
+        <div class="field">
+          <label>Product / affiliate link</label>
+          <input type="text" data-field="url" data-idx="${idx}" value="${escapeAttr(item.url||'')}" placeholder="https://...">
+        </div>
+      `;
+      area.appendChild(row);
+    });
+    area.querySelectorAll('[data-field]').forEach(el=>{
+      el.addEventListener('input', (e)=>{
+        const idx = +e.target.getAttribute('data-idx');
+        const field = e.target.getAttribute('data-field');
+        itemDraft[idx][field] = e.target.value;
+      });
+    });
+    area.querySelectorAll('.remove-item').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = +btn.getAttribute('data-idx');
+        itemDraft.splice(idx,1);
+        renderItemDraft();
+      });
+    });
+  }
+  document.getElementById('addItemBtn').addEventListener('click', ()=>{
+    itemDraft.push({ id: uid(), label:'TOP', name:'', price:'', url:'' });
+    renderItemDraft();
+  });
+
+  document.getElementById('fitFormSave').addEventListener('click', async ()=>{
+    const title = document.getElementById('fitTitleInput').value.trim();
+    const cover = document.getElementById('fitCoverInput').value.trim();
+    const photo = document.getElementById('fitPhotoInput').value.trim();
+    const errEl = document.getElementById('fitFormError');
+
+    if(!title || !cover){
+      errEl.textContent = 'Title and cover image URL are required.';
+      errEl.style.display = 'block';
+      return;
+    }
+    const cleanItems = itemDraft.filter(it => it.name.trim() && it.url.trim());
+    if(cleanItems.length === 0){
+      errEl.textContent = 'Add at least one item with a name and a link.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const fitData = { title, cover, photo: photo || cover, items: cleanItems };
+
+    const prevFits = fits.map(f => ({...f}));
+    if(editingId){
+      const idx = fits.findIndex(f=>f.id===editingId);
+      fits[idx] = { ...fits[idx], ...fitData };
+    } else {
+      fits.push({ id: uid(), ...fitData });
+    }
+    const ok = await saveFits();
+    if(!ok){
+      fits = prevFits; // roll back so local state matches what's actually saved
+      errEl.textContent = 'Save failed — your info is still in this form, try clicking Save fit again.';
+      errEl.style.display = 'block';
+      return;
+    }
+    fitFormModal.classList.remove('open');
+    render();
+    if(isAdmin) showAddFitShortcut();
+  });
+
+  loadFits();
+})();
+</script>
+</body>
+</html>
