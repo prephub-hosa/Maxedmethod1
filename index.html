@@ -168,11 +168,13 @@
     <div class="field">
       <label>Cover / thumbnail image URL</label>
       <input type="text" id="fitCoverInput" placeholder="https://...">
-      <div class="hint">This shows on the grid card. Use the same model shot from your carousel cover slide.</div>
+      <div class="hint">This shows on the grid card. Use the same model shot from your carousel cover slide. Imgur links must start with i.imgur.com (right-click the full-size image → "Copy image address"), not imgur.com/a/... page links.</div>
+      <div class="error-text" id="fitCoverWarning" style="display:none;"></div>
     </div>
     <div class="field">
       <label>Full-size photo URL (shown in the breakdown panel)</label>
       <input type="text" id="fitPhotoInput" placeholder="https://... (leave blank to reuse cover image)">
+      <div class="error-text" id="fitPhotoWarning" style="display:none;"></div>
     </div>
     <div id="itemsEditArea"></div>
     <button class="add-item-btn" id="addItemBtn">+ Add item</button>
@@ -206,7 +208,7 @@ const db = getFirestore(firebaseApp);
 const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
 
 (function(){
-  const ADMIN_PASS = "maxedmethod2026"; // change this line to set your own passcode — this only gates the UI, see note in chat
+  const ADMIN_PASS = "123"; // change this line to set your own passcode — this only gates the UI, see note in chat
   const LABELS = ["OUTER","TOP","BOTTOM","SHOES","ACCESSORY"];
 
   let fits = [];
@@ -473,6 +475,31 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
       });
     });
   }
+  function checkImageUrl(inputEl, warnEl){
+    const val = inputEl.value.trim();
+    if(!val){ warnEl.style.display='none'; return; }
+    const pageLinkMatch = val.match(/^https?:\/\/(www\.)?imgur\.com\/(a\/)?([a-zA-Z0-9]+)\/?$/);
+    if(pageLinkMatch && !val.includes('i.imgur.com')){
+      const id = pageLinkMatch[3];
+      const guess = `https://i.imgur.com/${id}.jpg`;
+      warnEl.innerHTML = `This looks like an Imgur page link, not a direct image link — it won't load. Try: <span style="text-decoration:underline;cursor:pointer;" data-fix="${guess}">${guess}</span> (click to use)`;
+      warnEl.style.display = 'block';
+      const fixSpan = warnEl.querySelector('[data-fix]');
+      if(fixSpan){
+        fixSpan.addEventListener('click', ()=>{
+          inputEl.value = guess;
+          warnEl.style.display = 'none';
+        });
+      }
+    } else {
+      warnEl.style.display = 'none';
+    }
+  }
+  const fitCoverInput = document.getElementById('fitCoverInput');
+  const fitPhotoInput = document.getElementById('fitPhotoInput');
+  fitCoverInput.addEventListener('blur', ()=> checkImageUrl(fitCoverInput, document.getElementById('fitCoverWarning')));
+  fitPhotoInput.addEventListener('blur', ()=> checkImageUrl(fitPhotoInput, document.getElementById('fitPhotoWarning')));
+
   document.getElementById('addItemBtn').addEventListener('click', ()=>{
     itemDraft.push({ id: uid(), label:'TOP', name:'', price:'', url:'' });
     renderItemDraft();
