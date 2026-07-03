@@ -138,6 +138,22 @@
   /* community section */
   .community{border-top:1px solid var(--line);margin-top:60px;padding:56px 28px 40px;}
   .community-inner{display:grid;grid-template-columns:1.4fr 1fr;gap:48px;max-width:1100px;}
+  .community-reviews-only{grid-template-columns:1fr;max-width:760px;}
+  /* compact email bar under hero */
+  .email-bar{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:0 28px 8px;padding:18px 22px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--surface) 0%,var(--bg-2) 100%);}
+  .email-bar-text{display:flex;flex-direction:column;gap:3px;}
+  .email-bar-label{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:-.01em;}
+  .email-bar-sub{font-size:12.5px;color:var(--text-soft);}
+  .email-bar-form{display:flex;gap:10px;align-items:stretch;flex:1;min-width:240px;max-width:420px;}
+  .email-bar-form input{flex:1;padding:11px 14px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:100px;transition:border-color .15s, box-shadow .15s;}
+  .email-bar-form input::placeholder{color:var(--text-dim);}
+  .email-bar-form input:focus{outline:none;border-color:var(--text-soft);box-shadow:0 0 0 3px rgba(245,243,237,.06);}
+  .email-bar-form .btn{white-space:nowrap;}
+  .email-bar .email-success, .email-bar .error-text{flex-basis:100%;margin-top:4px;}
+  @media (max-width:560px){
+    .email-bar{flex-direction:column;align-items:stretch;gap:14px;}
+    .email-bar-form{max-width:none;}
+  }
   @media (max-width:760px){.community-inner{grid-template-columns:1fr;gap:40px;}}
   .community-col .eyebrow{margin-bottom:20px;}
   .reviews-list{display:flex;flex-direction:column;gap:14px;margin-bottom:24px;max-height:340px;overflow-y:auto;}
@@ -233,6 +249,18 @@
     <p class="subtitle">Tap any look to see every piece — outerwear, tops, bottoms, footwear — and shop the exact fit.</p>
     <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
   </div>
+  <div class="email-bar" id="updatesAnchor">
+    <div class="email-bar-text">
+      <span class="email-bar-label">Get Updates</span>
+      <span class="email-bar-sub">New fits &amp; drops, straight to your inbox</span>
+    </div>
+    <div class="email-bar-form">
+      <input type="email" id="emailInput" placeholder="you@email.com">
+      <button class="btn btn-primary" id="emailSubmit">Subscribe</button>
+    </div>
+    <div class="error-text" id="emailError" style="display:none;"></div>
+    <div class="email-success" id="emailSuccess" style="display:none;">You're on the list. 🖤</div>
+  </div>
   <div class="tabbar">
     <div class="tabs">
       <button class="tab active" data-cat="men">Men</button>
@@ -244,7 +272,7 @@
 
   <!-- Community footer: reviews + email signup -->
   <div class="community">
-    <div class="community-inner">
+    <div class="community-inner community-reviews-only">
       <div class="community-col" id="reviewsAnchor">
         <div class="eyebrow">Reviews & Questions</div>
         <div id="reviewsList" class="reviews-list"><div class="hint">Loading…</div></div>
@@ -254,16 +282,6 @@
           <div class="error-text" id="reviewError" style="display:none;"></div>
           <button class="btn btn-primary" id="reviewSubmit">Post</button>
         </div>
-      </div>
-      <div class="community-col" id="updatesAnchor">
-        <div class="eyebrow">Get Updates</div>
-        <p class="community-blurb">Drop your email to hear when new fits and drops go live. No spam.</p>
-        <div class="email-form">
-          <input type="email" id="emailInput" placeholder="you@email.com">
-          <button class="btn btn-primary" id="emailSubmit">Subscribe</button>
-        </div>
-        <div class="error-text" id="emailError" style="display:none;"></div>
-        <div class="email-success" id="emailSuccess" style="display:none;">You're on the list. 🖤</div>
       </div>
     </div>
     <div class="community-foot">MAXEDMETHOD — follow for daily fits</div>
