@@ -130,6 +130,26 @@
 
   /* ---- Floating admin button ---- */
   .corner-mark{position:fixed;bottom:22px;left:22px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.2em;color:var(--text-soft);z-index:40;pointer-events:none;mix-blend-mode:difference;}
+  /* community section */
+  .community{border-top:1px solid var(--line);margin-top:60px;padding:56px 28px 40px;}
+  .community-inner{display:grid;grid-template-columns:1.4fr 1fr;gap:48px;max-width:1100px;}
+  @media (max-width:760px){.community-inner{grid-template-columns:1fr;gap:40px;}}
+  .community-col .eyebrow{margin-bottom:20px;}
+  .reviews-list{display:flex;flex-direction:column;gap:14px;margin-bottom:24px;max-height:340px;overflow-y:auto;}
+  .review-item{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--bg-2);}
+  .review-item .r-name{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
+  .review-item .r-text{font-size:14px;line-height:1.5;color:var(--text);}
+  .review-empty{font-size:13px;color:var(--text-dim);line-height:1.6;}
+  .review-form input, .review-form textarea, .email-form input{width:100%;padding:11px 12px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;margin-bottom:10px;transition:border-color .15s, box-shadow .15s;}
+  .review-form textarea{resize:vertical;line-height:1.5;}
+  .review-form input::placeholder, .review-form textarea::placeholder, .email-form input::placeholder{color:var(--text-dim);}
+  .review-form input:focus, .review-form textarea:focus, .email-form input:focus{outline:none;border-color:var(--text-soft);box-shadow:0 0 0 3px rgba(245,243,237,.06);}
+  .community-blurb{font-size:14px;color:var(--text-soft);line-height:1.6;margin:0 0 18px;}
+  .email-form{display:flex;gap:10px;align-items:stretch;}
+  .email-form input{margin-bottom:0;flex:1;}
+  .email-form .btn{white-space:nowrap;}
+  .email-success{color:#8BAE7C;font-size:13px;margin-top:12px;font-family:var(--font-mono);letter-spacing:.04em;}
+  .community-foot{margin-top:48px;padding-top:24px;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dim);text-align:center;}
   .fab{position:fixed;bottom:22px;right:22px;background:var(--text);color:var(--bg);border:none;padding:13px 20px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border-radius:100px;z-index:40;box-shadow:0 8px 30px rgba(0,0,0,.5);transition:transform .18s, background .18s;}
   .fab:hover{transform:translateY(-2px);}
   .fab.admin-on{background:var(--surface-2);color:var(--text);border:1px solid var(--line);}
@@ -174,6 +194,22 @@
   .stat-table td.num{font-family:var(--font-mono);color:var(--text-soft);}
   .stat-table tr:hover td{background:var(--bg-2);}
   .analytics-note{font-size:11px;color:var(--text-dim);margin-top:16px;line-height:1.5;}
+  .admin-section{margin-top:26px;border-top:1px solid var(--line);padding-top:20px;}
+  .section-head{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-soft);margin-bottom:14px;}
+  .mod-item{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:var(--bg-2);}
+  .mod-item.is-approved{border-color:rgba(139,174,124,.4);}
+  .mod-meta{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--text-dim);margin-bottom:6px;}
+  .tag-live{color:#8BAE7C;}
+  .tag-pending{color:#C9A15A;}
+  .mod-text{font-size:14px;line-height:1.5;color:var(--text);margin-bottom:10px;}
+  .mod-actions{display:flex;gap:8px;}
+  .mini-btn{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:100px;transition:background .15s,color .15s;}
+  .mini-btn:hover{background:var(--surface-2);}
+  .mini-approve{border-color:#8BAE7C;color:#8BAE7C;}
+  .mini-approve:hover{background:#8BAE7C;color:var(--bg);}
+  .mini-del{border-color:var(--danger);color:var(--danger);}
+  .mini-del:hover{background:var(--danger);color:var(--bg);}
+  .subs-box{width:100%;padding:10px 12px;border:1px solid var(--line);background:var(--bg-2);color:var(--text-soft);font-family:var(--font-mono);font-size:12px;border-radius:8px;resize:vertical;}
 </style>
 
 </head>
@@ -197,6 +233,34 @@
     <span class="count" id="fitCount"></span>
   </div>
   <div id="gridArea"><div class="loading">Loading fits…</div></div>
+
+  <!-- Community footer: reviews + email signup -->
+  <div class="community">
+    <div class="community-inner">
+      <div class="community-col">
+        <div class="eyebrow">Reviews & Questions</div>
+        <div id="reviewsList" class="reviews-list"><div class="hint">Loading…</div></div>
+        <div class="review-form">
+          <input type="text" id="reviewName" placeholder="Name (optional)" maxlength="40">
+          <textarea id="reviewText" placeholder="Leave a review or ask a question…" rows="3" maxlength="500"></textarea>
+          <div class="error-text" id="reviewError" style="display:none;"></div>
+          <button class="btn btn-primary" id="reviewSubmit">Post</button>
+          <div class="hint" style="margin-top:10px;">Reviews are checked before they appear.</div>
+        </div>
+      </div>
+      <div class="community-col">
+        <div class="eyebrow">Get Updates</div>
+        <p class="community-blurb">Drop your email to hear when new fits and drops go live. No spam.</p>
+        <div class="email-form">
+          <input type="email" id="emailInput" placeholder="you@email.com">
+          <button class="btn btn-primary" id="emailSubmit">Subscribe</button>
+        </div>
+        <div class="error-text" id="emailError" style="display:none;"></div>
+        <div class="email-success" id="emailSuccess" style="display:none;">You're on the list. 🖤</div>
+      </div>
+    </div>
+    <div class="community-foot">MAXEDMETHOD — follow for daily fits</div>
+  </div>
 </div>
 
 <button class="fab" id="adminFab">Manage Fits</button>
@@ -313,7 +377,7 @@ OUTER | Cream Cardigan | https://..."></textarea>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 // ============================================================
 // PASTE YOUR FIREBASE CONFIG HERE (see setup steps in chat)
@@ -332,6 +396,8 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
 const ANALYTICS_DOC = doc(db, "maxedmethod", "analytics");
+const REVIEWS_DOC = doc(db, "maxedmethod", "reviews");
+const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 
 (function(){
   const ADMIN_PASS = "\\\\\\"; // change this line to set your own passcode — this only gates the UI, see note in chat
@@ -885,8 +951,75 @@ const ANALYTICS_DOC = doc(db, "maxedmethod", "analytics");
       </div>
       ${tableHtml}
       <p class="analytics-note">Visits count once per browser session. "Opens" = times a fit's breakdown was viewed; "Shop clicks" = times a Shop button was tapped. Your own admin activity isn't counted.</p>
+      <div class="admin-section" id="reviewsAdmin"><div class="section-head">Reviews & Questions</div><div id="reviewsAdminBody"><div class="hint">Loading…</div></div></div>
+      <div class="admin-section" id="subsAdmin"><div class="section-head">Email Subscribers <span id="subCount"></span></div><div id="subsAdminBody"><div class="hint">Loading…</div></div></div>
     `;
+    loadReviewsAdmin();
+    loadSubsAdmin();
   });
+
+  // ----- admin: reviews moderation -----
+  async function loadReviewsAdmin(){
+    const el = document.getElementById('reviewsAdminBody');
+    if(!el) return;
+    let data = {};
+    try{ const snap = await getDoc(REVIEWS_DOC); data = snap.exists()?snap.data():{}; }
+    catch(e){ el.innerHTML = '<p class="hint">Could not load.</p>'; return; }
+    const all = (data.reviews || []).slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
+    if(all.length === 0){ el.innerHTML = '<p class="hint">No submissions yet.</p>'; return; }
+    el.innerHTML = all.map(r=>`
+      <div class="mod-item ${r.approved?'is-approved':''}">
+        <div class="mod-meta">${escapeHtml(r.name||'Anonymous')} · ${r.approved?'<span class="tag-live">LIVE</span>':'<span class="tag-pending">PENDING</span>'}</div>
+        <div class="mod-text">${escapeHtml(r.text)}</div>
+        <div class="mod-actions">
+          ${r.approved
+            ? `<button class="mini-btn" data-unapprove="${r.id}">Hide</button>`
+            : `<button class="mini-btn mini-approve" data-approve="${r.id}">Approve</button>`}
+          <button class="mini-btn mini-del" data-delreview="${r.id}">Delete</button>
+        </div>
+      </div>
+    `).join('');
+    // wire actions
+    el.querySelectorAll('[data-approve]').forEach(b=>b.addEventListener('click',()=>moderateReview(b.getAttribute('data-approve'),'approve')));
+    el.querySelectorAll('[data-unapprove]').forEach(b=>b.addEventListener('click',()=>moderateReview(b.getAttribute('data-unapprove'),'unapprove')));
+    el.querySelectorAll('[data-delreview]').forEach(b=>b.addEventListener('click',()=>moderateReview(b.getAttribute('data-delreview'),'delete')));
+  }
+  async function moderateReview(id, action){
+    let data = {};
+    try{ const snap = await getDoc(REVIEWS_DOC); data = snap.exists()?snap.data():{}; }catch(e){ return; }
+    let reviews = data.reviews || [];
+    if(action === 'delete'){ reviews = reviews.filter(r=>r.id!==id); }
+    else { reviews = reviews.map(r=> r.id===id ? {...r, approved: action==='approve'} : r); }
+    try{
+      await setDoc(REVIEWS_DOC, { reviews }, { merge:true });
+      loadReviewsAdmin();
+      loadPublicReviews(); // refresh public list live
+    }catch(e){ alertBox('Could not update review.'); }
+  }
+
+  // ----- admin: subscribers -----
+  async function loadSubsAdmin(){
+    const el = document.getElementById('subsAdminBody');
+    const countEl = document.getElementById('subCount');
+    if(!el) return;
+    let data = {};
+    try{ const snap = await getDoc(SUBSCRIBERS_DOC); data = snap.exists()?snap.data():{}; }
+    catch(e){ el.innerHTML = '<p class="hint">Could not load.</p>'; return; }
+    const subs = (data.emails || []).slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
+    if(countEl) countEl.textContent = subs.length ? `(${subs.length})` : '';
+    if(subs.length === 0){ el.innerHTML = '<p class="hint">No subscribers yet.</p>'; return; }
+    const emailText = subs.map(s=>s.email).join(', ');
+    el.innerHTML = `
+      <textarea class="subs-box" readonly rows="4">${escapeHtml(emailText)}</textarea>
+      <button class="btn btn-ghost" id="copySubs" style="margin-top:10px;">Copy all emails</button>
+    `;
+    const copyBtn = document.getElementById('copySubs');
+    if(copyBtn) copyBtn.addEventListener('click', ()=>{
+      const ta = el.querySelector('.subs-box');
+      ta.select();
+      try{ document.execCommand('copy'); copyBtn.textContent = 'Copied!'; setTimeout(()=>copyBtn.textContent='Copy all emails',1500); }catch(e){}
+    });
+  }
   document.getElementById('analyticsClose').addEventListener('click', ()=> analyticsModal.classList.remove('open'));
   analyticsModal.addEventListener('click', (e)=>{ if(e.target === analyticsModal) analyticsModal.classList.remove('open'); });
   const bulkModal = document.getElementById('bulkModal');
@@ -975,7 +1108,87 @@ const ANALYTICS_DOC = doc(db, "maxedmethod", "analytics");
     });
   });
 
+  // ---------- reviews (public display + submission) ----------
+  async function loadPublicReviews(){
+    const listEl = document.getElementById('reviewsList');
+    let data = {};
+    try{
+      const snap = await getDoc(REVIEWS_DOC);
+      data = snap.exists() ? snap.data() : {};
+    }catch(e){
+      listEl.innerHTML = '<div class="review-empty">Could not load reviews.</div>';
+      return;
+    }
+    const all = data.reviews || [];
+    const approved = all.filter(r=>r.approved);
+    if(approved.length === 0){
+      listEl.innerHTML = '<div class="review-empty">No reviews yet — be the first to leave one.</div>';
+      return;
+    }
+    // newest first
+    approved.sort((a,b)=> (b.ts||0) - (a.ts||0));
+    listEl.innerHTML = approved.map(r=>`
+      <div class="review-item">
+        <div class="r-name">${escapeHtml(r.name || 'Anonymous')}</div>
+        <div class="r-text">${escapeHtml(r.text)}</div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('reviewSubmit').addEventListener('click', async ()=>{
+    const nameEl = document.getElementById('reviewName');
+    const textEl = document.getElementById('reviewText');
+    const errEl = document.getElementById('reviewError');
+    const text = textEl.value.trim();
+    if(!text){ errEl.textContent = 'Write something first.'; errEl.style.display='block'; return; }
+    errEl.style.display = 'none';
+    const review = {
+      id: uid(),
+      name: nameEl.value.trim().slice(0,40),
+      text: text.slice(0,500),
+      approved: false,
+      ts: Date.now()
+    };
+    const btn = document.getElementById('reviewSubmit');
+    btn.textContent = 'Posting…'; btn.disabled = true;
+    try{
+      await setDoc(REVIEWS_DOC, { reviews: arrayUnion(review) }, { merge:true });
+      nameEl.value = ''; textEl.value = '';
+      btn.textContent = 'Posted! Pending review';
+      setTimeout(()=>{ btn.textContent = 'Post'; btn.disabled = false; }, 2500);
+    }catch(e){
+      errEl.textContent = 'Could not post — try again.'; errEl.style.display='block';
+      btn.textContent = 'Post'; btn.disabled = false;
+    }
+  });
+
+  // ---------- email subscription ----------
+  document.getElementById('emailSubmit').addEventListener('click', async ()=>{
+    const input = document.getElementById('emailInput');
+    const errEl = document.getElementById('emailError');
+    const okEl = document.getElementById('emailSuccess');
+    const email = input.value.trim().toLowerCase();
+    okEl.style.display = 'none';
+    // simple email validation
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      errEl.textContent = 'Enter a valid email.'; errEl.style.display='block'; return;
+    }
+    errEl.style.display = 'none';
+    const btn = document.getElementById('emailSubmit');
+    btn.textContent = '…'; btn.disabled = true;
+    try{
+      await setDoc(SUBSCRIBERS_DOC, { emails: arrayUnion({ email, ts: Date.now() }) }, { merge:true });
+      input.value = '';
+      okEl.style.display = 'block';
+      btn.textContent = 'Subscribe'; btn.disabled = false;
+    }catch(e){
+      errEl.textContent = 'Could not subscribe — try again.'; errEl.style.display='block';
+      btn.textContent = 'Subscribe'; btn.disabled = false;
+    }
+  });
+
   trackVisit();
+  loadPublicReviews();
   loadFits();
 })();
 </script>
