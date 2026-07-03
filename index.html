@@ -245,7 +245,6 @@
           <textarea id="reviewText" placeholder="Leave a review or ask a question…" rows="3" maxlength="500"></textarea>
           <div class="error-text" id="reviewError" style="display:none;"></div>
           <button class="btn btn-primary" id="reviewSubmit">Post</button>
-          <div class="hint" style="margin-top:10px;">Reviews are checked before they appear.</div>
         </div>
       </div>
       <div class="community-col">
@@ -1154,7 +1153,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     try{
       await setDoc(REVIEWS_DOC, { reviews: arrayUnion(review) }, { merge:true });
       nameEl.value = ''; textEl.value = '';
-      btn.textContent = 'Posted! Pending review';
+      btn.textContent = 'Posted — thank you!';
       setTimeout(()=>{ btn.textContent = 'Post'; btn.disabled = false; }, 2500);
     }catch(e){
       errEl.textContent = 'Could not post — try again.'; errEl.style.display='block';
