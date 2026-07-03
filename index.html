@@ -437,19 +437,25 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       await setDoc(ANALYTICS_DOC, { visits: increment(1) }, { merge:true });
     }catch(e){ /* analytics never blocks the site */ }
   }
-  async function trackOpen(fit){
+  // Use setDoc with a merged plain object per fit id. Reading-then-writing guarantees
+  // brand-new fit ids get created (nested increment on a missing path is unreliable).
+  async function bumpFitStat(fit, field){
     try{
-      await setDoc(ANALYTICS_DOC, { fitStats: { [fit.id]: { title: fit.title, opens: increment(1) } } }, { merge:true });
-    }catch(e){}
+      let data = {};
+      try{ const snap = await getDoc(ANALYTICS_DOC); data = snap.exists() ? snap.data() : {}; }catch(e){}
+      const fitStats = data.fitStats || {};
+      const entry = fitStats[fit.id] || { title: fit.title, opens: 0, clicks: 0 };
+      entry.title = fit.title; // keep title fresh in case it was renamed
+      entry.opens = entry.opens || 0;
+      entry.clicks = entry.clicks || 0;
+      entry[field] = (entry[field] || 0) + 1;
+      const patch = { fitStats: { [fit.id]: entry } };
+      if(field === 'clicks') patch.totalClicks = increment(1);
+      await setDoc(ANALYTICS_DOC, patch, { merge:true });
+    }catch(e){ /* never block */ }
   }
-  async function trackClick(fit, itemName){
-    try{
-      await setDoc(ANALYTICS_DOC, {
-        totalClicks: increment(1),
-        fitStats: { [fit.id]: { title: fit.title, clicks: increment(1) } }
-      }, { merge:true });
-    }catch(e){}
-  }
+  function trackOpen(fit){ bumpFitStat(fit, 'opens'); }
+  function trackClick(fit){ bumpFitStat(fit, 'clicks'); }
 
   async function loadFits(){
     // 1) instant paint from local cache if we have one (kills the blank-loading wait)
@@ -686,7 +692,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       `;
       const buyLink = row.querySelector('.item-buy');
       if(buyLink && !isAdmin){
-        buyLink.addEventListener('click', ()=> trackClick(fit, item.name));
+        buyLink.addEventListener('click', ()=> trackClick(fit));
       }
       list.appendChild(row);
     });
