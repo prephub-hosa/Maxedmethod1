@@ -231,10 +231,90 @@
   .mini-del{border-color:var(--danger);color:var(--danger);}
   .mini-del:hover{background:var(--danger);color:var(--bg);}
   .subs-box{width:100%;padding:10px 12px;border:1px solid var(--line);background:var(--bg-2);color:var(--text-soft);font-family:var(--font-mono);font-size:12px;border-radius:8px;resize:vertical;}
+
+  /* ---- Shadow King intro ---- */
+  .intro-overlay{position:fixed;inset:0;z-index:200;background:#0C0C0B;display:flex;align-items:center;justify-content:center;transition:opacity .8s ease;}
+  .intro-overlay.done{opacity:0;pointer-events:none;}
+  .intro-inner{text-align:center;position:relative;}
+  .intro-king{width:120px;height:auto;filter:drop-shadow(0 0 40px rgba(0,0,0,.9));opacity:0;transform:translateY(20px) scale(.94);animation:king-rise 2s cubic-bezier(.16,1,.3,1) .2s forwards;}
+  @keyframes king-rise{0%{opacity:0;transform:translateY(30px) scale(.9);filter:blur(8px) drop-shadow(0 0 0 rgba(0,0,0,0));}60%{opacity:1;filter:blur(0) drop-shadow(0 0 40px rgba(0,0,0,.9));}100%{opacity:1;transform:translateY(0) scale(1);}}
+  .intro-word{font-family:var(--font-mono);font-weight:700;font-size:15px;letter-spacing:.5em;color:var(--text);margin-top:26px;opacity:0;animation:word-emerge 1.4s ease 1s forwards;padding-left:.5em;}
+  @keyframes word-emerge{from{opacity:0;letter-spacing:.9em;filter:blur(6px);}to{opacity:1;letter-spacing:.5em;filter:blur(0);}}
+  .intro-tag{font-family:var(--font-body);font-size:12px;color:var(--text-dim);margin-top:12px;opacity:0;animation:fade-in-dark 1.2s ease 1.7s forwards;font-style:italic;}
+
+  /* ---- Fit of the Day ---- */
+  .fotd{margin:8px 28px 24px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--bg-2);display:grid;grid-template-columns:1fr 1fr;cursor:pointer;position:relative;}
+  @media (max-width:680px){.fotd{grid-template-columns:1fr;}}
+  .fotd-img{position:relative;min-height:360px;background:var(--surface);overflow:hidden;}
+  @media (max-width:680px){.fotd-img{min-height:0;aspect-ratio:4/5;}}
+  .fotd-img img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;transition:transform 8s ease;}
+  .fotd:hover .fotd-img img{transform:scale(1.06);}
+  .fotd-body{padding:32px 30px;display:flex;flex-direction:column;justify-content:center;}
+  .fotd-kicker{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--stone-dark,#C9A15A);color:#C9A15A;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .fotd-kicker::before{content:"★";}
+  .fotd-title{font-family:var(--font-display);font-weight:800;font-size:34px;line-height:1;letter-spacing:-.03em;margin:0 0 10px;}
+  .fotd-meta{font-family:var(--font-mono);font-size:11px;color:var(--text-soft);margin-bottom:22px;}
+  .fotd-cta{align-self:flex-start;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--text);color:var(--bg);border:none;padding:12px 22px;border-radius:100px;transition:transform .15s;}
+  .fotd-cta:hover{transform:translateX(4px);}
+
+  /* ---- Trending badge ---- */
+  .trending-badge{position:absolute;top:10px;left:10px;z-index:3;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;background:#C9A15A;color:#0C0C0B;padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px;}
+  .new-badge + .trending-badge, .trending-badge.stacked{top:38px;}
+
+  /* ---- Roulette button ---- */
+  .roulette-btn{display:inline-flex;align-items:center;gap:10px;margin:0 0 4px;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--surface-2);color:var(--text);border:1px solid var(--line);padding:11px 20px;border-radius:100px;transition:background .15s, transform .15s;}
+  .roulette-btn:hover{background:var(--text);color:var(--bg);}
+  .roulette-btn.spinning{pointer-events:none;}
+  .roulette-dice{display:inline-block;transition:transform .1s;}
+  .roulette-btn.spinning .roulette-dice{animation:dice-spin .5s linear infinite;}
+  @keyframes dice-spin{to{transform:rotate(360deg);}}
+  .roulette-row{display:flex;align-items:center;gap:14px;padding:0 28px 8px;flex-wrap:wrap;}
+
+  /* ---- Fit rating (upvote only) ---- */
+  .fit-rate{position:absolute;bottom:10px;left:10px;z-index:3;display:flex;align-items:center;gap:6px;background:rgba(12,12,11,.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:100px;padding:5px 11px;opacity:0;transform:translateY(6px);transition:opacity .25s, transform .25s, background .15s;}
+  .fit-card:hover .fit-rate{opacity:1;transform:translateY(0);}
+  .fit-rate:hover{background:rgba(12,12,11,.92);}
+  .fit-rate.rated{background:rgba(201,161,90,.22);border-color:rgba(201,161,90,.5);}
+  .fit-rate .flame{font-size:13px;line-height:1;transition:transform .2s;}
+  .fit-rate:hover .flame{transform:scale(1.2);}
+  .fit-rate .rcount{font-family:var(--font-mono);font-size:11px;color:#fff;font-weight:700;}
+
+  /* ---- Wishlist heart ---- */
+  .fit-heart{position:absolute;bottom:10px;right:10px;z-index:3;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(12,12,11,.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:50%;font-size:14px;opacity:0;transform:translateY(6px);transition:opacity .25s, transform .25s, background .15s;color:#fff;}
+  .fit-card:hover .fit-heart{opacity:1;transform:translateY(0);}
+  .fit-heart:hover{background:rgba(12,12,11,.92);}
+  .fit-heart.saved{background:#fff;color:#E0245E;opacity:1;transform:translateY(0);}
+  .saved-toggle{background:none;border:none;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);padding:11px 0;transition:color .15s;display:inline-flex;align-items:center;gap:7px;}
+  .saved-toggle:hover{color:var(--text);}
+  .saved-toggle.active{color:#E0245E;}
+
+  /* ---- Shop whole fit button ---- */
+  .shop-all-wrap{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);}
+  .shop-all-btn{width:100%;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--text);color:var(--bg);border:none;padding:15px;border-radius:100px;transition:transform .15s, background .15s;font-weight:700;}
+  .shop-all-btn:hover{transform:translateY(-2px);}
+  .shop-all-note{font-size:11px;color:var(--text-dim);text-align:center;margin-top:10px;line-height:1.5;}
 </style>
 
 </head>
 <body>
+<div id="introOverlay" class="intro-overlay">
+  <div class="intro-inner">
+    <svg class="intro-king" viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <radialGradient id="kingGlow" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#2a2a26"/>
+          <stop offset="100%" stop-color="#0C0C0B"/>
+        </radialGradient>
+      </defs>
+      <!-- silhouette: crowned figure emerging -->
+      <path fill="#000" d="M100 44c-16 0-28 12-28 28 0 10 5 19 13 24-14 6-25 18-30 34-4 12-6 40-6 62 0 8 4 14 10 16h82c6-2 10-8 10-16 0-22-2-50-6-62-5-16-16-28-30-34 8-5 13-14 13-24 0-16-12-28-28-28z"/>
+      <!-- crown -->
+      <path fill="#000" d="M74 40l6-20 8 12 12-18 12 18 8-12 6 20z"/>
+    </svg>
+    <div class="intro-word">MAXEDMETHOD</div>
+    <div class="intro-tag">emerging from the shadows</div>
+  </div>
+</div>
 <div id="app">
   <div class="topbar">
     <div class="wordmark">MAXEDMETHOD</div>
@@ -260,6 +340,11 @@
     </div>
     <div class="error-text" id="emailError" style="display:none;"></div>
     <div class="email-success" id="emailSuccess" style="display:none;">You're on the list. 🖤</div>
+  </div>
+  <div id="fotdContainer"></div>
+  <div class="roulette-row">
+    <button class="roulette-btn" id="rouletteBtn"><span class="roulette-dice">🎲</span> Surprise me</button>
+    <button class="saved-toggle" id="savedToggle">♡ Saved <span id="savedCount"></span></button>
   </div>
   <div class="tabbar">
     <div class="tabs">
@@ -423,6 +508,7 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
 const ANALYTICS_DOC = doc(db, "maxedmethod", "analytics");
 const REVIEWS_DOC = doc(db, "maxedmethod", "reviews");
 const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
+const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
 
 (function(){
   const ADMIN_PASS = "\\\\\\"; // change this line to set your own passcode — this only gates the UI, see note in chat
@@ -433,6 +519,13 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   let editingId = null; // id of fit currently being edited, null = new
   let itemDraft = [];
   let activeCat = 'men'; // which tab is showing
+  let ratings = {};           // { fitId: count } from Firebase
+  let myRatings = {};         // { fitId: true } this browser has upvoted
+  let wishlist = {};          // { fitId: true } saved in this browser
+  let analyticsCache = null;  // opens data for trending calc
+  let showSaved = false;      // saved-only view toggle
+  try{ myRatings = JSON.parse(localStorage.getItem('mm-my-ratings')||'{}'); }catch(e){}
+  try{ wishlist = JSON.parse(localStorage.getItem('mm-wishlist')||'{}'); }catch(e){}
 
   // fits without a cat are treated as men's (preserves everything built before tabs existed)
   function catOf(fit){ return fit.cat || 'men'; }
@@ -566,7 +659,11 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   }
 
   function render(){
-    const filtered = getFiltered();
+    let filtered = getFiltered();
+    // saved-only view
+    if(showSaved){
+      filtered = filtered.filter(e => wishlist[e.f.id]);
+    }
     const countEl = document.getElementById('fitCount');
     if(countEl) animateCount(countEl, filtered.length);
     // sync tab active states
@@ -574,6 +671,10 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 
     if(filtered.length === 0){
       const label = activeCat === 'women' ? "Women's" : "Men's";
+      if(showSaved){
+        gridArea.innerHTML = `<div class="empty-state"><h2 class="title">No saved fits</h2><p>Tap the ♡ on any fit to save it here for later.</p></div>`;
+        return;
+      }
       if(isAdmin){
         gridArea.innerHTML = `<div class="empty-state"><h2 class="title">No ${activeCat} fits yet</h2><p>Add your first ${label} look below, or use Bulk Import.</p><button class="btn btn-primary" id="emptyAddBtn" style="margin-top:20px;">+ Add ${label} Fit</button></div>`;
         const eb = document.getElementById('emptyAddBtn');
@@ -588,6 +689,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     // determine which fits count as "new": the 3 most recently created in this category
     const withTs = filtered.filter(e => e.f.created).map(e => e.f.created).sort((a,b)=>b-a);
     const newThreshold = withTs.length ? withTs[Math.min(2, withTs.length-1)] : Infinity;
+    const trendingId = getTrendingId();
     filtered.forEach((entry, i) => {
       const fit = entry.f;
       const card = document.createElement('div');
@@ -597,14 +699,23 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       if(isAdmin) card.setAttribute('draggable', 'true');
       const itemCount = (fit.items||[]).length;
       const isNew = fit.created && fit.created >= newThreshold;
+      const isTrending = !isAdmin && fit.id === trendingId;
+      const rCount = ratings[fit.id] || 0;
+      const iRated = myRatings[fit.id];
+      const saved = wishlist[fit.id];
       card.innerHTML = `
         <img class="fit-cover" src="${escapeAttr(fit.cover)}" alt="${escapeAttr(fit.title)}" onerror="this.style.background='#201F1D'">
         ${isNew && !isAdmin ? '<div class="new-badge">NEW</div>' : ''}
+        ${isTrending ? `<div class="trending-badge ${isNew?'stacked':''}">🔥 TRENDING</div>` : ''}
         <div class="fit-card-footer">
           <span class="fit-tag">FIT ${String(i+1).padStart(2,'0')}</span>
           <h3 class="fit-title">${escapeHtml(fit.title)}</h3>
           <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →</div>
         </div>
+        ${!isAdmin ? `
+        <button class="fit-rate ${iRated?'rated':''}" data-rate="${fit.id}" title="${iRated?'You liked this':'Like this fit'}"><span class="flame">🔥</span><span class="rcount">${rCount}</span></button>
+        <button class="fit-heart ${saved?'saved':''}" data-heart="${fit.id}" title="${saved?'Saved':'Save for later'}">${saved?'♥':'♡'}</button>
+        ` : ''}
         ${isAdmin ? `
         <div class="drag-hint" title="Drag to reorder">⠿ drag</div>
         <div class="move-controls">
@@ -620,10 +731,22 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         if(e.target.closest('.admin-controls')) return;
         if(e.target.closest('.move-controls')) return;
         if(e.target.closest('.drag-hint')) return;
+        if(e.target.closest('.fit-rate')) return;
+        if(e.target.closest('.fit-heart')) return;
         openDetail(fit);
       });
       grid.appendChild(card);
     });
+
+    // wire rating + heart (public)
+    if(!isAdmin){
+      grid.querySelectorAll('[data-rate]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{ e.stopPropagation(); rateFit(btn.getAttribute('data-rate')); });
+      });
+      grid.querySelectorAll('[data-heart]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleWishlist(btn.getAttribute('data-heart')); });
+      });
+    }
 
     if(isAdmin){
       grid.querySelectorAll('[data-edit]').forEach(btn=>{
@@ -714,6 +837,25 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       }
       list.appendChild(row);
     });
+    // "Shop the whole fit" button — opens every product link at once
+    const items = (fit.items||[]).filter(it=>it.url);
+    if(items.length > 1){
+      const wrap = document.createElement('div');
+      wrap.className = 'shop-all-wrap';
+      wrap.innerHTML = `
+        <button class="shop-all-btn" id="shopAllBtn">Shop the whole fit — ${items.length} pieces</button>
+        <div class="shop-all-note">Opens each item in a new tab. Your browser may ask to allow multiple tabs.</div>
+      `;
+      list.appendChild(wrap);
+      wrap.querySelector('#shopAllBtn').addEventListener('click', ()=>{
+        const ok = confirm(`This opens all ${items.length} items in separate tabs. Your browser may ask you to allow pop-ups — tap allow to see the full fit. Continue?`);
+        if(!ok) return;
+        items.forEach((it, idx)=>{
+          setTimeout(()=> window.open(it.url, '_blank', 'noopener'), idx * 250);
+        });
+        if(!isAdmin) trackClick(fit);
+      });
+    }
     if(!isAdmin) trackOpen(fit);
     detailOverlay.classList.add('open');
     // lock the background so touch-scroll stays inside the panel, not the homepage
@@ -1226,9 +1368,142 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     });
   });
 
+  // ---------- intro animation dismissal ----------
+  (function initIntro(){
+    const intro = document.getElementById('introOverlay');
+    if(!intro) return;
+    // if they've seen it this session, skip fast
+    if(sessionStorage.getItem('mm-intro-seen')){
+      intro.remove();
+      return;
+    }
+    sessionStorage.setItem('mm-intro-seen','1');
+    setTimeout(()=>{
+      intro.classList.add('done');
+      setTimeout(()=> intro.remove(), 900);
+    }, 3200);
+    // let them tap to skip
+    intro.addEventListener('click', ()=>{
+      intro.classList.add('done');
+      setTimeout(()=> intro.remove(), 900);
+    });
+  })();
+
+  // ---------- ratings ----------
+  async function loadRatings(){
+    try{
+      const snap = await getDoc(RATINGS_DOC);
+      ratings = snap.exists() ? (snap.data().counts || {}) : {};
+    }catch(e){ ratings = {}; }
+  }
+  async function rateFit(fitId){
+    if(myRatings[fitId]) return; // one upvote per browser
+    myRatings[fitId] = true;
+    ratings[fitId] = (ratings[fitId]||0) + 1;
+    try{ localStorage.setItem('mm-my-ratings', JSON.stringify(myRatings)); }catch(e){}
+    render();
+    try{
+      const snap = await getDoc(RATINGS_DOC);
+      const counts = snap.exists() ? (snap.data().counts||{}) : {};
+      counts[fitId] = (counts[fitId]||0) + 1;
+      await setDoc(RATINGS_DOC, { counts }, { merge:true });
+    }catch(e){}
+  }
+
+  // ---------- wishlist ----------
+  function toggleWishlist(fitId){
+    if(wishlist[fitId]) delete wishlist[fitId];
+    else wishlist[fitId] = true;
+    try{ localStorage.setItem('mm-wishlist', JSON.stringify(wishlist)); }catch(e){}
+    updateSavedCount();
+    render();
+  }
+  function updateSavedCount(){
+    const n = Object.keys(wishlist).length;
+    const el = document.getElementById('savedCount');
+    if(el) el.textContent = n ? '('+n+')' : '';
+    const toggle = document.getElementById('savedToggle');
+    if(toggle) toggle.classList.toggle('active', showSaved);
+  }
+
+  // ---------- trending (most opens) ----------
+  function getTrendingId(){
+    if(!analyticsCache || !analyticsCache.fitStats) return null;
+    const fs = analyticsCache.fitStats;
+    let topId = null, topOpens = 0;
+    Object.keys(fs).forEach(id=>{
+      const o = fs[id].opens || 0;
+      if(o > topOpens){ topOpens = o; topId = id; }
+    });
+    return topOpens >= 3 ? topId : null; // needs a little traction to earn the tag
+  }
+
+  // ---------- Fit of the Day (same for everyone, changes daily) ----------
+  function getFotd(){
+    if(!fits.length) return null;
+    // seed from date so it's stable per calendar day
+    const today = new Date();
+    const seed = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
+    const idx = seed % fits.length;
+    return fits[idx];
+  }
+  function renderFotd(){
+    const c = document.getElementById('fotdContainer');
+    if(!c) return;
+    if(showSaved){ c.innerHTML=''; return; }
+    const fit = getFotd();
+    if(!fit){ c.innerHTML=''; return; }
+    const itemCount = (fit.items||[]).length;
+    c.innerHTML = `
+      <div class="fotd">
+        <div class="fotd-img"><img src="${escapeAttr(fit.cover)}" alt="${escapeAttr(fit.title)}" onerror="this.style.background='#201F1D'"></div>
+        <div class="fotd-body">
+          <div class="fotd-kicker">Fit of the Day</div>
+          <h2 class="fotd-title">${escapeHtml(fit.title)}</h2>
+          <div class="fotd-meta">${itemCount} ${itemCount===1?'piece':'pieces'} · fully shoppable</div>
+          <button class="fotd-cta">Shop this look →</button>
+        </div>
+      </div>`;
+    c.querySelector('.fotd').addEventListener('click', ()=> openDetail(fit));
+  }
+
+  // ---------- roulette ----------
+  document.getElementById('rouletteBtn').addEventListener('click', ()=>{
+    const btn = document.getElementById('rouletteBtn');
+    const pool = getFiltered().map(e=>e.f);
+    if(!pool.length) return;
+    btn.classList.add('spinning');
+    let flips = 0;
+    const maxFlips = 12;
+    const interval = setInterval(()=>{
+      flips++;
+      if(flips >= maxFlips){
+        clearInterval(interval);
+        btn.classList.remove('spinning');
+        const pick = pool[Math.floor(Math.random()*pool.length)];
+        openDetail(pick);
+      }
+    }, 70);
+  });
+
+  // ---------- saved view toggle ----------
+  document.getElementById('savedToggle').addEventListener('click', ()=>{
+    showSaved = !showSaved;
+    updateSavedCount();
+    renderFotd();
+    render();
+  });
+
+  // ---------- intro / boot ----------
   trackVisit();
   loadPublicReviews();
-  loadFits();
+  (async ()=>{
+    await loadRatings();
+    try{ const snap = await getDoc(ANALYTICS_DOC); analyticsCache = snap.exists()?snap.data():{}; }catch(e){ analyticsCache = {}; }
+    await loadFits();
+    renderFotd();
+    updateSavedCount();
+  })();
 })();
 </script>
 </body>
