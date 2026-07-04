@@ -247,7 +247,7 @@
 
   /* ---- Squad banner ---- */
   .squad-banner{display:flex;align-items:flex-end;justify-content:center;gap:0;background:linear-gradient(180deg,#0C0C0B 0%,#161513 100%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:16px 0 8px;padding:0;height:440px;overflow:hidden;position:relative;}
-  .squad-model{height:100%;width:auto;object-fit:contain;object-position:bottom;margin:0 -34px;opacity:0;transform:translateY(100%);filter:drop-shadow(0 10px 30px rgba(0,0,0,.55));}
+  .squad-model{height:100%;width:auto;object-fit:contain;object-position:bottom;margin:0 -90px;opacity:0;transform:translateY(100%);filter:drop-shadow(0 10px 30px rgba(0,0,0,.55));}
   /* pyramid stacking: middle frontmost, sides tuck behind toward center */
   .squad-model[data-i="0"]{z-index:1;}
   .squad-model[data-i="1"]{z-index:2;}
@@ -266,7 +266,7 @@
   }
   @media (max-width:680px){
     .squad-banner{height:280px;}
-    .squad-model{margin:0 -22px;}
+    .squad-model{margin:0 -58px;}
   }
 
   /* ---- Roulette button ---- */
@@ -1389,15 +1389,23 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       void banner.offsetWidth; // force reflow so the animation restarts
       banner.classList.add('play');
     }
-    // play on first load (slight delay so it's not competing with the intro)
-    setTimeout(play, 300);
+    // wait for the intro to finish before playing, so people actually see it.
+    // if the intro was already seen this session, it's gone — play right away.
+    if(sessionStorage.getItem('mm-intro-seen')){
+      setTimeout(play, 250);
+    } else {
+      // the intro dispatches 'mm-intro-done' when it fades out
+      window.addEventListener('mm-intro-done', ()=> setTimeout(play, 200), { once:true });
+      // safety fallback in case the event never fires (e.g. intro errored)
+      setTimeout(()=>{ if(!banner.classList.contains('play')) play(); }, 6000);
+    }
     // replay on hover, but not while an animation is mid-flight
     let cooling = false;
     banner.addEventListener('mouseenter', ()=>{
       if(cooling) return;
       cooling = true;
       play();
-      setTimeout(()=>{ cooling = false; }, 1500);
+      setTimeout(()=>{ cooling = false; }, 1800);
     });
   })();
 
@@ -1445,6 +1453,8 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       if(finished) return; finished = true;
       if(raf) cancelAnimationFrame(raf);
       intro.classList.add('done');
+      // tell the squad banner the stage is clear
+      window.dispatchEvent(new CustomEvent('mm-intro-done'));
       setTimeout(()=> intro.remove(), 900);
     }
     skipBtn.addEventListener('click', finish);
