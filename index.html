@@ -233,14 +233,17 @@
   .subs-box{width:100%;padding:10px 12px;border:1px solid var(--line);background:var(--bg-2);color:var(--text-soft);font-family:var(--font-mono);font-size:12px;border-radius:8px;resize:vertical;}
 
   /* ---- Shadow King intro ---- */
-  .intro-overlay{position:fixed;inset:0;z-index:200;background:#0C0C0B;display:flex;align-items:center;justify-content:center;transition:opacity .8s ease;}
+  .intro-overlay{position:fixed;inset:0;z-index:200;background:#0C0C0B;display:flex;align-items:center;justify-content:center;transition:opacity .8s ease;overflow:hidden;}
   .intro-overlay.done{opacity:0;pointer-events:none;}
-  .intro-inner{text-align:center;position:relative;}
-  .intro-king{width:120px;height:auto;filter:drop-shadow(0 0 40px rgba(0,0,0,.9));opacity:0;transform:translateY(20px) scale(.94);animation:king-rise 2s cubic-bezier(.16,1,.3,1) .2s forwards;}
-  @keyframes king-rise{0%{opacity:0;transform:translateY(30px) scale(.9);filter:blur(8px) drop-shadow(0 0 0 rgba(0,0,0,0));}60%{opacity:1;filter:blur(0) drop-shadow(0 0 40px rgba(0,0,0,.9));}100%{opacity:1;transform:translateY(0) scale(1);}}
-  .intro-word{font-family:var(--font-mono);font-weight:700;font-size:15px;letter-spacing:.5em;color:var(--text);margin-top:26px;opacity:0;animation:word-emerge 1.4s ease 1s forwards;padding-left:.5em;}
-  @keyframes word-emerge{from{opacity:0;letter-spacing:.9em;filter:blur(6px);}to{opacity:1;letter-spacing:.5em;filter:blur(0);}}
-  .intro-tag{font-family:var(--font-body);font-size:12px;color:var(--text-dim);margin-top:12px;opacity:0;animation:fade-in-dark 1.2s ease 1.7s forwards;font-style:italic;}
+  .intro-inner{text-align:center;position:relative;padding:0 20px;}
+  .intro-word{font-family:var(--font-display);font-weight:800;font-size:clamp(36px,10vw,92px);letter-spacing:-.03em;line-height:1;color:var(--text);white-space:nowrap;animation:king-emerge 3s cubic-bezier(.16,1,.3,1) forwards;}
+  @keyframes king-emerge{
+    0%{opacity:0;transform:scale(1.14);filter:blur(24px);text-shadow:0 0 60px rgba(0,0,0,1);color:#151512;}
+    35%{opacity:1;filter:blur(4px);color:#3a3a34;}
+    60%{opacity:1;transform:scale(1);filter:blur(0);color:var(--text);text-shadow:0 0 40px rgba(245,243,237,.15);}
+    80%{opacity:1;filter:blur(0);}
+    100%{opacity:0;transform:scale(.99);filter:blur(2px);}
+  }
 
   /* ---- Fit of the Day ---- */
   .fotd{margin:8px 28px 24px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--bg-2);display:grid;grid-template-columns:1fr 1fr;cursor:pointer;position:relative;}
@@ -299,20 +302,7 @@
 <body>
 <div id="introOverlay" class="intro-overlay">
   <div class="intro-inner">
-    <svg class="intro-king" viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <radialGradient id="kingGlow" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stop-color="#2a2a26"/>
-          <stop offset="100%" stop-color="#0C0C0B"/>
-        </radialGradient>
-      </defs>
-      <!-- silhouette: crowned figure emerging -->
-      <path fill="#000" d="M100 44c-16 0-28 12-28 28 0 10 5 19 13 24-14 6-25 18-30 34-4 12-6 40-6 62 0 8 4 14 10 16h82c6-2 10-8 10-16 0-22-2-50-6-62-5-16-16-28-30-34 8-5 13-14 13-24 0-16-12-28-28-28z"/>
-      <!-- crown -->
-      <path fill="#000" d="M74 40l6-20 8 12 12-18 12 18 8-12 6 20z"/>
-    </svg>
     <div class="intro-word">MAXEDMETHOD</div>
-    <div class="intro-tag">emerging from the shadows</div>
   </div>
 </div>
 <div id="app">
@@ -1381,7 +1371,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     setTimeout(()=>{
       intro.classList.add('done');
       setTimeout(()=> intro.remove(), 900);
-    }, 3200);
+    }, 2900);
     // let them tap to skip
     intro.addEventListener('click', ()=>{
       intro.classList.add('done');
