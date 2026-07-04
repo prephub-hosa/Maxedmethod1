@@ -1369,7 +1369,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     let W, H, dpr = Math.min(window.devicePixelRatio||1, 2);
     let particles = [];
     let raf = null, startTime = null, finished = false;
-    let imgReady = false, silBox = null, wordOnly = false;
+    let imgReady = false, silBox = null, wordOnly = false, wordFontSize = 60;
 
     // timeline (ms)
     const T_HOLD = 1000;     // solid sharp image holds
@@ -1412,13 +1412,13 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       octx.drawImage(img, silBox.x, silBox.y, silBox.w, silBox.h);
       const sil = octx.getImageData(0,0,W,H).data;
       const silPts = [];
-      const step = 3;
+      const step = 2;
       for(let y=0;y<H;y+=step){
         for(let x=0;x<W;x+=step){
           const idx=(y*W+x)*4;
           if(sil[idx+3]<50) continue;
           const lum=(sil[idx]+sil[idx+1]+sil[idx+2])/3;
-          if(lum<120) silPts.push({x,y});
+          if(lum<130) silPts.push({x,y});
         }
       }
       // word points
@@ -1428,17 +1428,19 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       octx.font=`800 ${fs}px "Bricolage Grotesque", sans-serif`;
       octx.textAlign='center'; octx.textBaseline='middle';
       while(octx.measureText('MAXEDMETHOD').width>W*0.88 && fs>10){ fs-=2; octx.font=`800 ${fs}px "Bricolage Grotesque", sans-serif`; }
+      wordFontSize = fs;
       octx.fillText('MAXEDMETHOD', W/2, H/2);
       const wd = octx.getImageData(0,0,W,H).data;
       const wordPts=[];
-      for(let y=0;y<H;y+=step){
-        for(let x=0;x<W;x+=step){
+      for(let y=0;y<H;y+=2){
+        for(let x=0;x<W;x+=2){
           const idx=(y*W+x)*4;
           if(wd[idx+3]>60) wordPts.push({x,y});
         }
       }
       for(let i=wordPts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [wordPts[i],wordPts[j]]=[wordPts[j],wordPts[i]]; }
-      const n = Math.min(silPts.length, Math.max(wordPts.length, 3000));
+      // use MANY particles so the entire figure shatters (not just half)
+      const n = Math.max(silPts.length, wordPts.length);
       particles=[];
       for(let i=0;i<n;i++){
         const s=silPts[i % silPts.length]; const w=wordPts[i % wordPts.length];
@@ -1489,7 +1491,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
           ctx.fillRect(px, py, p.size, p.size);
         }
       } else if(t < T_HOLD + T_DISPERSE + T_REFORM){
-        // PHASE 3: particles migrate into the word
+        // PHASE 3: particles migrate into the word, solid text fades in underneath
         const k = easeInOut((t - T_HOLD - T_DISPERSE)/T_REFORM);
         for(const p of particles){
           const fromX=p.sx+p.dx, fromY=p.sy+p.dy;
@@ -1497,17 +1499,30 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
           px += Math.sin(p.drift + t*0.004)*(7*(1-k));
           py += Math.cos(p.drift + t*0.004)*(7*(1-k));
           const c = Math.round(120 + 135*k);
-          ctx.fillStyle = `rgb(${c},${c},${c})`;
+          ctx.fillStyle = `rgba(${c},${c},${c},${1 - k*0.5})`;
           ctx.fillRect(px, py, p.size, p.size);
         }
+        // crisp solid text fades in over the last 40% of the reform
+        if(k > 0.6){
+          const ta = (k - 0.6)/0.4;
+          drawSolidWord(ta);
+        }
       } else {
-        // PHASE 4: settled white word on black
-        ctx.fillStyle = 'rgb(245,243,237)';
-        for(const p of particles){ ctx.fillRect(p.wx, p.wy, p.size, p.size); }
+        // PHASE 4: crisp solid white word on black
+        drawSolidWord(1);
       }
 
       if(t >= T_TOTAL){ setTimeout(finish, 500); return; }
       raf = requestAnimationFrame(frame);
+    }
+
+    function drawSolidWord(alpha){
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgb(245,243,237)';
+      ctx.font = `800 ${wordFontSize}px "Bricolage Grotesque", sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('MAXEDMETHOD', W/2, H/2);
+      ctx.globalAlpha = 1;
     }
 
     function startWordOnly(){
