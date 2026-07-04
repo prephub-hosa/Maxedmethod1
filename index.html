@@ -89,13 +89,9 @@
   .badge-stack{position:absolute;top:10px;left:10px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:5px;max-width:calc(100% - 20px);}
   .tag{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:4px 8px;border-radius:4px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;line-height:1;}
   .tag-new{background:var(--text);color:var(--bg);}
-  .tag-trending{background:#C9A15A;color:#0C0C0B;}
+  .tag-trending{background:#5B7C99;color:#fff;}
   .tag-hot{background:#D9534F;color:#fff;}
-  .tag-staff{background:#5B7C99;color:#fff;}
-  .tag-limited{background:#0C0C0B;color:#fff;border:1px solid rgba(255,255,255,.4);}
-  .tag-fire{background:#B4884D;color:#0C0C0B;}
-  .tag-back{background:#6B8E6B;color:#fff;}
-  .tag-clean{background:#EDEAE2;color:#0C0C0B;}
+  .tag-top{background:#C9A15A;color:#0C0C0B;}
 
   .admin-controls{position:absolute;top:10px;right:10px;display:flex;gap:6px;z-index:3;}
   .admin-icon-btn{width:30px;height:30px;background:rgba(12,12,11,.72);backdrop-filter:blur(6px);color:#fff;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:6px;transition:background .15s;}
@@ -664,6 +660,18 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     const withTs = filtered.filter(e => e.f.created).map(e => e.f.created).sort((a,b)=>b-a);
     const newThreshold = withTs.length ? withTs[Math.min(1, withTs.length-1)] : Infinity;
     const trendingId = getTrendingId();
+    // HOT: one fit per section, rotates every 2 days (stable for all visitors, adapts as fits are added)
+    let hotId = null;
+    if(filtered.length){
+      const twoDayPeriod = Math.floor(Date.now() / (1000*60*60*24*2));
+      hotId = filtered[twoDayPeriod % filtered.length].f.id;
+    }
+    // MOST UPVOTES: the fit in this section with the highest total rating
+    let mostUpvotedId = null, topVotes = -1;
+    filtered.forEach(e=>{
+      const v = displayRating(e.f.id);
+      if(v > topVotes){ topVotes = v; mostUpvotedId = e.f.id; }
+    });
     filtered.forEach((entry, i) => {
       const fit = entry.f;
       const card = document.createElement('div');
@@ -679,11 +687,11 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       const saved = wishlist[fit.id];
       // build the badge stack (never overlaps — flex column container)
       const badges = [];
-      if(isNew && !isAdmin) badges.push('<span class="tag tag-new">NEW</span>');
-      if(isTrending) badges.push('<span class="tag tag-trending">🔥 TRENDING</span>');
       if(!isAdmin){
-        const hype = hypeTagFor(fit.id);
-        if(hype) badges.push(hype);
+        if(fit.id === hotId) badges.push('<span class="tag tag-hot">🔥 HOT</span>');
+        if(fit.id === mostUpvotedId) badges.push('<span class="tag tag-top">⭐ MOST UPVOTES</span>');
+        if(isNew) badges.push('<span class="tag tag-new">NEW</span>');
+        if(isTrending) badges.push('<span class="tag tag-trending">📈 TRENDING</span>');
       }
       const badgeStack = badges.length ? `<div class="badge-stack">${badges.join('')}</div>` : '';
       card.innerHTML = `
@@ -1381,23 +1389,6 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
   }
   function displayRating(fitId){
     return seedFor(fitId) + (ratings[fitId] || 0);
-  }
-  // curated "hype" tags on SOME fits (not all) — stable per fit, to spark interest
-  const HYPE_TAGS = [
-    { cls:'tag-hot', label:'⚡ SELLING FAST' },
-    { cls:'tag-staff', label:'★ STAFF PICK' },
-    { cls:'tag-limited', label:'LIMITED' },
-    { cls:'tag-fire', label:'MOST WANTED' },
-    { cls:'tag-back', label:'BACK IN ROTATION' },
-    { cls:'tag-clean', label:'CERTIFIED CLEAN' }
-  ];
-  function hypeTagFor(fitId){
-    // hash the id → decide if this fit gets a hype tag (~40% of fits) and which one
-    let h = 0;
-    for(let i=0;i<fitId.length;i++){ h = (h*33 + fitId.charCodeAt(i)) >>> 0; }
-    if(h % 5 >= 2) return null; // ~40% of fits get one
-    const tag = HYPE_TAGS[h % HYPE_TAGS.length];
-    return `<span class="tag ${tag.cls}">${tag.label}</span>`;
   }
   async function loadRatings(){
     try{
