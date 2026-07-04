@@ -6,7 +6,7 @@
 <title>MaxedMethod — Shop The Fits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0C0C0B;
@@ -1372,10 +1372,10 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     let imgReady = false, silBox = null, wordOnly = false, wordFontSize = 60;
 
     // timeline (ms)
-    const T_HOLD = 1000;     // solid sharp image holds
-    const T_DISPERSE = 750;  // shatters into smoke
-    const T_REFORM = 950;    // particles migrate into the word
-    const T_SETTLE = 650;    // settle, bg fully black
+    const T_HOLD = 1000;     // solid sharp image holds ~1s
+    const T_DISPERSE = 650;  // shatters into smoke
+    const T_REFORM = 850;    // particles migrate into the word
+    const T_SETTLE = 500;    // settle, bg fully black
     const T_TOTAL = T_HOLD + T_DISPERSE + T_REFORM + T_SETTLE;
 
     function resize(){
@@ -1424,10 +1424,10 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       // word points
       octx.clearRect(0,0,W,H);
       octx.fillStyle='#000';
-      let fs=Math.min(W*0.11,120);
-      octx.font=`800 ${fs}px "Bricolage Grotesque", sans-serif`;
+      let fs=Math.min(W*0.13,150);
+      octx.font=`${fs}px "Anton", sans-serif`;
       octx.textAlign='center'; octx.textBaseline='middle';
-      while(octx.measureText('MAXEDMETHOD').width>W*0.88 && fs>10){ fs-=2; octx.font=`800 ${fs}px "Bricolage Grotesque", sans-serif`; }
+      while(octx.measureText('MAXEDMETHOD').width>W*0.9 && fs>10){ fs-=2; octx.font=`${fs}px "Anton", sans-serif`; }
       wordFontSize = fs;
       octx.fillText('MAXEDMETHOD', W/2, H/2);
       const wd = octx.getImageData(0,0,W,H).data;
@@ -1475,19 +1475,22 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
         if(!wordOnly){ ctx.globalAlpha = 1; ctx.drawImage(img, silBox.x, silBox.y, silBox.w, silBox.h); }
         else { for(const p of particles){ ctx.fillStyle='rgba(20,20,18,1)'; ctx.fillRect(p.wx,p.wy,p.size,p.size); } }
       } else if(t < T_HOLD + T_DISPERSE){
-        // PHASE 2: image fades as particles burst out of it
+        // PHASE 2: image stays sharp, then particles burst out of it
         const k = (t - T_HOLD)/T_DISPERSE;
+        const ek = easeIn(k);
+        // solid image fades out on a delay so the figure stays crisp until the burst is underway
         if(!wordOnly){
-          ctx.globalAlpha = Math.max(0, 1 - k*1.6);
+          ctx.globalAlpha = Math.max(0, 1 - Math.max(0,(k-0.15))/0.55);
           ctx.drawImage(img, silBox.x, silBox.y, silBox.w, silBox.h);
           ctx.globalAlpha = 1;
         }
-        const ek = easeIn(k);
+        // particles only become visible as they leave (opacity tracks how far they've moved)
         for(const p of particles){
           const px = p.sx + p.dx*ek;
           const py = p.sy + p.dy*ek;
-          const g = Math.round(20 + 120*k);
-          ctx.fillStyle = `rgba(${g},${g},${g-4},${1-k*0.3})`;
+          const g = Math.round(18 + 130*k);
+          const pAlpha = Math.min(1, ek*3); // invisible at rest, fades in as it moves
+          ctx.fillStyle = `rgba(${g},${g},${g-4},${pAlpha})`;
           ctx.fillRect(px, py, p.size, p.size);
         }
       } else if(t < T_HOLD + T_DISPERSE + T_REFORM){
@@ -1519,7 +1522,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     function drawSolidWord(alpha){
       ctx.globalAlpha = alpha;
       ctx.fillStyle = 'rgb(245,243,237)';
-      ctx.font = `800 ${wordFontSize}px "Bricolage Grotesque", sans-serif`;
+      ctx.font = `${wordFontSize}px "Anton", sans-serif`;
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.fillText('MAXEDMETHOD', W/2, H/2);
       ctx.globalAlpha = 1;
@@ -1531,10 +1534,10 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       computeSilBox && (silBox = {x:0,y:0,w:W,h:H});
       const off=document.createElement('canvas'); off.width=W; off.height=H;
       const octx=off.getContext('2d');
-      octx.fillStyle='#000'; let fs=Math.min(W*0.11,120);
-      octx.font=`800 ${fs}px "Bricolage Grotesque", sans-serif`;
+      octx.fillStyle='#000'; let fs=Math.min(W*0.13,150);
+      octx.font=`${fs}px "Anton", sans-serif`;
       octx.textAlign='center'; octx.textBaseline='middle';
-      while(octx.measureText('MAXEDMETHOD').width>W*0.88 && fs>10){ fs-=2; octx.font=`800 ${fs}px "Bricolage Grotesque", sans-serif`; }
+      while(octx.measureText('MAXEDMETHOD').width>W*0.9 && fs>10){ fs-=2; octx.font=`${fs}px "Anton", sans-serif`; }
       octx.fillText('MAXEDMETHOD', W/2, H/2);
       const wd=octx.getImageData(0,0,W,H).data; const wordPts=[];
       for(let y=0;y<H;y+=3){ for(let x=0;x<W;x+=3){ const idx=(y*W+x)*4; if(wd[idx+3]>60) wordPts.push({x,y}); } }
