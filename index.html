@@ -238,7 +238,7 @@
   .subs-box{width:100%;padding:10px 12px;border:1px solid var(--line);background:var(--bg-2);color:var(--text-soft);font-family:var(--font-mono);font-size:12px;border-radius:8px;resize:vertical;}
 
   /* ---- Intro (particle dispersal) ---- */
-  .intro-overlay{position:fixed;inset:0;z-index:200;background:#FFFFFF;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .9s ease;}
+  .intro-overlay{position:fixed;inset:0;z-index:200;background:#F5F3ED;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .9s ease;}
   .intro-overlay.done{opacity:0;pointer-events:none;}
   #introCanvas{display:block;width:100%;height:100%;}
   .intro-skip{position:absolute;bottom:24px;right:24px;font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.4);background:none;border:none;z-index:2;transition:color .3s;}
@@ -1372,8 +1372,8 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     let imgReady = false, silBox = null, wordOnly = false, wordFontSize = 60;
 
     // timeline (ms)
-    const T_FADEIN = 600;    // models fade into view
-    const T_HOLD = 550;      // brief hold once visible
+    const T_FADEIN = 550;    // models fade into view
+    const T_HOLD = 150;      // very brief beat, then disperse
     const T_DISPERSE = 1150; // slow drift into smoke (shadow aura)
     const T_REFORM = 950;    // particles migrate into the word
     const T_SETTLE = 500;    // settle, bg fully black
@@ -1466,7 +1466,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       // background: white until reform, then flip to near-black
       const flipStart = T_FADEIN + T_HOLD + T_DISPERSE + T_REFORM*0.4;
       let bgP = t>flipStart ? Math.min(1,(t-flipStart)/(T_TOTAL-flipStart)) : 0;
-      const bgR=Math.round(255+(12-255)*bgP), bgG=Math.round(255+(12-255)*bgP), bgB=Math.round(255+(11-255)*bgP);
+      const bgR=Math.round(245+(12-245)*bgP), bgG=Math.round(243+(12-243)*bgP), bgB=Math.round(237+(11-237)*bgP);
       ctx.fillStyle=`rgb(${bgR},${bgG},${bgB})`;
       ctx.fillRect(0,0,W,H);
       skipBtn.classList.toggle('on-dark', bgP>0.5);
