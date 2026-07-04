@@ -1359,23 +1359,23 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
   (function initIntro(){
     const intro = document.getElementById('introOverlay');
     if(!intro) return;
-    // seen this session? skip straight to site
     if(sessionStorage.getItem('mm-intro-seen')){ intro.remove(); return; }
     sessionStorage.setItem('mm-intro-seen','1');
 
-    const SILHOUETTE_URL = "https://i.imgur.com/tTUQyiu.png";
+    const SILHOUETTE_URL = "https://i.imgur.com/0HaRaKz.png";
     const canvas = document.getElementById('introCanvas');
     const skipBtn = document.getElementById('introSkip');
     const ctx = canvas.getContext('2d');
     let W, H, dpr = Math.min(window.devicePixelRatio||1, 2);
     let particles = [];
     let raf = null, startTime = null, finished = false;
+    let imgReady = false, silBox = null, wordOnly = false;
 
     // timeline (ms)
-    const T_HOLD = 900;      // hold on silhouette
-    const T_DISPERSE = 700;  // fly apart into smoke
-    const T_REFORM = 900;    // migrate into the word
-    const T_SETTLE = 700;    // settle + bg flips to black
+    const T_HOLD = 1000;     // solid sharp image holds
+    const T_DISPERSE = 750;  // shatters into smoke
+    const T_REFORM = 950;    // particles migrate into the word
+    const T_SETTLE = 650;    // settle, bg fully black
     const T_TOTAL = T_HOLD + T_DISPERSE + T_REFORM + T_SETTLE;
 
     function resize(){
@@ -1394,157 +1394,155 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     }
     skipBtn.addEventListener('click', finish);
 
-    // sample points from an offscreen render (silhouette dark pixels, and the word pixels)
-    function samplePoints(drawFn, targetCount, threshold, wantDark){
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    function computeSilBox(){
+      const scale = Math.min(W*0.62/img.width, H*0.84/img.height);
+      const dw = img.width*scale, dh = img.height*scale;
+      silBox = { x:(W-dw)/2, y:(H-dh)/2, w:dw, h:dh };
+    }
+
+    // build the particle field FROM the placed image (dark pixels), plus word targets
+    function buildParticles(){
       const off = document.createElement('canvas');
-      const scale = 1; off.width = Math.floor(W*scale); off.height = Math.floor(H*scale);
+      off.width = W; off.height = H;
       const octx = off.getContext('2d');
-      drawFn(octx, off.width, off.height);
-      const data = octx.getImageData(0,0,off.width,off.height).data;
-      const pts = [];
-      const step = 3; // denser sampling
-      for(let y=0;y<off.height;y+=step){
-        for(let x=0;x<off.width;x+=step){
-          const idx = (y*off.width + x)*4;
-          const a = data[idx+3];
-          if(a < 40) continue;
-          const lum = (data[idx]+data[idx+1]+data[idx+2])/3;
-          const isDark = lum < threshold;
-          if(wantDark ? isDark : !isDark){
-            pts.push({x:x/scale, y:y/scale});
-          }
+      // draw silhouette where it sits
+      octx.drawImage(img, silBox.x, silBox.y, silBox.w, silBox.h);
+      const sil = octx.getImageData(0,0,W,H).data;
+      const silPts = [];
+      const step = 3;
+      for(let y=0;y<H;y+=step){
+        for(let x=0;x<W;x+=step){
+          const idx=(y*W+x)*4;
+          if(sil[idx+3]<50) continue;
+          const lum=(sil[idx]+sil[idx+1]+sil[idx+2])/3;
+          if(lum<120) silPts.push({x,y});
         }
       }
-      // thin only if massively over target (keep density high)
-      if(pts.length > targetCount){
-        const out = [];
-        const stride = pts.length/targetCount;
-        for(let i=0;i<targetCount;i++) out.push(pts[Math.floor(i*stride)]);
-        return out;
-      }
-      return pts;
-    }
-
-    function drawWord(octx, w, h){
-      octx.clearRect(0,0,w,h);
-      octx.fillStyle = '#000';
-      let fs = Math.min(w*0.11, 120);
-      octx.font = `800 ${fs}px "Bricolage Grotesque", sans-serif`;
+      // word points
+      octx.clearRect(0,0,W,H);
+      octx.fillStyle='#000';
+      let fs=Math.min(W*0.11,120);
+      octx.font=`800 ${fs}px "Bricolage Grotesque", sans-serif`;
       octx.textAlign='center'; octx.textBaseline='middle';
-      // shrink to fit width
-      while(octx.measureText('MAXEDMETHOD').width > w*0.88 && fs > 10){
-        fs -= 2; octx.font = `800 ${fs}px "Bricolage Grotesque", sans-serif`;
+      while(octx.measureText('MAXEDMETHOD').width>W*0.88 && fs>10){ fs-=2; octx.font=`800 ${fs}px "Bricolage Grotesque", sans-serif`; }
+      octx.fillText('MAXEDMETHOD', W/2, H/2);
+      const wd = octx.getImageData(0,0,W,H).data;
+      const wordPts=[];
+      for(let y=0;y<H;y+=step){
+        for(let x=0;x<W;x+=step){
+          const idx=(y*W+x)*4;
+          if(wd[idx+3]>60) wordPts.push({x,y});
+        }
       }
-      octx.fillText('MAXEDMETHOD', w/2, h/2);
-    }
-
-    function buildParticles(silPts, wordPts){
-      const n = Math.min(silPts.length, wordPts.length);
-      // shuffle word points so migration looks organic
       for(let i=wordPts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [wordPts[i],wordPts[j]]=[wordPts[j],wordPts[i]]; }
-      particles = [];
+      const n = Math.min(silPts.length, Math.max(wordPts.length, 3000));
+      particles=[];
       for(let i=0;i<n;i++){
-        const s = silPts[i]; const w = wordPts[i % wordPts.length];
+        const s=silPts[i % silPts.length]; const w=wordPts[i % wordPts.length];
         particles.push({
-          sx:s.x, sy:s.y,      // silhouette home
-          wx:w.x, wy:w.y,      // word target
-          x:s.x, y:s.y,
-          // random dispersal velocity
-          dx:(Math.random()-0.5)*W*0.9,
-          dy:(Math.random()-0.5)*H*0.9,
-          size: 1.4 + Math.random()*1.8,
-          drift: Math.random()*Math.PI*2
+          sx:s.x, sy:s.y, wx:w.x, wy:w.y,
+          dx:(Math.random()-0.5)*W*1.0,
+          dy:(Math.random()-0.5)*H*1.0 - H*0.1,
+          size:1.3+Math.random()*1.6,
+          drift:Math.random()*Math.PI*2
         });
       }
     }
 
     const easeOut = t => 1 - Math.pow(1-t, 3);
+    const easeIn = t => t*t*t;
     const easeInOut = t => t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
 
     function frame(now){
       if(!startTime) startTime = now;
       const t = now - startTime;
-      // background flip: white → black during settle phase
-      const flipStart = T_HOLD + T_DISPERSE + T_REFORM*0.5;
-      let bgP = 0;
-      if(t > flipStart) bgP = Math.min(1, (t - flipStart)/(T_TOTAL - flipStart));
-      const bg = Math.round(255*(1-bgP)) ; // 255→0
-      // slightly warm black target (#0C0C0B)
-      const bgR = Math.round(255 + (12-255)*bgP), bgG = Math.round(255 + (12-255)*bgP), bgB = Math.round(255 + (11-255)*bgP);
-      ctx.fillStyle = `rgb(${bgR},${bgG},${bgB})`;
+
+      // background: white until reform, then flip to near-black
+      const flipStart = T_HOLD + T_DISPERSE + T_REFORM*0.4;
+      let bgP = t>flipStart ? Math.min(1,(t-flipStart)/(T_TOTAL-flipStart)) : 0;
+      const bgR=Math.round(255+(12-255)*bgP), bgG=Math.round(255+(12-255)*bgP), bgB=Math.round(255+(11-255)*bgP);
+      ctx.fillStyle=`rgb(${bgR},${bgG},${bgB})`;
       ctx.fillRect(0,0,W,H);
-      if(bgP > 0.5) skipBtn.classList.add('on-dark'); else skipBtn.classList.remove('on-dark');
+      skipBtn.classList.toggle('on-dark', bgP>0.5);
 
-      for(const p of particles){
-        let px, py, alpha=1, col;
-        if(t < T_HOLD){
-          px = p.sx; py = p.sy; col = '20,20,18'; // dark silhouette on white
-        } else if(t < T_HOLD + T_DISPERSE){
-          const k = easeOut((t - T_HOLD)/T_DISPERSE);
-          px = p.sx + p.dx*k;
-          py = p.sy + p.dy*k - (30*k); // slight upward smoke drift
-          // color fades from dark toward mid-grey as it becomes "smoke"
-          const g = Math.round(20 + 120*k);
-          col = `${g},${g},${g-4}`;
-        } else if(t < T_HOLD + T_DISPERSE + T_REFORM){
-          const k = easeInOut((t - T_HOLD - T_DISPERSE)/T_REFORM);
-          const fromX = p.sx + p.dx, fromY = p.sy + p.dy - 30;
-          px = fromX + (p.wx - fromX)*k;
-          py = fromY + (p.wy - fromY)*k;
-          px += Math.sin(p.drift + t*0.004)*(6*(1-k)); // organic wobble fading out
-          py += Math.cos(p.drift + t*0.004)*(6*(1-k));
-          // grey → white as it forms the word and bg darkens
-          const c = Math.round(140 + 115*k);
-          col = `${c},${c},${c}`;
-        } else {
-          px = p.wx; py = p.wy; col = '245,243,237';
+      if(t < T_HOLD){
+        // PHASE 1: solid sharp image (crisp, no dots)
+        if(!wordOnly){ ctx.globalAlpha = 1; ctx.drawImage(img, silBox.x, silBox.y, silBox.w, silBox.h); }
+        else { for(const p of particles){ ctx.fillStyle='rgba(20,20,18,1)'; ctx.fillRect(p.wx,p.wy,p.size,p.size); } }
+      } else if(t < T_HOLD + T_DISPERSE){
+        // PHASE 2: image fades as particles burst out of it
+        const k = (t - T_HOLD)/T_DISPERSE;
+        if(!wordOnly){
+          ctx.globalAlpha = Math.max(0, 1 - k*1.6);
+          ctx.drawImage(img, silBox.x, silBox.y, silBox.w, silBox.h);
+          ctx.globalAlpha = 1;
         }
-        ctx.fillStyle = `rgba(${col},${alpha})`;
-        ctx.fillRect(px, py, p.size, p.size);
+        const ek = easeIn(k);
+        for(const p of particles){
+          const px = p.sx + p.dx*ek;
+          const py = p.sy + p.dy*ek;
+          const g = Math.round(20 + 120*k);
+          ctx.fillStyle = `rgba(${g},${g},${g-4},${1-k*0.3})`;
+          ctx.fillRect(px, py, p.size, p.size);
+        }
+      } else if(t < T_HOLD + T_DISPERSE + T_REFORM){
+        // PHASE 3: particles migrate into the word
+        const k = easeInOut((t - T_HOLD - T_DISPERSE)/T_REFORM);
+        for(const p of particles){
+          const fromX=p.sx+p.dx, fromY=p.sy+p.dy;
+          let px=fromX+(p.wx-fromX)*k, py=fromY+(p.wy-fromY)*k;
+          px += Math.sin(p.drift + t*0.004)*(7*(1-k));
+          py += Math.cos(p.drift + t*0.004)*(7*(1-k));
+          const c = Math.round(120 + 135*k);
+          ctx.fillStyle = `rgb(${c},${c},${c})`;
+          ctx.fillRect(px, py, p.size, p.size);
+        }
+      } else {
+        // PHASE 4: settled white word on black
+        ctx.fillStyle = 'rgb(245,243,237)';
+        for(const p of particles){ ctx.fillRect(p.wx, p.wy, p.size, p.size); }
       }
 
-      if(t >= T_TOTAL){
-        // brief hold on the white word over black, then finish
-        setTimeout(finish, 550);
-        return;
-      }
+      if(t >= T_TOTAL){ setTimeout(finish, 500); return; }
       raf = requestAnimationFrame(frame);
     }
 
-    // load the silhouette, sample, and go. Fallback: if image fails, just show word.
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    let safety = setTimeout(()=>{ if(!startTime && !finished) startWithWordOnly(); }, 2500);
-
-    function startWithWordOnly(){
-      // no silhouette — spawn particles from screen edges into the word
-      const wordPts = samplePoints(drawWord, 6000, 128, true);
-      const silPts = wordPts.map(()=>({x:Math.random()*W, y:Math.random()*H}));
-      buildParticles(silPts, wordPts);
+    function startWordOnly(){
+      wordOnly = true;
+      // fallback: no image — particles fly in from random spots to form the word
+      computeSilBox && (silBox = {x:0,y:0,w:W,h:H});
+      const off=document.createElement('canvas'); off.width=W; off.height=H;
+      const octx=off.getContext('2d');
+      octx.fillStyle='#000'; let fs=Math.min(W*0.11,120);
+      octx.font=`800 ${fs}px "Bricolage Grotesque", sans-serif`;
+      octx.textAlign='center'; octx.textBaseline='middle';
+      while(octx.measureText('MAXEDMETHOD').width>W*0.88 && fs>10){ fs-=2; octx.font=`800 ${fs}px "Bricolage Grotesque", sans-serif`; }
+      octx.fillText('MAXEDMETHOD', W/2, H/2);
+      const wd=octx.getImageData(0,0,W,H).data; const wordPts=[];
+      for(let y=0;y<H;y+=3){ for(let x=0;x<W;x+=3){ const idx=(y*W+x)*4; if(wd[idx+3]>60) wordPts.push({x,y}); } }
+      particles = wordPts.map(w=>({sx:Math.random()*W, sy:Math.random()*H, dx:0, dy:0, wx:w.x, wy:w.y, size:1.3+Math.random()*1.6, drift:Math.random()*Math.PI*2}));
+      // for fallback, treat sx/sy as the dispersed position directly
+      particles.forEach(p=>{ p.dx = p.sx - p.wx; p.dy = p.sy - p.wy; p.sx = p.wx; p.sy = p.wy; });
       raf = requestAnimationFrame(frame);
     }
 
+    let safety = setTimeout(()=>{ if(!startTime && !finished) startWordOnly(); }, 3000);
     img.onload = ()=>{
       clearTimeout(safety);
       try{
-        // draw silhouette centered/contained, sample its DARK pixels
-        const drawSil = (octx,w,h)=>{
-          octx.clearRect(0,0,w,h);
-          const scale = Math.min(w*0.7/img.width, h*0.82/img.height);
-          const dw = img.width*scale, dh = img.height*scale;
-          octx.drawImage(img, (w-dw)/2, (h-dh)/2, dw, dh);
-        };
-        const silPts = samplePoints(drawSil, 6000, 120, true);
-        const wordPts = samplePoints(drawWord, 6000, 128, true);
-        if(silPts.length < 50 || wordPts.length < 50){ startWithWordOnly(); return; }
-        buildParticles(silPts, wordPts);
+        computeSilBox();
+        buildParticles();
+        if(particles.length < 50){ startWordOnly(); return; }
         raf = requestAnimationFrame(frame);
-      }catch(e){ startWithWordOnly(); }
+      }catch(e){ startWordOnly(); }
     };
-    img.onerror = ()=>{ clearTimeout(safety); startWithWordOnly(); };
+    img.onerror = ()=>{ clearTimeout(safety); startWordOnly(); };
     img.src = SILHOUETTE_URL;
 
-    window.addEventListener('resize', ()=>{ if(!finished){ resize(); } });
+    window.addEventListener('resize', ()=>{ if(!finished) resize(); });
   })();
 
   // ---------- ratings ----------
