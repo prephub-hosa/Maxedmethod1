@@ -86,7 +86,16 @@
   .fit-title{font-family:var(--font-display);font-weight:700;font-size:20px;line-height:1.02;margin:0;letter-spacing:-.02em;}
   .fit-shop-cue{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:rgba(255,255,255,.72);text-transform:uppercase;margin-top:10px;opacity:0;transform:translateY(6px);transition:opacity .3s ease, transform .3s ease;}
   .fit-card:hover .fit-shop-cue{opacity:1;transform:translateY(0);}
-  .new-badge{position:absolute;top:10px;left:10px;z-index:3;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.14em;background:var(--text);color:var(--bg);padding:4px 8px;border-radius:4px;}
+  .badge-stack{position:absolute;top:10px;left:10px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:5px;max-width:calc(100% - 20px);}
+  .tag{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:4px 8px;border-radius:4px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;line-height:1;}
+  .tag-new{background:var(--text);color:var(--bg);}
+  .tag-trending{background:#C9A15A;color:#0C0C0B;}
+  .tag-hot{background:#D9534F;color:#fff;}
+  .tag-staff{background:#5B7C99;color:#fff;}
+  .tag-limited{background:#0C0C0B;color:#fff;border:1px solid rgba(255,255,255,.4);}
+  .tag-fire{background:#B4884D;color:#0C0C0B;}
+  .tag-back{background:#6B8E6B;color:#fff;}
+  .tag-clean{background:#EDEAE2;color:#0C0C0B;}
 
   .admin-controls{position:absolute;top:10px;right:10px;display:flex;gap:6px;z-index:3;}
   .admin-icon-btn{width:30px;height:30px;background:rgba(12,12,11,.72);backdrop-filter:blur(6px);color:#fff;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:6px;transition:background .15s;}
@@ -242,10 +251,6 @@
     100%{opacity:1;transform:scale(1);filter:blur(0);text-shadow:0 0 44px rgba(245,243,237,.18);}
   }
 
-  /* ---- Trending badge ---- */
-  .trending-badge{position:absolute;top:10px;left:10px;z-index:3;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;background:#C9A15A;color:#0C0C0B;padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px;}
-  .new-badge + .trending-badge, .trending-badge.stacked{top:38px;}
-
   /* ---- Roulette button ---- */
   .roulette-btn{display:inline-flex;align-items:center;gap:10px;margin:0 0 4px;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--surface-2);color:var(--text);border:1px solid var(--line);padding:11px 20px;border-radius:100px;transition:background .15s, transform .15s;}
   .roulette-btn:hover{background:var(--text);color:var(--bg);}
@@ -256,7 +261,7 @@
   .roulette-row{display:flex;align-items:center;gap:14px;padding:0 28px 8px;flex-wrap:wrap;}
 
   /* ---- Fit rating (upvote only) ---- */
-  .fit-rate{position:absolute;top:10px;left:10px;z-index:3;display:flex;align-items:center;gap:6px;background:rgba(12,12,11,.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:100px;padding:5px 11px;opacity:0;transform:translateY(-6px);transition:opacity .25s, transform .25s, background .15s;}
+  .fit-rate{position:absolute;top:10px;right:10px;z-index:3;display:flex;align-items:center;gap:6px;background:rgba(12,12,11,.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:100px;padding:5px 11px;opacity:0;transform:translateY(-6px);transition:opacity .25s, transform .25s, background .15s;}
   .fit-card:hover .fit-rate{opacity:1;transform:translateY(0);}
   .fit-rate:hover{background:rgba(12,12,11,.92);}
   .fit-rate.rated{background:rgba(201,161,90,.22);border-color:rgba(201,161,90,.5);}
@@ -655,9 +660,9 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     }
     gridArea.innerHTML = '<div class="fits-grid" id="fitsGrid"></div>';
     const grid = document.getElementById('fitsGrid');
-    // determine which fits count as "new": the 3 most recently created in this category
+    // "new" = the 2 most recently created in this category
     const withTs = filtered.filter(e => e.f.created).map(e => e.f.created).sort((a,b)=>b-a);
-    const newThreshold = withTs.length ? withTs[Math.min(2, withTs.length-1)] : Infinity;
+    const newThreshold = withTs.length ? withTs[Math.min(1, withTs.length-1)] : Infinity;
     const trendingId = getTrendingId();
     filtered.forEach((entry, i) => {
       const fit = entry.f;
@@ -672,10 +677,18 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       const rCount = displayRating(fit.id);
       const iRated = myRatings[fit.id];
       const saved = wishlist[fit.id];
+      // build the badge stack (never overlaps — flex column container)
+      const badges = [];
+      if(isNew && !isAdmin) badges.push('<span class="tag tag-new">NEW</span>');
+      if(isTrending) badges.push('<span class="tag tag-trending">🔥 TRENDING</span>');
+      if(!isAdmin){
+        const hype = hypeTagFor(fit.id);
+        if(hype) badges.push(hype);
+      }
+      const badgeStack = badges.length ? `<div class="badge-stack">${badges.join('')}</div>` : '';
       card.innerHTML = `
         <img class="fit-cover" src="${escapeAttr(fit.cover)}" alt="${escapeAttr(fit.title)}" onerror="this.style.background='#201F1D'">
-        ${isNew && !isAdmin ? '<div class="new-badge">NEW</div>' : ''}
-        ${isTrending ? `<div class="trending-badge ${isNew?'stacked':''}">🔥 TRENDING</div>` : ''}
+        ${badgeStack}
         <div class="fit-card-footer">
           <span class="fit-tag">FIT ${String(i+1).padStart(2,'0')}</span>
           <h3 class="fit-title">${escapeHtml(fit.title)}</h3>
@@ -1368,6 +1381,23 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
   }
   function displayRating(fitId){
     return seedFor(fitId) + (ratings[fitId] || 0);
+  }
+  // curated "hype" tags on SOME fits (not all) — stable per fit, to spark interest
+  const HYPE_TAGS = [
+    { cls:'tag-hot', label:'⚡ SELLING FAST' },
+    { cls:'tag-staff', label:'★ STAFF PICK' },
+    { cls:'tag-limited', label:'LIMITED' },
+    { cls:'tag-fire', label:'MOST WANTED' },
+    { cls:'tag-back', label:'BACK IN ROTATION' },
+    { cls:'tag-clean', label:'CERTIFIED CLEAN' }
+  ];
+  function hypeTagFor(fitId){
+    // hash the id → decide if this fit gets a hype tag (~40% of fits) and which one
+    let h = 0;
+    for(let i=0;i<fitId.length;i++){ h = (h*33 + fitId.charCodeAt(i)) >>> 0; }
+    if(h % 5 >= 2) return null; // ~40% of fits get one
+    const tag = HYPE_TAGS[h % HYPE_TAGS.length];
+    return `<span class="tag ${tag.cls}">${tag.label}</span>`;
   }
   async function loadRatings(){
     try{
