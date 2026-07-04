@@ -246,22 +246,27 @@
   .intro-skip:hover{color:rgba(128,128,128,.9);}
 
   /* ---- Squad banner ---- */
-  .squad-banner{display:flex;align-items:flex-end;justify-content:center;gap:0;background:linear-gradient(180deg,#0C0C0B 0%,#161513 100%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:16px 0 8px;padding:0 12px;height:230px;overflow:hidden;position:relative;}
-  .squad-model{height:96%;width:auto;object-fit:contain;object-position:bottom;margin:0 -14px;filter:drop-shadow(0 12px 24px rgba(0,0,0,.5));opacity:0;transform:translateY(-40px) scale(.96);}
-  .squad-banner.play .squad-model{animation:squad-drop .62s cubic-bezier(.34,1.56,.64,1) both;}
+  .squad-banner{display:flex;align-items:flex-end;justify-content:center;gap:0;background:linear-gradient(180deg,#0C0C0B 0%,#161513 100%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:16px 0 8px;padding:0;height:440px;overflow:hidden;position:relative;}
+  .squad-model{height:100%;width:auto;object-fit:contain;object-position:bottom;margin:0 -34px;opacity:0;transform:translateY(100%);filter:drop-shadow(0 10px 30px rgba(0,0,0,.55));}
+  /* pyramid stacking: middle frontmost, sides tuck behind toward center */
+  .squad-model[data-i="0"]{z-index:1;}
+  .squad-model[data-i="1"]{z-index:2;}
+  .squad-model[data-i="2"]{z-index:3;}
+  .squad-model[data-i="3"]{z-index:2;}
+  .squad-model[data-i="4"]{z-index:1;}
+  .squad-banner.play .squad-model{animation:squad-rise .7s cubic-bezier(.22,1,.36,1) both;}
   .squad-banner.play .squad-model[data-i="0"]{animation-delay:.05s;}
-  .squad-banner.play .squad-model[data-i="1"]{animation-delay:.22s;}
-  .squad-banner.play .squad-model[data-i="2"]{animation-delay:.39s;}
-  .squad-banner.play .squad-model[data-i="3"]{animation-delay:.56s;}
-  .squad-banner.play .squad-model[data-i="4"]{animation-delay:.73s;}
-  @keyframes squad-drop{
-    0%{opacity:0;transform:translateY(-60px) scale(.94);}
-    60%{opacity:1;transform:translateY(6px) scale(1.01);}
-    100%{opacity:1;transform:translateY(0) scale(1);}
+  .squad-banner.play .squad-model[data-i="1"]{animation-delay:.20s;}
+  .squad-banner.play .squad-model[data-i="2"]{animation-delay:.35s;}
+  .squad-banner.play .squad-model[data-i="3"]{animation-delay:.50s;}
+  .squad-banner.play .squad-model[data-i="4"]{animation-delay:.65s;}
+  @keyframes squad-rise{
+    0%{opacity:0;transform:translateY(100%);}
+    100%{opacity:1;transform:translateY(0);}
   }
   @media (max-width:680px){
-    .squad-banner{height:150px;padding:0 4px;}
-    .squad-model{margin:0 -8px;}
+    .squad-banner{height:280px;}
+    .squad-model{margin:0 -22px;}
   }
 
   /* ---- Roulette button ---- */
