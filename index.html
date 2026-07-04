@@ -1508,18 +1508,16 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       } else if(t < tReformEnd){
         // PHASE 3: particles fly back IN from EXACTLY where they dispersed, landing in the word
         const k = easeInOut((t - tDisperseEnd)/T_REFORM);
-        // particles fade out EARLY and FAST (gone by k=0.82); solid text only starts after (k=0.8)
-        // the tiny 0.02 overlap is imperceptible and prevents any full double-word moment
-        // gentle crossfade: particles fade out and text fades in with overlap, so it dissolves
-        // (they're the same size/position now, so overlap blends rather than doubling)
-        const particleAlpha = k < 0.55 ? 1 : Math.max(0, 1 - (k-0.55)/0.35);
-        const textAlpha = k < 0.60 ? 0 : Math.min(1,(k-0.60)/0.35);
+        // particles fade OUT over the last 25% while solid text fades IN — a clean handoff, no doubling
+        const particleAlpha = k < 0.75 ? 1 : Math.max(0, 1 - (k-0.75)/0.25);
+        const textAlpha = k < 0.75 ? 0 : (k-0.75)/0.25;
         if(particleAlpha > 0.01){
           for(const p of particles){
             const fromX = (p.lastX !== undefined) ? p.lastX : p.sx + p.dx*0.85;
             const fromY = (p.lastY !== undefined) ? p.lastY : p.sy + p.dy*0.85;
             let px = fromX + (p.wx - fromX)*k;
             let py = fromY + (p.wy - fromY)*k;
+            // wobble vanishes well before landing so particles sit tight on the letters
             const wob = 12*(1-k)*(1-k)*(1-k);
             px += Math.sin(p.drift + t*0.003)*wob;
             py += Math.cos(p.drift + t*0.003)*wob;
@@ -1528,6 +1526,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
             ctx.fillRect(px, py, p.size, p.size);
           }
         }
+        // solid text fades in as particles fade out — same size, same position, seamless
         if(textAlpha > 0){ drawSolidWord(textAlpha); }
       } else {
         // PHASE 4: crisp solid white word on black
