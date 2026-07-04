@@ -232,33 +232,15 @@
   .mini-del:hover{background:var(--danger);color:var(--bg);}
   .subs-box{width:100%;padding:10px 12px;border:1px solid var(--line);background:var(--bg-2);color:var(--text-soft);font-family:var(--font-mono);font-size:12px;border-radius:8px;resize:vertical;}
 
-  /* ---- Shadow King intro ---- */
-  .intro-overlay{position:fixed;inset:0;z-index:200;background:#0C0C0B;display:flex;align-items:center;justify-content:center;transition:opacity .8s ease;overflow:hidden;}
+  /* ---- Intro ---- */
+  .intro-overlay{position:fixed;inset:0;z-index:200;background:#0C0C0B;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity 1s ease;}
   .intro-overlay.done{opacity:0;pointer-events:none;}
   .intro-inner{text-align:center;position:relative;padding:0 20px;}
-  .intro-word{font-family:var(--font-display);font-weight:800;font-size:clamp(36px,10vw,92px);letter-spacing:-.03em;line-height:1;color:var(--text);white-space:nowrap;animation:king-emerge 3s cubic-bezier(.16,1,.3,1) forwards;}
+  .intro-word{font-family:var(--font-display);font-weight:800;font-size:clamp(36px,10vw,92px);letter-spacing:-.03em;line-height:1;color:var(--text);white-space:nowrap;opacity:0;transform:scale(1.08);filter:blur(18px);animation:king-emerge 1.8s cubic-bezier(.22,1,.36,1) forwards;}
   @keyframes king-emerge{
-    0%{opacity:0;transform:scale(1.14);filter:blur(24px);text-shadow:0 0 60px rgba(0,0,0,1);color:#151512;}
-    35%{opacity:1;filter:blur(4px);color:#3a3a34;}
-    60%{opacity:1;transform:scale(1);filter:blur(0);color:var(--text);text-shadow:0 0 40px rgba(245,243,237,.15);}
-    80%{opacity:1;filter:blur(0);}
-    100%{opacity:0;transform:scale(.99);filter:blur(2px);}
+    0%{opacity:0;transform:scale(1.08);filter:blur(18px);}
+    100%{opacity:1;transform:scale(1);filter:blur(0);text-shadow:0 0 44px rgba(245,243,237,.18);}
   }
-
-  /* ---- Fit of the Day ---- */
-  .fotd{margin:8px 28px 24px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--bg-2);display:grid;grid-template-columns:1fr 1fr;cursor:pointer;position:relative;}
-  @media (max-width:680px){.fotd{grid-template-columns:1fr;}}
-  .fotd-img{position:relative;min-height:360px;background:var(--surface);overflow:hidden;}
-  @media (max-width:680px){.fotd-img{min-height:0;aspect-ratio:4/5;}}
-  .fotd-img img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;transition:transform 8s ease;}
-  .fotd:hover .fotd-img img{transform:scale(1.06);}
-  .fotd-body{padding:32px 30px;display:flex;flex-direction:column;justify-content:center;}
-  .fotd-kicker{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--stone-dark,#C9A15A);color:#C9A15A;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-  .fotd-kicker::before{content:"★";}
-  .fotd-title{font-family:var(--font-display);font-weight:800;font-size:34px;line-height:1;letter-spacing:-.03em;margin:0 0 10px;}
-  .fotd-meta{font-family:var(--font-mono);font-size:11px;color:var(--text-soft);margin-bottom:22px;}
-  .fotd-cta{align-self:flex-start;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--text);color:var(--bg);border:none;padding:12px 22px;border-radius:100px;transition:transform .15s;}
-  .fotd-cta:hover{transform:translateX(4px);}
 
   /* ---- Trending badge ---- */
   .trending-badge{position:absolute;top:10px;left:10px;z-index:3;font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;background:#C9A15A;color:#0C0C0B;padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px;}
@@ -331,7 +313,6 @@
     <div class="error-text" id="emailError" style="display:none;"></div>
     <div class="email-success" id="emailSuccess" style="display:none;">You're on the list. 🖤</div>
   </div>
-  <div id="fotdContainer"></div>
   <div class="roulette-row">
     <button class="roulette-btn" id="rouletteBtn"><span class="roulette-dice">🎲</span> Surprise me</button>
     <button class="saved-toggle" id="savedToggle">♡ Saved <span id="savedCount"></span></button>
@@ -731,10 +712,10 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     // wire rating + heart (public)
     if(!isAdmin){
       grid.querySelectorAll('[data-rate]').forEach(btn=>{
-        btn.addEventListener('click', (e)=>{ e.stopPropagation(); rateFit(btn.getAttribute('data-rate')); });
+        btn.addEventListener('click', (e)=>{ e.stopPropagation(); rateFit(btn.getAttribute('data-rate'), btn); });
       });
       grid.querySelectorAll('[data-heart]').forEach(btn=>{
-        btn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleWishlist(btn.getAttribute('data-heart')); });
+        btn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleWishlist(btn.getAttribute('data-heart'), btn); });
       });
     }
 
@@ -1368,10 +1349,11 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       return;
     }
     sessionStorage.setItem('mm-intro-seen','1');
+    // word emerges (1.8s) → short hold → whole overlay fades into the site (1s)
     setTimeout(()=>{
       intro.classList.add('done');
-      setTimeout(()=> intro.remove(), 900);
-    }, 2900);
+      setTimeout(()=> intro.remove(), 1000);
+    }, 2300);
     // let them tap to skip
     intro.addEventListener('click', ()=>{
       intro.classList.add('done');
@@ -1383,30 +1365,52 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
   async function loadRatings(){
     try{
       const snap = await getDoc(RATINGS_DOC);
-      ratings = snap.exists() ? (snap.data().counts || {}) : {};
+      ratings = snap.exists() ? {...(snap.data().counts || {})} : {};
     }catch(e){ ratings = {}; }
   }
-  async function rateFit(fitId){
-    if(myRatings[fitId]) return; // one upvote per browser
-    myRatings[fitId] = true;
-    ratings[fitId] = (ratings[fitId]||0) + 1;
+  async function rateFit(fitId, btnEl){
+    const wasRated = !!myRatings[fitId];
+    if(wasRated){
+      // take the vote back
+      delete myRatings[fitId];
+      ratings[fitId] = Math.max(0, (ratings[fitId]||1) - 1);
+    } else {
+      myRatings[fitId] = true;
+      ratings[fitId] = (ratings[fitId]||0) + 1;
+    }
     try{ localStorage.setItem('mm-my-ratings', JSON.stringify(myRatings)); }catch(e){}
-    render();
+    const newLocalCount = ratings[fitId] || 0;
+    // update just this button in place — no grid re-render (that caused the "refresh")
+    if(btnEl){
+      btnEl.classList.toggle('rated', !wasRated);
+      const c = btnEl.querySelector('.rcount');
+      if(c) c.textContent = newLocalCount;
+      btnEl.title = !wasRated ? 'You liked this' : 'Like this fit';
+    }
+    // persist to Firebase — apply the same +1/-1 delta to the stored count
     try{
       const snap = await getDoc(RATINGS_DOC);
-      const counts = snap.exists() ? (snap.data().counts||{}) : {};
-      counts[fitId] = (counts[fitId]||0) + 1;
+      const counts = snap.exists() ? {...(snap.data().counts||{})} : {};
+      counts[fitId] = Math.max(0, (counts[fitId]||0) + (wasRated ? -1 : 1));
       await setDoc(RATINGS_DOC, { counts }, { merge:true });
     }catch(e){}
   }
 
   // ---------- wishlist ----------
-  function toggleWishlist(fitId){
-    if(wishlist[fitId]) delete wishlist[fitId];
+  function toggleWishlist(fitId, btnEl){
+    const wasSaved = !!wishlist[fitId];
+    if(wasSaved) delete wishlist[fitId];
     else wishlist[fitId] = true;
     try{ localStorage.setItem('mm-wishlist', JSON.stringify(wishlist)); }catch(e){}
     updateSavedCount();
-    render();
+    // update button in place (no full grid refresh)
+    if(btnEl){
+      btnEl.classList.toggle('saved', !wasSaved);
+      btnEl.textContent = !wasSaved ? '♥' : '♡';
+      btnEl.title = !wasSaved ? 'Saved' : 'Save for later';
+    }
+    // only re-render if we're in the saved-only view (item needs to appear/disappear)
+    if(showSaved) render();
   }
   function updateSavedCount(){
     const n = Object.keys(wishlist).length;
@@ -1428,34 +1432,6 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     return topOpens >= 3 ? topId : null; // needs a little traction to earn the tag
   }
 
-  // ---------- Fit of the Day (same for everyone, changes daily) ----------
-  function getFotd(){
-    if(!fits.length) return null;
-    // seed from date so it's stable per calendar day
-    const today = new Date();
-    const seed = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
-    const idx = seed % fits.length;
-    return fits[idx];
-  }
-  function renderFotd(){
-    const c = document.getElementById('fotdContainer');
-    if(!c) return;
-    if(showSaved){ c.innerHTML=''; return; }
-    const fit = getFotd();
-    if(!fit){ c.innerHTML=''; return; }
-    const itemCount = (fit.items||[]).length;
-    c.innerHTML = `
-      <div class="fotd">
-        <div class="fotd-img"><img src="${escapeAttr(fit.cover)}" alt="${escapeAttr(fit.title)}" onerror="this.style.background='#201F1D'"></div>
-        <div class="fotd-body">
-          <div class="fotd-kicker">Fit of the Day</div>
-          <h2 class="fotd-title">${escapeHtml(fit.title)}</h2>
-          <div class="fotd-meta">${itemCount} ${itemCount===1?'piece':'pieces'} · fully shoppable</div>
-          <button class="fotd-cta">Shop this look →</button>
-        </div>
-      </div>`;
-    c.querySelector('.fotd').addEventListener('click', ()=> openDetail(fit));
-  }
 
   // ---------- roulette ----------
   document.getElementById('rouletteBtn').addEventListener('click', ()=>{
@@ -1480,7 +1456,6 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
   document.getElementById('savedToggle').addEventListener('click', ()=>{
     showSaved = !showSaved;
     updateSavedCount();
-    renderFotd();
     render();
   });
 
@@ -1491,7 +1466,6 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     await loadRatings();
     try{ const snap = await getDoc(ANALYTICS_DOC); analyticsCache = snap.exists()?snap.data():{}; }catch(e){ analyticsCache = {}; }
     await loadFits();
-    renderFotd();
     updateSavedCount();
   })();
 })();
