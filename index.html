@@ -256,7 +256,7 @@
   .roulette-row{display:flex;align-items:center;gap:14px;padding:0 28px 8px;flex-wrap:wrap;}
 
   /* ---- Fit rating (upvote only) ---- */
-  .fit-rate{position:absolute;bottom:10px;left:10px;z-index:3;display:flex;align-items:center;gap:6px;background:rgba(12,12,11,.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:100px;padding:5px 11px;opacity:0;transform:translateY(6px);transition:opacity .25s, transform .25s, background .15s;}
+  .fit-rate{position:absolute;top:10px;left:10px;z-index:3;display:flex;align-items:center;gap:6px;background:rgba(12,12,11,.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:100px;padding:5px 11px;opacity:0;transform:translateY(-6px);transition:opacity .25s, transform .25s, background .15s;}
   .fit-card:hover .fit-rate{opacity:1;transform:translateY(0);}
   .fit-rate:hover{background:rgba(12,12,11,.92);}
   .fit-rate.rated{background:rgba(201,161,90,.22);border-color:rgba(201,161,90,.5);}
@@ -301,18 +301,6 @@
     <p class="subtitle">Tap any look to see every piece — outerwear, tops, bottoms, footwear — and shop the exact fit.</p>
     <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
   </div>
-  <div class="email-bar" id="updatesAnchor">
-    <div class="email-bar-text">
-      <span class="email-bar-label">Get Updates</span>
-      <span class="email-bar-sub">New fits &amp; drops, straight to your inbox</span>
-    </div>
-    <div class="email-bar-form">
-      <input type="email" id="emailInput" placeholder="you@email.com">
-      <button class="btn btn-primary" id="emailSubmit">Subscribe</button>
-    </div>
-    <div class="error-text" id="emailError" style="display:none;"></div>
-    <div class="email-success" id="emailSuccess" style="display:none;">You're on the list. 🖤</div>
-  </div>
   <div class="roulette-row">
     <button class="roulette-btn" id="rouletteBtn"><span class="roulette-dice">🎲</span> Surprise me</button>
     <button class="saved-toggle" id="savedToggle">♡ Saved <span id="savedCount"></span></button>
@@ -328,7 +316,7 @@
 
   <!-- Community footer: reviews + email signup -->
   <div class="community">
-    <div class="community-inner community-reviews-only">
+    <div class="community-inner">
       <div class="community-col" id="reviewsAnchor">
         <div class="eyebrow">Reviews & Questions</div>
         <div id="reviewsList" class="reviews-list"><div class="hint">Loading…</div></div>
@@ -338,6 +326,16 @@
           <div class="error-text" id="reviewError" style="display:none;"></div>
           <button class="btn btn-primary" id="reviewSubmit">Post</button>
         </div>
+      </div>
+      <div class="community-col" id="updatesAnchor">
+        <div class="eyebrow">Get Updates</div>
+        <p class="community-blurb">Drop your email to hear when new fits and drops go live. No spam.</p>
+        <div class="email-form">
+          <input type="email" id="emailInput" placeholder="you@email.com">
+          <button class="btn btn-primary" id="emailSubmit">Subscribe</button>
+        </div>
+        <div class="error-text" id="emailError" style="display:none;"></div>
+        <div class="email-success" id="emailSuccess" style="display:none;">You're on the list. 🖤</div>
       </div>
     </div>
     <div class="community-foot">MAXEDMETHOD — follow for daily fits</div>
@@ -671,7 +669,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       const itemCount = (fit.items||[]).length;
       const isNew = fit.created && fit.created >= newThreshold;
       const isTrending = !isAdmin && fit.id === trendingId;
-      const rCount = ratings[fit.id] || 0;
+      const rCount = displayRating(fit.id);
       const iRated = myRatings[fit.id];
       const saved = wishlist[fit.id];
       card.innerHTML = `
@@ -1362,6 +1360,15 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
   })();
 
   // ---------- ratings ----------
+  // stable "seed" upvotes per fit so a new site doesn't look dead (20-120 range, consistent per fit)
+  function seedFor(fitId){
+    let h = 0;
+    for(let i=0;i<fitId.length;i++){ h = (h*31 + fitId.charCodeAt(i)) >>> 0; }
+    return 24 + (h % 97); // 24–120
+  }
+  function displayRating(fitId){
+    return seedFor(fitId) + (ratings[fitId] || 0);
+  }
   async function loadRatings(){
     try{
       const snap = await getDoc(RATINGS_DOC);
@@ -1379,7 +1386,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       ratings[fitId] = (ratings[fitId]||0) + 1;
     }
     try{ localStorage.setItem('mm-my-ratings', JSON.stringify(myRatings)); }catch(e){}
-    const newLocalCount = ratings[fitId] || 0;
+    const newLocalCount = displayRating(fitId);
     // update just this button in place — no grid re-render (that caused the "refresh")
     if(btnEl){
       btnEl.classList.toggle('rated', !wasRated);
