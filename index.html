@@ -1440,11 +1440,13 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
         }
       }
       for(let i=wordPts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [wordPts[i],wordPts[j]]=[wordPts[j],wordPts[i]]; }
-      // use MANY particles so the entire figure shatters (not just half)
+      // enough particles to (a) fully shatter the figure AND (b) densely fill the word
       const n = Math.max(silPts.length, wordPts.length);
       particles=[];
       for(let i=0;i<n;i++){
-        const s=silPts[i % silPts.length]; const w=wordPts[i % wordPts.length];
+        const s=silPts[i % silPts.length];
+        // map so EVERY word point is covered: cycle through word points evenly
+        const w=wordPts[i % wordPts.length];
         particles.push({
           sx:s.x, sy:s.y, wx:w.x, wy:w.y,
           dx:(Math.random()-0.5)*W*1.0,
@@ -1496,28 +1498,32 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
         for(const p of particles){
           const px = p.sx + p.dx*ek + Math.sin(p.drift + t*0.002)*8*k;
           const py = p.sy + p.dy*ek - 20*k; // slight upward smoke rise
+          // remember where this particle ended up, so reform starts exactly here (no jump)
+          p.lastX = px; p.lastY = py;
           const g = Math.round(18 + 120*k);
           const pAlpha = Math.min(1, ek*3);
           ctx.fillStyle = `rgba(${g},${g},${g-4},${pAlpha})`;
           ctx.fillRect(px, py, p.size, p.size);
         }
       } else if(t < tReformEnd){
-        // PHASE 3: particles fly back IN and land in the exact shape of the word
+        // PHASE 3: particles fly back IN from EXACTLY where they dispersed, landing in the word
         const k = easeInOut((t - tDisperseEnd)/T_REFORM);
-        // particles travel from their dispersed position to their word-target (wx,wy)
         for(const p of particles){
-          const fromX=p.sx+p.dx*0.85, fromY=p.sy+p.dy*0.85 - 20;
-          let px=fromX+(p.wx-fromX)*k, py=fromY+(p.wy-fromY)*k;
-          // wobble that fades as they lock into place
-          px += Math.sin(p.drift + t*0.003)*(10*(1-k));
-          py += Math.cos(p.drift + t*0.003)*(10*(1-k));
-          // brighten to near-white as they form the word
+          // start from the particle's real last dispersed position (seamless, no flash)
+          const fromX = (p.lastX !== undefined) ? p.lastX : p.sx + p.dx*0.85;
+          const fromY = (p.lastY !== undefined) ? p.lastY : p.sy + p.dy*0.85;
+          let px = fromX + (p.wx - fromX)*k;
+          let py = fromY + (p.wy - fromY)*k;
+          // wobble is strong early, fully gone by the time they land (clean word shape)
+          const wob = 12*(1-k)*(1-k);
+          px += Math.sin(p.drift + t*0.003)*wob;
+          py += Math.cos(p.drift + t*0.003)*wob;
           const c = Math.round(90 + 165*k);
           ctx.fillStyle = `rgb(${c},${c},${c})`;
           ctx.fillRect(px, py, p.size, p.size);
         }
-        // crisp solid text fades in ONLY at the very end, once particles have landed (k>0.85)
-        if(k > 0.85){ drawSolidWord((k-0.85)/0.15); }
+        // solid text crossfades in gently over the last third so particles visibly BECOME the word
+        if(k > 0.7){ drawSolidWord((k-0.7)/0.3); }
       } else {
         // PHASE 4: crisp solid white word on black
         drawSolidWord(1);
