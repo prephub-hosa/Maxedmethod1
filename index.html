@@ -1402,7 +1402,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       drawFn(octx, off.width, off.height);
       const data = octx.getImageData(0,0,off.width,off.height).data;
       const pts = [];
-      const step = 4; // sampling density
+      const step = 3; // denser sampling
       for(let y=0;y<off.height;y+=step){
         for(let x=0;x<off.width;x+=step){
           const idx = (y*off.width + x)*4;
@@ -1415,7 +1415,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
           }
         }
       }
-      // thin/expand to ~targetCount
+      // thin only if massively over target (keep density high)
       if(pts.length > targetCount){
         const out = [];
         const stride = pts.length/targetCount;
@@ -1452,7 +1452,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
           // random dispersal velocity
           dx:(Math.random()-0.5)*W*0.9,
           dy:(Math.random()-0.5)*H*0.9,
-          size: 1 + Math.random()*1.6,
+          size: 1.4 + Math.random()*1.8,
           drift: Math.random()*Math.PI*2
         });
       }
@@ -1518,7 +1518,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
 
     function startWithWordOnly(){
       // no silhouette — spawn particles from screen edges into the word
-      const wordPts = samplePoints(drawWord, 2600, 128, true);
+      const wordPts = samplePoints(drawWord, 6000, 128, true);
       const silPts = wordPts.map(()=>({x:Math.random()*W, y:Math.random()*H}));
       buildParticles(silPts, wordPts);
       raf = requestAnimationFrame(frame);
@@ -1530,12 +1530,12 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
         // draw silhouette centered/contained, sample its DARK pixels
         const drawSil = (octx,w,h)=>{
           octx.clearRect(0,0,w,h);
-          const scale = Math.min(w*0.5/img.width, h*0.62/img.height);
+          const scale = Math.min(w*0.7/img.width, h*0.82/img.height);
           const dw = img.width*scale, dh = img.height*scale;
           octx.drawImage(img, (w-dw)/2, (h-dh)/2, dw, dh);
         };
-        const silPts = samplePoints(drawSil, 2600, 110, true);
-        const wordPts = samplePoints(drawWord, 2600, 128, true);
+        const silPts = samplePoints(drawSil, 6000, 120, true);
+        const wordPts = samplePoints(drawWord, 6000, 128, true);
         if(silPts.length < 50 || wordPts.length < 50){ startWithWordOnly(); return; }
         buildParticles(silPts, wordPts);
         raf = requestAnimationFrame(frame);
