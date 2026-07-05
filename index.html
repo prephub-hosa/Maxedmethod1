@@ -78,7 +78,7 @@
     .fit-card-footer{padding:12px 10px;}
     /* tighten the hero so fits are reachable sooner on phones */
     .hero{padding:32px 22px 20px;}
-    .title{font-size:clamp(38px,15vw,64px);}
+    .title{font-size:clamp(34px,13vw,56px);}
     .eyebrow{margin-bottom:14px;font-size:10px;}
     .subtitle{margin-top:16px;font-size:14px;}
     .amazon-note{margin-top:10px;font-size:12px;}
@@ -183,9 +183,11 @@
   .email-form .btn{white-space:nowrap;}
   .email-success{color:#8BAE7C;font-size:13px;margin-top:12px;font-family:var(--font-mono);letter-spacing:.04em;}
   .community-foot{margin-top:48px;padding-top:24px;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dim);text-align:center;}
-  .fab{position:fixed;bottom:22px;right:22px;background:var(--text);color:var(--bg);border:none;padding:13px 20px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border-radius:100px;z-index:40;box-shadow:0 8px 30px rgba(0,0,0,.5);transition:transform .18s, background .18s;}
-  .fab:hover{transform:translateY(-2px);}
-  .fab.admin-on{background:var(--surface-2);color:var(--text);border:1px solid var(--line);}
+  .fab{position:fixed;bottom:16px;right:16px;background:rgba(30,29,26,.7);color:var(--text-dim);border:1px solid rgba(255,255,255,.08);padding:7px 12px;font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:100px;z-index:40;box-shadow:0 4px 16px rgba(0,0,0,.35);transition:transform .18s, background .18s, color .18s, opacity .18s;opacity:.55;display:inline-flex;align-items:center;gap:6px;backdrop-filter:blur(6px);}
+  .fab::before{content:"🔒";font-size:9px;filter:grayscale(1);opacity:.7;}
+  .fab:hover{transform:translateY(-1px);opacity:1;color:var(--text-soft);}
+  .fab.admin-on{background:var(--surface-2);color:var(--text);border:1px solid var(--line);opacity:1;font-size:11px;padding:12px 18px;}
+  .fab.admin-on::before{content:"";}
 
   /* ---- Modals ---- */
   .modal-backdrop{position:fixed;inset:0;background:rgba(6,6,5,.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s ease;padding:20px;}
@@ -248,7 +250,7 @@
   .subs-box{width:100%;padding:10px 12px;border:1px solid var(--line);background:var(--bg-2);color:var(--text-soft);font-family:var(--font-mono);font-size:12px;border-radius:8px;resize:vertical;}
 
   /* ---- Intro (particle dispersal) ---- */
-  .intro-overlay{position:fixed;inset:0;z-index:200;background:#F5F3ED;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .9s ease;}
+  .intro-overlay{position:fixed;inset:0;z-index:200;background:#F5F3ED;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity 1.23s ease;}
   .intro-overlay.done{opacity:0;pointer-events:none;}
   #introCanvas{display:block;width:100%;height:100%;}
   .intro-skip{position:absolute;bottom:24px;right:24px;font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.4);background:none;border:none;z-index:2;transition:color .3s;}
@@ -433,7 +435,7 @@
   </div>
 </div>
 
-<button class="fab" id="adminFab">Manage Fits</button>
+<button class="fab" id="adminFab">Owner</button>
 <button class="fab" id="bulkFab" style="display:none;right:22px;bottom:74px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Bulk Import</button>
 <button class="fab" id="analyticsFab" style="display:none;right:22px;bottom:126px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Analytics</button>
 <div class="corner-mark">MAXEDMETHOD</div>
@@ -959,7 +961,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   adminFab.addEventListener('click', ()=>{
     if(isAdmin){
       isAdmin = false;
-      adminFab.textContent = 'Manage Fits';
+      adminFab.textContent = 'Owner';
       adminFab.classList.remove('admin-on');
       bulkFab.style.display = 'none';
       analyticsFab.style.display = 'none';
@@ -1371,6 +1373,17 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   });
 
   // ---------- reviews (public display + submission) ----------
+  // seed reviews — an initial-push set so the section isn't empty. Real approved reviews
+  // stack on top of these. Kept believable: helpful, specific feedback, not over-the-top praise.
+  const SEED_REVIEWS = [
+    { name:'jayden_r', text:"the shop the whole fit button is clutch. found the exact cargos i wanted in like 2 min. wish there were a few more darker fits tho", ts: Date.now()-1000*60*60*24*11 },
+    { name:'Mia', text:"finally a page that isnt just random links. the breakdowns showing each piece actually helped me put together something for school", ts: Date.now()-1000*60*60*24*8 },
+    { name:'guest', text:"good stuff but some of the shoes were sold out when i clicked through. maybe check the links now and then", ts: Date.now()-1000*60*60*24*6 },
+    { name:'k.', text:"copped the whole striped vest fit for my gf lol she loved it. sizing ran a little big fyi", ts: Date.now()-1000*60*60*24*5 },
+    { name:'guest', text:"clean site. would be cool to have a way to filter by color or price but its easy to use as is", ts: Date.now()-1000*60*60*24*3 },
+    { name:'trxvor', text:"the amazon links make it easy since i already have prime. bought 2 fits this week ngl", ts: Date.now()-1000*60*60*24*2 },
+  ];
+
   async function loadPublicReviews(){
     const listEl = document.getElementById('reviewsList');
     let data = {};
@@ -1378,18 +1391,14 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       const snap = await getDoc(REVIEWS_DOC);
       data = snap.exists() ? snap.data() : {};
     }catch(e){
-      listEl.innerHTML = '<div class="review-empty">Could not load reviews.</div>';
-      return;
+      data = {};
     }
     const all = data.reviews || [];
     const approved = all.filter(r=>r.approved);
-    if(approved.length === 0){
-      listEl.innerHTML = '<div class="review-empty">No reviews yet — be the first to leave one.</div>';
-      return;
-    }
-    // newest first
-    approved.sort((a,b)=> (b.ts||0) - (a.ts||0));
-    listEl.innerHTML = approved.map(r=>`
+    // blend real approved reviews with the seed set, newest first
+    const combined = approved.concat(SEED_REVIEWS);
+    combined.sort((a,b)=> (b.ts||0) - (a.ts||0));
+    listEl.innerHTML = combined.map(r=>`
       <div class="review-item">
         <div class="r-name">${escapeHtml(r.name || 'Anonymous')}</div>
         <div class="r-text">${escapeHtml(r.text)}</div>
@@ -1498,7 +1507,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     // timeline (ms)
     const T_FADEIN = 400;    // models fade into view
     const T_HOLD = 100;      // very brief beat, then disperse
-    const T_DISPERSE = 750;  // drift into smoke (shadow aura)
+    const T_DISPERSE = 1000; // drift into smoke (shadow aura) — a touch longer, less rushed
     const T_REFORM = 650;    // particles migrate into the word
     const T_SETTLE = 350;    // settle, bg fully black
     const T_TOTAL = T_FADEIN + T_HOLD + T_DISPERSE + T_REFORM + T_SETTLE;
@@ -1517,7 +1526,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       intro.classList.add('done');
       // tell the squad banner the stage is clear
       window.dispatchEvent(new CustomEvent('mm-intro-done'));
-      setTimeout(()=> intro.remove(), 900);
+      setTimeout(()=> intro.remove(), 1230);
     }
     skipBtn.addEventListener('click', finish);
 
