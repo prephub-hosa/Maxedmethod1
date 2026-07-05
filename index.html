@@ -1417,14 +1417,7 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       // safety fallback in case the event never fires (e.g. intro errored)
       setTimeout(()=>{ if(!banner.classList.contains('play')) play(); }, 6000);
     }
-    // replay on hover, but not while an animation is mid-flight
-    let cooling = false;
-    banner.addEventListener('mouseenter', ()=>{
-      if(cooling) return;
-      cooling = true;
-      play();
-      setTimeout(()=>{ cooling = false; }, 1800);
-    });
+    // plays once on load only — no hover replay
   })();
 
   // ---------- top nav scroll links ----------
@@ -1664,14 +1657,31 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
   })();
 
   // ---------- ratings ----------
-  // stable "seed" upvotes per fit so a new site doesn't look dead (20-120 range, consistent per fit)
-  function seedFor(fitId){
+  // Each fit has a stable TARGET in a tight, believable range (97–123) so no fit looks
+  // like a flop next to another. New fits START LOW (~10) and climb ~hourly toward their
+  // target over the first day, so a freshly-created fit never appears with suspiciously
+  // high upvotes out of nowhere.
+  function targetFor(fitId){
     let h = 0;
     for(let i=0;i<fitId.length;i++){ h = (h*31 + fitId.charCodeAt(i)) >>> 0; }
-    return 24 + (h % 97); // 24–120
+    return 97 + (h % 27); // 97–123
+  }
+  function seedFor(fit){
+    // accept either a fit object or a bare id (fallback)
+    const id = (typeof fit === 'string') ? fit : fit.id;
+    const created = (typeof fit === 'object' && fit.created) ? fit.created : null;
+    const target = targetFor(id);
+    if(!created) return target; // legacy fits with no timestamp: just show the target
+    const START = 10;
+    const hoursSince = (Date.now() - created) / (1000*60*60);
+    if(hoursSince < 0) return START;
+    // climb from START up to target; reaches target after ~22 hours (~4/hour)
+    const grown = START + Math.floor(hoursSince * ((target - START) / 22));
+    return Math.min(target, grown);
   }
   function displayRating(fitId){
-    return seedFor(fitId) + (ratings[fitId] || 0);
+    const fit = fits.find(f => f.id === fitId);
+    return seedFor(fit || fitId) + (ratings[fitId] || 0);
   }
   async function loadRatings(){
     try{
