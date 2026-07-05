@@ -248,31 +248,26 @@
   .intro-skip.on-dark{color:rgba(255,255,255,.4);}
   .intro-skip:hover{color:rgba(128,128,128,.9);}
 
-  /* ---- Squad banner (beside hero, no bar) ---- */
+  /* ---- Squad banner (each fit in its own background bar) ---- */
   .hero-wrap{display:flex;align-items:stretch;gap:20px;}
   .hero-wrap .hero{flex:0 0 auto;}
-  .squad-banner{flex:1 1 auto;display:flex;align-items:flex-end;justify-content:center;gap:0;background:transparent;margin:0;padding:0;min-height:520px;overflow:hidden;position:relative;}
-  .squad-model{height:480px;width:auto;object-fit:contain;object-position:bottom;margin:0 -80px;opacity:0;transform:translateY(60px);filter:drop-shadow(0 10px 30px rgba(0,0,0,.55));}
-  /* pyramid stacking: middle frontmost, sides tuck behind toward center */
-  .squad-model[data-i="0"]{z-index:1;}
-  .squad-model[data-i="1"]{z-index:2;}
-  .squad-model[data-i="2"]{z-index:3;}
-  .squad-model[data-i="3"]{z-index:2;}
-  .squad-model[data-i="4"]{z-index:1;}
-  .squad-banner.play .squad-model{animation:squad-rise .7s cubic-bezier(.22,1,.36,1) both;}
-  .squad-banner.play .squad-model[data-i="0"]{animation-delay:.05s;}
-  .squad-banner.play .squad-model[data-i="1"]{animation-delay:.20s;}
-  .squad-banner.play .squad-model[data-i="2"]{animation-delay:.35s;}
-  .squad-banner.play .squad-model[data-i="3"]{animation-delay:.50s;}
-  .squad-banner.play .squad-model[data-i="4"]{animation-delay:.65s;}
+  .squad-banner{flex:1 1 auto;display:flex;align-items:flex-end;justify-content:center;gap:8px;background:transparent;margin:0;padding:0;min-height:520px;overflow:hidden;position:relative;}
+  .squad-slot{position:relative;flex:0 0 auto;width:150px;height:500px;border-radius:14px;overflow:hidden;background:linear-gradient(180deg, #26251F 0%, #191813 60%, #131210 100%);border:1px solid rgba(255,255,255,.05);display:flex;align-items:flex-end;justify-content:center;opacity:0;transform:translateY(60px);}
+  .squad-model{height:96%;width:auto;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 20px rgba(0,0,0,.5));}
+  .squad-banner.play .squad-slot{animation:squad-rise .7s cubic-bezier(.22,1,.36,1) both;}
+  .squad-banner.play .squad-slot[data-i="0"]{animation-delay:.05s;}
+  .squad-banner.play .squad-slot[data-i="1"]{animation-delay:.20s;}
+  .squad-banner.play .squad-slot[data-i="2"]{animation-delay:.35s;}
+  .squad-banner.play .squad-slot[data-i="3"]{animation-delay:.50s;}
+  .squad-banner.play .squad-slot[data-i="4"]{animation-delay:.65s;}
   @keyframes squad-rise{
     0%{opacity:0;transform:translateY(60px);}
     100%{opacity:1;transform:translateY(0);}
   }
   @media (max-width:900px){
     .hero-wrap{flex-direction:column;gap:0;}
-    .squad-banner{min-height:0;height:260px;margin-top:8px;}
-    .squad-model{height:250px;margin:0 -70px;}
+    .squad-banner{min-height:0;height:300px;margin-top:8px;gap:5px;}
+    .squad-slot{width:82px;height:290px;border-radius:9px;}
   }
 
   /* ---- Roulette button ---- */
@@ -325,11 +320,11 @@
       <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
     </div>
     <div class="squad-banner" id="squadBanner">
-      <img class="squad-model" data-i="0" src="https://i.imgur.com/VxXHnt4.png" alt="">
-      <img class="squad-model" data-i="1" src="https://i.imgur.com/MJzqo0M.png" alt="">
-      <img class="squad-model" data-i="2" src="https://i.imgur.com/zPOM6OA.png" alt="">
-      <img class="squad-model" data-i="3" src="https://i.imgur.com/jVcugkv.png" alt="">
-      <img class="squad-model" data-i="4" src="https://i.imgur.com/lgVQeH8.png" alt="">
+      <div class="squad-slot" data-i="0"><img class="squad-model" src="https://i.imgur.com/VxXHnt4.png" alt=""></div>
+      <div class="squad-slot" data-i="1"><img class="squad-model" src="https://i.imgur.com/MJzqo0M.png" alt=""></div>
+      <div class="squad-slot" data-i="2"><img class="squad-model" src="https://i.imgur.com/zPOM6OA.png" alt=""></div>
+      <div class="squad-slot" data-i="3"><img class="squad-model" src="https://i.imgur.com/jVcugkv.png" alt=""></div>
+      <div class="squad-slot" data-i="4"><img class="squad-model" src="https://i.imgur.com/lgVQeH8.png" alt=""></div>
     </div>
   </div>
 
