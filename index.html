@@ -91,7 +91,6 @@
   .tag-new{background:var(--text);color:var(--bg);}
   .tag-trending{background:#5B7C99;color:#fff;}
   .tag-hot{background:#D9534F;color:#fff;}
-  .tag-top{background:#C9A15A;color:#0C0C0B;}
 
   .admin-controls{position:absolute;top:10px;right:10px;display:flex;gap:6px;z-index:3;}
   .admin-icon-btn{width:30px;height:30px;background:rgba(12,12,11,.72);backdrop-filter:blur(6px);color:#fff;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:6px;transition:background .15s;}
@@ -285,14 +284,6 @@
   .roulette-row{display:flex;align-items:center;gap:14px;padding:0 28px 8px;flex-wrap:wrap;}
 
   /* ---- Fit rating (upvote only) ---- */
-  .fit-rate{position:absolute;top:10px;right:10px;z-index:3;display:flex;align-items:center;gap:6px;background:rgba(12,12,11,.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:100px;padding:5px 11px;opacity:0;transform:translateY(-6px);transition:opacity .25s, transform .25s, background .15s;}
-  .fit-card:hover .fit-rate{opacity:1;transform:translateY(0);}
-  .fit-rate:hover{background:rgba(12,12,11,.92);}
-  .fit-rate.rated{background:rgba(201,161,90,.22);border-color:rgba(201,161,90,.5);}
-  .fit-rate .flame{font-size:13px;line-height:1;transition:transform .2s;}
-  .fit-rate:hover .flame{transform:scale(1.2);}
-  .fit-rate .rcount{font-family:var(--font-mono);font-size:11px;color:#fff;font-weight:700;}
-
   /* ---- Wishlist heart ---- */
   .fit-heart{position:absolute;bottom:10px;right:10px;z-index:3;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(12,12,11,.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:50%;font-size:14px;opacity:0;transform:translateY(6px);transition:opacity .25s, transform .25s, background .15s;color:#fff;}
   .fit-card:hover .fit-heart{opacity:1;transform:translateY(0);}
@@ -514,7 +505,6 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
 const ANALYTICS_DOC = doc(db, "maxedmethod", "analytics");
 const REVIEWS_DOC = doc(db, "maxedmethod", "reviews");
 const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
-const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
 
 (function(){
   const ADMIN_PASS = "\\\\\\"; // change this line to set your own passcode — this only gates the UI, see note in chat
@@ -525,12 +515,9 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
   let editingId = null; // id of fit currently being edited, null = new
   let itemDraft = [];
   let activeCat = 'men'; // which tab is showing
-  let ratings = {};           // { fitId: count } from Firebase
-  let myRatings = {};         // { fitId: true } this browser has upvoted
   let wishlist = {};          // { fitId: true } saved in this browser
   let analyticsCache = null;  // opens data for trending calc
   let showSaved = false;      // saved-only view toggle
-  try{ myRatings = JSON.parse(localStorage.getItem('mm-my-ratings')||'{}'); }catch(e){}
   try{ wishlist = JSON.parse(localStorage.getItem('mm-wishlist')||'{}'); }catch(e){}
 
   // fits without a cat are treated as men's (preserves everything built before tabs existed)
@@ -702,12 +689,6 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       const twoDayPeriod = Math.floor(Date.now() / (1000*60*60*24*2));
       hotId = filtered[twoDayPeriod % filtered.length].f.id;
     }
-    // MOST UPVOTES: the fit in this section with the highest total rating
-    let mostUpvotedId = null, topVotes = -1;
-    filtered.forEach(e=>{
-      const v = displayRating(e.f.id);
-      if(v > topVotes){ topVotes = v; mostUpvotedId = e.f.id; }
-    });
     filtered.forEach((entry, i) => {
       const fit = entry.f;
       const card = document.createElement('div');
@@ -718,14 +699,11 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
       const itemCount = (fit.items||[]).length;
       const isNew = fit.created && fit.created >= newThreshold;
       const isTrending = !isAdmin && fit.id === trendingId;
-      const rCount = displayRating(fit.id);
-      const iRated = myRatings[fit.id];
       const saved = wishlist[fit.id];
       // build the badge stack (never overlaps — flex column container)
       const badges = [];
       if(!isAdmin){
         if(fit.id === hotId) badges.push('<span class="tag tag-hot">🔥 HOT</span>');
-        if(fit.id === mostUpvotedId) badges.push('<span class="tag tag-top">⭐ MOST UPVOTES</span>');
         if(isNew) badges.push('<span class="tag tag-new">NEW</span>');
         if(isTrending) badges.push('<span class="tag tag-trending">📈 TRENDING</span>');
       }
@@ -739,7 +717,6 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
           <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →</div>
         </div>
         ${!isAdmin ? `
-        <button class="fit-rate ${iRated?'rated':''}" data-rate="${fit.id}" title="${iRated?'You liked this':'Like this fit'}"><span class="flame">🔥</span><span class="rcount">${rCount}</span></button>
         <button class="fit-heart ${saved?'saved':''}" data-heart="${fit.id}" title="${saved?'Saved':'Save for later'}">${saved?'♥':'♡'}</button>
         ` : ''}
         ${isAdmin ? `
@@ -757,18 +734,14 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
         if(e.target.closest('.admin-controls')) return;
         if(e.target.closest('.move-controls')) return;
         if(e.target.closest('.drag-hint')) return;
-        if(e.target.closest('.fit-rate')) return;
         if(e.target.closest('.fit-heart')) return;
         openDetail(fit);
       });
       grid.appendChild(card);
     });
 
-    // wire rating + heart (public)
+    // wire heart (public)
     if(!isAdmin){
-      grid.querySelectorAll('[data-rate]').forEach(btn=>{
-        btn.addEventListener('click', (e)=>{ e.stopPropagation(); rateFit(btn.getAttribute('data-rate'), btn); });
-      });
       grid.querySelectorAll('[data-heart]').forEach(btn=>{
         btn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleWishlist(btn.getAttribute('data-heart'), btn); });
       });
@@ -1659,67 +1632,6 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     window.addEventListener('resize', ()=>{ if(!finished) resize(); });
   })();
 
-  // ---------- ratings ----------
-  // Each fit has a stable TARGET in a tight, believable range (97–123) so no fit looks
-  // like a flop next to another. New fits START LOW (~10) and climb ~hourly toward their
-  // target over the first day, so a freshly-created fit never appears with suspiciously
-  // high upvotes out of nowhere.
-  function targetFor(fitId){
-    let h = 0;
-    for(let i=0;i<fitId.length;i++){ h = (h*31 + fitId.charCodeAt(i)) >>> 0; }
-    return 97 + (h % 27); // 97–123
-  }
-  function seedFor(fit){
-    // accept either a fit object or a bare id (fallback)
-    const id = (typeof fit === 'string') ? fit : fit.id;
-    const created = (typeof fit === 'object' && fit.created) ? fit.created : null;
-    const target = targetFor(id);
-    if(!created) return target; // legacy fits with no timestamp: just show the target
-    const START = 10;
-    const hoursSince = (Date.now() - created) / (1000*60*60);
-    if(hoursSince < 0) return START;
-    // climb from START up to target; reaches target after ~22 hours (~4/hour)
-    const grown = START + Math.floor(hoursSince * ((target - START) / 22));
-    return Math.min(target, grown);
-  }
-  function displayRating(fitId){
-    const fit = fits.find(f => f.id === fitId);
-    return seedFor(fit || fitId) + (ratings[fitId] || 0);
-  }
-  async function loadRatings(){
-    try{
-      const snap = await getDoc(RATINGS_DOC);
-      ratings = snap.exists() ? {...(snap.data().counts || {})} : {};
-    }catch(e){ ratings = {}; }
-  }
-  async function rateFit(fitId, btnEl){
-    const wasRated = !!myRatings[fitId];
-    if(wasRated){
-      // take the vote back
-      delete myRatings[fitId];
-      ratings[fitId] = Math.max(0, (ratings[fitId]||1) - 1);
-    } else {
-      myRatings[fitId] = true;
-      ratings[fitId] = (ratings[fitId]||0) + 1;
-    }
-    try{ localStorage.setItem('mm-my-ratings', JSON.stringify(myRatings)); }catch(e){}
-    const newLocalCount = displayRating(fitId);
-    // update just this button in place — no grid re-render (that caused the "refresh")
-    if(btnEl){
-      btnEl.classList.toggle('rated', !wasRated);
-      const c = btnEl.querySelector('.rcount');
-      if(c) c.textContent = newLocalCount;
-      btnEl.title = !wasRated ? 'You liked this' : 'Like this fit';
-    }
-    // persist to Firebase — apply the same +1/-1 delta to the stored count
-    try{
-      const snap = await getDoc(RATINGS_DOC);
-      const counts = snap.exists() ? {...(snap.data().counts||{})} : {};
-      counts[fitId] = Math.max(0, (counts[fitId]||0) + (wasRated ? -1 : 1));
-      await setDoc(RATINGS_DOC, { counts }, { merge:true });
-    }catch(e){}
-  }
-
   // ---------- wishlist ----------
   function toggleWishlist(fitId, btnEl){
     const wasSaved = !!wishlist[fitId];
@@ -1768,7 +1680,6 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
   trackVisit();
   loadPublicReviews();
   (async ()=>{
-    await loadRatings();
     try{ const snap = await getDoc(ANALYTICS_DOC); analyticsCache = snap.exists()?snap.data():{}; }catch(e){ analyticsCache = {}; }
     await loadFits();
     updateSavedCount();
