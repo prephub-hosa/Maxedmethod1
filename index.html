@@ -56,6 +56,7 @@
   .title{font-family:var(--font-display);font-weight:800;font-size:clamp(46px,11vw,120px);line-height:.92;letter-spacing:-.03em;margin:0;}
   .title .thin{font-weight:600;color:var(--text-soft);}
   .subtitle{font-family:var(--font-body);font-size:15px;color:var(--text-soft);margin-top:24px;max-width:440px;line-height:1.6;}
+  .amazon-note{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);margin-top:14px;max-width:440px;line-height:1.6;letter-spacing:.02em;}
   .status-badge{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:8px 14px;border:1px solid var(--line);border-radius:100px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--text-soft);}
   .status-dot{width:6px;height:6px;border-radius:50%;background:#8BAE7C;flex-shrink:0;animation:pulse-dot 2s ease-in-out infinite;}
   @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.35;}}
@@ -295,6 +296,7 @@
 
   /* ---- Shop whole fit button ---- */
   .shop-all-wrap{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);}
+  .shop-all-wrap.shop-all-top{margin-top:0;margin-bottom:20px;padding-top:0;padding-bottom:20px;border-top:none;border-bottom:1px solid var(--line);}
   .shop-all-btn{width:100%;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--text);color:var(--bg);border:none;padding:15px;border-radius:100px;transition:transform .15s, background .15s;font-weight:700;}
   .shop-all-btn:hover{transform:translateY(-2px);}
   .shop-all-note{font-size:11px;color:var(--text-dim);text-align:center;margin-top:10px;line-height:1.5;}
@@ -319,6 +321,7 @@
       <div class="eyebrow">Curated fits, fully shoppable</div>
       <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
       <p class="subtitle">Tap any look to see every piece — outerwear, tops, bottoms, footwear — and shop the exact fit.</p>
+      <p class="amazon-note">Every piece links to Amazon — for the best prices, trusted checkout, and the most size &amp; color options in one place.</p>
       <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
     </div>
     <div class="squad-banner" id="squadBanner">
@@ -822,6 +825,25 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     document.getElementById('detailImg').src = fit.photo || fit.cover;
     const list = document.getElementById('itemList');
     list.innerHTML = '';
+
+    // "Shop the whole fit" button — at the TOP, opens every product link at once
+    const linkedItems = (fit.items||[]).filter(it=>it.url);
+    if(linkedItems.length > 1){
+      const wrap = document.createElement('div');
+      wrap.className = 'shop-all-wrap shop-all-top';
+      wrap.innerHTML = `
+        <button class="shop-all-btn" id="shopAllBtn">Shop the whole fit — ${linkedItems.length} pieces</button>
+        <div class="shop-all-note">Opens each piece in its own tab. If your browser asks, tap “Allow” to see them all.</div>
+      `;
+      list.appendChild(wrap);
+      wrap.querySelector('#shopAllBtn').addEventListener('click', ()=>{
+        // open ALL links synchronously inside the click gesture so the browser doesn't
+        // block them (setTimeout/confirm break the "user-initiated" chain -> only 1 opens)
+        linkedItems.forEach(it=> window.open(it.url, '_blank', 'noopener'));
+        if(!isAdmin) trackClick(fit);
+      });
+    }
+
     (fit.items||[]).forEach(item=>{
       const row = document.createElement('div');
       row.className = 'item-row';
@@ -836,25 +858,6 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       }
       list.appendChild(row);
     });
-    // "Shop the whole fit" button — opens every product link at once
-    const items = (fit.items||[]).filter(it=>it.url);
-    if(items.length > 1){
-      const wrap = document.createElement('div');
-      wrap.className = 'shop-all-wrap';
-      wrap.innerHTML = `
-        <button class="shop-all-btn" id="shopAllBtn">Shop the whole fit — ${items.length} pieces</button>
-        <div class="shop-all-note">Opens each item in a new tab. Your browser may ask to allow multiple tabs.</div>
-      `;
-      list.appendChild(wrap);
-      wrap.querySelector('#shopAllBtn').addEventListener('click', ()=>{
-        const ok = confirm(`This opens all ${items.length} items in separate tabs. Your browser may ask you to allow pop-ups — tap allow to see the full fit. Continue?`);
-        if(!ok) return;
-        items.forEach((it, idx)=>{
-          setTimeout(()=> window.open(it.url, '_blank', 'noopener'), idx * 250);
-        });
-        if(!isAdmin) trackClick(fit);
-      });
-    }
     if(!isAdmin) trackOpen(fit);
     detailOverlay.classList.add('open');
     // lock the background so touch-scroll stays inside the panel, not the homepage
