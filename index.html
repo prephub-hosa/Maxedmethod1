@@ -56,7 +56,7 @@
   .title{font-family:var(--font-display);font-weight:800;font-size:clamp(46px,11vw,120px);line-height:.92;letter-spacing:-.03em;margin:0;}
   .title .thin{font-weight:600;color:var(--text-soft);}
   .subtitle{font-family:var(--font-body);font-size:15px;color:var(--text-soft);margin-top:24px;max-width:440px;line-height:1.6;}
-  .amazon-note{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);margin-top:14px;max-width:440px;line-height:1.6;letter-spacing:.02em;}
+  .amazon-note{font-family:var(--font-body);font-size:13px;color:var(--text-soft);margin-top:14px;max-width:460px;line-height:1.6;}
   .status-badge{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:8px 14px;border:1px solid var(--line);border-radius:100px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--text-soft);}
   .status-dot{width:6px;height:6px;border-radius:50%;background:#8BAE7C;flex-shrink:0;animation:pulse-dot 2s ease-in-out infinite;}
   @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.35;}}
@@ -826,21 +826,33 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     const list = document.getElementById('itemList');
     list.innerHTML = '';
 
-    // "Shop the whole fit" button — at the TOP, opens every product link at once
+    // "Shop the whole fit" button — at the TOP. Opens the first piece instantly (one tab
+    // never gets blocked), then attempts the rest and flags any the browser blocked so the
+    // user can tap them individually. Reliable regardless of pop-up settings.
     const linkedItems = (fit.items||[]).filter(it=>it.url);
     if(linkedItems.length > 1){
       const wrap = document.createElement('div');
       wrap.className = 'shop-all-wrap shop-all-top';
       wrap.innerHTML = `
         <button class="shop-all-btn" id="shopAllBtn">Shop the whole fit — ${linkedItems.length} pieces</button>
-        <div class="shop-all-note">Opens each piece in its own tab. If your browser asks, tap “Allow” to see them all.</div>
+        <div class="shop-all-note">Opens each piece on Amazon. If your browser blocks a tab, tap “Allow” or use the links below.</div>
       `;
       list.appendChild(wrap);
       wrap.querySelector('#shopAllBtn').addEventListener('click', ()=>{
-        // open ALL links synchronously inside the click gesture so the browser doesn't
-        // block them (setTimeout/confirm break the "user-initiated" chain -> only 1 opens)
-        linkedItems.forEach(it=> window.open(it.url, '_blank', 'noopener'));
         if(!isAdmin) trackClick(fit);
+        let blocked = 0;
+        linkedItems.forEach(it=>{
+          const w = window.open(it.url, '_blank', 'noopener');
+          if(!w || w.closed || typeof w.closed === 'undefined') blocked++;
+        });
+        // if the browser blocked some tabs, tell the user clearly
+        const note = wrap.querySelector('.shop-all-note');
+        if(blocked > 0){
+          note.innerHTML = `Your browser blocked ${blocked} tab${blocked>1?'s':''} — tap “Allow pop-ups” for this site, or use the individual Shop buttons below.`;
+          note.style.color = 'var(--danger)';
+        } else {
+          note.textContent = 'Opened all pieces on Amazon — check your new tabs.';
+        }
       });
     }
 
