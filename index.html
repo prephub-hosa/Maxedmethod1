@@ -252,7 +252,13 @@
   .hero-wrap{display:flex;align-items:stretch;gap:20px;}
   .hero-wrap .hero{flex:0 0 auto;}
   .squad-banner{flex:1 1 auto;display:flex;align-items:flex-end;justify-content:center;gap:8px;background:transparent;margin:0;padding:0;min-height:520px;overflow:hidden;position:relative;}
-  .squad-slot{position:relative;flex:0 0 auto;width:150px;height:500px;border-radius:14px;overflow:hidden;background:linear-gradient(180deg, #26251F 0%, #191813 60%, #131210 100%);border:1px solid rgba(255,255,255,.05);display:flex;align-items:flex-end;justify-content:center;opacity:0;transform:translateY(60px);}
+  .squad-slot{position:relative;flex:0 0 auto;width:150px;height:500px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.05);display:flex;align-items:flex-end;justify-content:center;opacity:0;transform:translateY(60px);}
+  /* per-fit background, tuned to each outfit's palette (muted for the dark editorial look) */
+  .squad-slot[data-i="0"]{background:linear-gradient(180deg,#4a4235 0%,#2b2820 55%,#17150f 100%);}   /* sandstone/beige */
+  .squad-slot[data-i="1"]{background:linear-gradient(180deg,#45403a 0%,#2a2723 55%,#161412 100%);}   /* warm cream */
+  .squad-slot[data-i="2"]{background:linear-gradient(180deg,#3a3f47 0%,#24272c 55%,#131517 100%);}   /* slate grey */
+  .squad-slot[data-i="3"]{background:linear-gradient(180deg,#3a4a5a 0%,#232d37 55%,#12171c 100%);}   /* sky blue */
+  .squad-slot[data-i="4"]{background:linear-gradient(180deg,#404650 0%,#272b31 55%,#14161a 100%);}   /* cool light blue-grey */
   .squad-model{height:96%;width:auto;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 20px rgba(0,0,0,.5));}
   .squad-banner.play .squad-slot{animation:squad-rise .7s cubic-bezier(.22,1,.36,1) both;}
   .squad-banner.play .squad-slot[data-i="0"]{animation-delay:.05s;}
