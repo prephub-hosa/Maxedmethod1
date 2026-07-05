@@ -76,6 +76,13 @@
     .fit-tag{font-size:9px;}
     .fit-shop-cue{font-size:9px;}
     .fit-card-footer{padding:12px 10px;}
+    /* tighten the hero so fits are reachable sooner on phones */
+    .hero{padding:32px 22px 20px;}
+    .title{font-size:clamp(38px,15vw,64px);}
+    .eyebrow{margin-bottom:14px;font-size:10px;}
+    .subtitle{margin-top:16px;font-size:14px;}
+    .amazon-note{margin-top:10px;font-size:12px;}
+    .status-badge{margin-top:16px;}
   }
   .fit-card{position:relative;background:var(--bg-2);overflow:hidden;cursor:pointer;aspect-ratio:3/4;}
   .fit-cover{width:100%;height:100%;object-fit:cover;display:block;background:var(--surface);transition:transform .6s cubic-bezier(.16,1,.3,1), filter .4s ease;filter:saturate(.96);}
@@ -1489,11 +1496,11 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     let imgReady = false, silBox = null, wordOnly = false, wordFontSize = 60;
 
     // timeline (ms)
-    const T_FADEIN = 550;    // models fade into view
-    const T_HOLD = 150;      // very brief beat, then disperse
-    const T_DISPERSE = 1150; // slow drift into smoke (shadow aura)
-    const T_REFORM = 950;    // particles migrate into the word
-    const T_SETTLE = 500;    // settle, bg fully black
+    const T_FADEIN = 400;    // models fade into view
+    const T_HOLD = 100;      // very brief beat, then disperse
+    const T_DISPERSE = 750;  // drift into smoke (shadow aura)
+    const T_REFORM = 650;    // particles migrate into the word
+    const T_SETTLE = 350;    // settle, bg fully black
     const T_TOTAL = T_FADEIN + T_HOLD + T_DISPERSE + T_REFORM + T_SETTLE;
 
     function resize(){
@@ -1652,7 +1659,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         drawSolidWord(1);
       }
 
-      if(t >= T_TOTAL){ setTimeout(finish, 450); return; }
+      if(t >= T_TOTAL){ setTimeout(finish, 250); return; }
       raf = requestAnimationFrame(frame);
     }
 
