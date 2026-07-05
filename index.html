@@ -251,8 +251,8 @@
   /* ---- Squad banner (beside hero, no bar) ---- */
   .hero-wrap{display:flex;align-items:stretch;gap:20px;}
   .hero-wrap .hero{flex:0 0 auto;}
-  .squad-banner{flex:1 1 auto;display:flex;align-items:flex-end;justify-content:center;gap:0;background:transparent;margin:0;padding:0;min-height:520px;overflow:visible;position:relative;}
-  .squad-model{height:500px;width:auto;object-fit:contain;object-position:bottom;margin:0 -60px;opacity:0;transform:translateY(60px);filter:drop-shadow(0 10px 30px rgba(0,0,0,.55));}
+  .squad-banner{flex:1 1 auto;display:flex;align-items:flex-end;justify-content:center;gap:0;background:transparent;margin:0;padding:0;min-height:420px;overflow:hidden;position:relative;}
+  .squad-model{height:360px;width:auto;object-fit:contain;object-position:bottom;margin:0 -95px;opacity:0;transform:translateY(60px);filter:drop-shadow(0 10px 30px rgba(0,0,0,.55));}
   /* pyramid stacking: middle frontmost, sides tuck behind toward center */
   .squad-model[data-i="0"]{z-index:1;}
   .squad-model[data-i="1"]{z-index:2;}
@@ -271,8 +271,8 @@
   }
   @media (max-width:900px){
     .hero-wrap{flex-direction:column;gap:0;}
-    .squad-banner{min-height:0;height:300px;margin-top:8px;}
-    .squad-model{height:290px;margin:0 -48px;}
+    .squad-banner{min-height:0;height:260px;margin-top:8px;}
+    .squad-model{height:250px;margin:0 -70px;}
   }
 
   /* ---- Roulette button ---- */
