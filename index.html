@@ -219,6 +219,9 @@
   .stat-table td{font-size:13px;padding:10px 8px;border-bottom:1px solid var(--line-soft);}
   .stat-table td.num{font-family:var(--font-mono);color:var(--text-soft);}
   .stat-table tr:hover td{background:var(--bg-2);}
+  .cat-block{margin-top:22px;}
+  .cat-head{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text);margin-bottom:8px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+  .cat-sub{font-size:9px;letter-spacing:.06em;color:var(--text-dim);font-weight:400;}
   .analytics-note{font-size:11px;color:var(--text-dim);margin-top:16px;line-height:1.5;}
   .admin-section{margin-top:26px;border-top:1px solid var(--line);padding-top:20px;}
   .section-head{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-soft);margin-bottom:14px;}
@@ -1119,22 +1122,37 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     const ctr = visits > 0 ? Math.round((totalClicks / visits) * 100) : 0;
     const fitStats = data.fitStats || {};
 
-    // build sorted per-fit rows (by shop clicks desc)
-    const rows = Object.keys(fitStats).map(id=>({
-      title: fitStats[id].title || 'Untitled',
-      opens: fitStats[id].opens || 0,
-      clicks: fitStats[id].clicks || 0
-    })).sort((a,b)=> b.clicks - a.clicks || b.opens - a.opens);
+    // map each tracked fit to its category using the loaded catalog
+    const catById = {};
+    fits.forEach(f => { catById[f.id] = f.cat || 'men'; });
 
-    let tableHtml = '';
-    if(rows.length){
-      tableHtml = `<table class="stat-table">
-        <thead><tr><th>Fit</th><th class="num">Opens</th><th class="num">Shop clicks</th></tr></thead>
-        <tbody>${rows.map(r=>`<tr><td>${escapeHtml(r.title)}</td><td class="num">${r.opens}</td><td class="num">${r.clicks}</td></tr>`).join('')}</tbody>
-      </table>`;
-    } else {
-      tableHtml = '<p class="hint">No fit activity tracked yet. Data appears here as people open fits and click Shop.</p>';
+    function buildRows(cat){
+      return Object.keys(fitStats)
+        .filter(id => (catById[id] || 'men') === cat)
+        .map(id=>({
+          title: fitStats[id].title || 'Untitled',
+          opens: fitStats[id].opens || 0,
+          clicks: fitStats[id].clicks || 0
+        }))
+        .sort((a,b)=> b.clicks - a.clicks || b.opens - a.opens);
     }
+    function tableFor(cat, label){
+      const rows = buildRows(cat);
+      // per-section totals
+      const secOpens = rows.reduce((s,r)=>s+r.opens,0);
+      const secClicks = rows.reduce((s,r)=>s+r.clicks,0);
+      if(!rows.length){
+        return `<div class="cat-block"><div class="cat-head">${label}</div><p class="hint">No ${label.toLowerCase()} activity tracked yet.</p></div>`;
+      }
+      return `<div class="cat-block">
+        <div class="cat-head">${label} <span class="cat-sub">${secOpens} opens · ${secClicks} clicks</span></div>
+        <table class="stat-table">
+          <thead><tr><th>Fit</th><th class="num">Opens</th><th class="num">Shop clicks</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr><td>${escapeHtml(r.title)}</td><td class="num">${r.opens}</td><td class="num">${r.clicks}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+    }
+    const tableHtml = tableFor('men', "Men's") + tableFor('women', "Women's");
 
     body.innerHTML = `
       <div class="stat-row">
