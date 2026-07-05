@@ -248,9 +248,11 @@
   .intro-skip.on-dark{color:rgba(255,255,255,.4);}
   .intro-skip:hover{color:rgba(128,128,128,.9);}
 
-  /* ---- Squad banner ---- */
-  .squad-banner{display:flex;align-items:flex-end;justify-content:center;gap:0;background:linear-gradient(180deg,#0C0C0B 0%,#161513 100%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:16px 0 8px;padding:0;height:440px;overflow:hidden;position:relative;}
-  .squad-model{height:100%;width:auto;object-fit:contain;object-position:bottom;margin:0 -130px;opacity:0;transform:translateY(100%);filter:drop-shadow(0 10px 30px rgba(0,0,0,.55));}
+  /* ---- Squad banner (beside hero, no bar) ---- */
+  .hero-wrap{display:flex;align-items:stretch;gap:20px;}
+  .hero-wrap .hero{flex:0 0 auto;}
+  .squad-banner{flex:1 1 auto;display:flex;align-items:flex-end;justify-content:center;gap:0;background:transparent;margin:0;padding:0;min-height:520px;overflow:visible;position:relative;}
+  .squad-model{height:500px;width:auto;object-fit:contain;object-position:bottom;margin:0 -60px;opacity:0;transform:translateY(60px);filter:drop-shadow(0 10px 30px rgba(0,0,0,.55));}
   /* pyramid stacking: middle frontmost, sides tuck behind toward center */
   .squad-model[data-i="0"]{z-index:1;}
   .squad-model[data-i="1"]{z-index:2;}
@@ -264,12 +266,13 @@
   .squad-banner.play .squad-model[data-i="3"]{animation-delay:.50s;}
   .squad-banner.play .squad-model[data-i="4"]{animation-delay:.65s;}
   @keyframes squad-rise{
-    0%{opacity:0;transform:translateY(100%);}
+    0%{opacity:0;transform:translateY(60px);}
     100%{opacity:1;transform:translateY(0);}
   }
-  @media (max-width:680px){
-    .squad-banner{height:280px;}
-    .squad-model{margin:0 -85px;}
+  @media (max-width:900px){
+    .hero-wrap{flex-direction:column;gap:0;}
+    .squad-banner{min-height:0;height:300px;margin-top:8px;}
+    .squad-model{height:290px;margin:0 -48px;}
   }
 
   /* ---- Roulette button ---- */
@@ -320,23 +323,23 @@
       <button class="nav-link" data-scrollto="updatesAnchor">Updates</button>
     </div>
   </div>
-  <div class="hero">
-    <div class="eyebrow">Curated fits, fully shoppable</div>
-    <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
-    <p class="subtitle">Tap any look to see every piece — outerwear, tops, bottoms, footwear — and shop the exact fit.</p>
-    <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
-  </div>
-
-  <div class="squad-banner" id="squadBanner">
-    <img class="squad-model" data-i="0" src="https://i.imgur.com/VxXHnt4.png" alt="">
-    <img class="squad-model" data-i="1" src="https://i.imgur.com/MJzqo0M.png" alt="">
-    <img class="squad-model" data-i="2" src="https://i.imgur.com/zPOM6OA.png" alt="">
-    <img class="squad-model" data-i="3" src="https://i.imgur.com/jVcugkv.png" alt="">
-    <img class="squad-model" data-i="4" src="https://i.imgur.com/lgVQeH8.png" alt="">
+  <div class="hero-wrap">
+    <div class="hero">
+      <div class="eyebrow">Curated fits, fully shoppable</div>
+      <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
+      <p class="subtitle">Tap any look to see every piece — outerwear, tops, bottoms, footwear — and shop the exact fit.</p>
+      <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
+    </div>
+    <div class="squad-banner" id="squadBanner">
+      <img class="squad-model" data-i="0" src="https://i.imgur.com/VxXHnt4.png" alt="">
+      <img class="squad-model" data-i="1" src="https://i.imgur.com/MJzqo0M.png" alt="">
+      <img class="squad-model" data-i="2" src="https://i.imgur.com/zPOM6OA.png" alt="">
+      <img class="squad-model" data-i="3" src="https://i.imgur.com/jVcugkv.png" alt="">
+      <img class="squad-model" data-i="4" src="https://i.imgur.com/lgVQeH8.png" alt="">
+    </div>
   </div>
 
   <div class="roulette-row">
-    <button class="roulette-btn" id="rouletteBtn"><span class="roulette-dice">🎲</span> Surprise me</button>
     <button class="saved-toggle" id="savedToggle">♡ Saved <span id="savedCount"></span></button>
   </div>
   <div class="tabbar">
@@ -1753,25 +1756,6 @@ const RATINGS_DOC = doc(db, "maxedmethod", "ratings");
     return topOpens >= 3 ? topId : null; // needs a little traction to earn the tag
   }
 
-
-  // ---------- roulette ----------
-  document.getElementById('rouletteBtn').addEventListener('click', ()=>{
-    const btn = document.getElementById('rouletteBtn');
-    const pool = getFiltered().map(e=>e.f);
-    if(!pool.length) return;
-    btn.classList.add('spinning');
-    let flips = 0;
-    const maxFlips = 12;
-    const interval = setInterval(()=>{
-      flips++;
-      if(flips >= maxFlips){
-        clearInterval(interval);
-        btn.classList.remove('spinning');
-        const pick = pool[Math.floor(Math.random()*pool.length)];
-        openDetail(pick);
-      }
-    }, 70);
-  });
 
   // ---------- saved view toggle ----------
   document.getElementById('savedToggle').addEventListener('click', ()=>{
