@@ -230,6 +230,17 @@
   .cat-block{margin-top:22px;}
   .cat-head{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text);margin-bottom:8px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
   .cat-sub{font-size:9px;letter-spacing:.06em;color:var(--text-dim);font-weight:400;}
+  .funnel-block{margin-top:22px;}
+  .funnel{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
+  .funnel-step{display:flex;flex-direction:column;gap:4px;}
+  .funnel-bar{height:8px;background:var(--bg-2);border-radius:100px;overflow:hidden;}
+  .funnel-fill{height:100%;background:var(--text-soft);border-radius:100px;transition:width .5s ease;}
+  .funnel-fill-gold{background:#C9A15A;}
+  .funnel-row{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--text-soft);}
+  .funnel-row b{color:var(--text);}
+  .insight{margin-top:14px;padding:12px 14px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;font-size:12px;line-height:1.5;color:var(--text-soft);}
+  .stat-row-mini{margin-top:16px;}
+  .stat-row-mini .stat-num{font-size:24px;}
   .analytics-note{font-size:11px;color:var(--text-dim);margin-top:16px;line-height:1.5;}
   .admin-section{margin-top:26px;border-top:1px solid var(--line);padding-top:20px;}
   .section-head{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-soft);margin-bottom:14px;}
@@ -298,9 +309,12 @@
   }
   @media (max-width:900px){
     .hero-wrap{flex-direction:column;gap:0;}
-    .squad-banner{min-height:0;height:340px;margin-top:8px;gap:6px;}
-    .squad-slot{height:330px;border-radius:10px;}
-    .squad-slot::after{font-size:30px;}
+    .squad-banner{min-height:0;height:280px;margin-top:6px;gap:5px;}
+    .squad-slot{height:270px;border-radius:10px;}
+  }
+  @media (max-width:640px){
+    .squad-banner{height:210px;margin-top:4px;gap:4px;}
+    .squad-slot{height:205px;border-radius:8px;}
   }
 
   /* ---- Roulette button ---- */
@@ -603,13 +617,50 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       // count one visit per browser session (a refresh won't inflate it)
       if(sessionStorage.getItem('mm-visit-counted')) return;
       sessionStorage.setItem('mm-visit-counted','1');
-      await setDoc(ANALYTICS_DOC, { visits: increment(1) }, { merge:true });
+      // also record device type so we can see mobile vs desktop behaviour
+      const isMobile = window.matchMedia('(max-width:640px)').matches;
+      await setDoc(ANALYTICS_DOC, {
+        visits: increment(1),
+        visitsMobile: increment(isMobile ? 1 : 0),
+        visitsDesktop: increment(isMobile ? 0 : 1)
+      }, { merge:true });
     }catch(e){ /* analytics never blocks the site */ }
+  }
+
+  // one-time-per-session event counters (scroll depth, engagement, etc.)
+  async function trackEventOnce(key, field){
+    try{
+      if(sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key,'1');
+      await setDoc(ANALYTICS_DOC, { [field]: increment(1) }, { merge:true });
+    }catch(e){}
+  }
+  async function trackEvent(field){
+    try{ await setDoc(ANALYTICS_DOC, { [field]: increment(1) }, { merge:true }); }catch(e){}
+  }
+  // fired when the visitor scrolls far enough to actually SEE the fit grid
+  function initScrollTracking(){
+    const grid = document.querySelector('.tabbar');
+    if(!grid) return;
+    let fired = false;
+    const check = ()=>{
+      if(fired) return;
+      const r = grid.getBoundingClientRect();
+      if(r.top < window.innerHeight * 0.9){
+        fired = true;
+        trackEventOnce('mm-reached-fits','reachedFits');
+        window.removeEventListener('scroll', check);
+      }
+    };
+    window.addEventListener('scroll', check, { passive:true });
+    check(); // in case it's already visible (desktop)
   }
   // Use setDoc with a merged plain object per fit id. Reading-then-writing guarantees
   // brand-new fit ids get created (nested increment on a missing path is unreliable).
   async function bumpFitStat(fit, field){
     try{
+      // mark that this session engaged with at least one fit (for bounce rate)
+      trackEventOnce('mm-engaged','engagedSessions');
       let data = {};
       try{ const snap = await getDoc(ANALYTICS_DOC); data = snap.exists() ? snap.data() : {}; }catch(e){}
       const fitStats = data.fitStats || {};
@@ -625,6 +676,8 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   }
   function trackOpen(fit){ bumpFitStat(fit, 'opens'); }
   function trackClick(fit){ bumpFitStat(fit, 'clicks'); }
+  function trackTabView(cat){ trackEvent(cat === 'women' ? 'tabWomenViews' : 'tabMenViews'); }
+  function trackShopAll(){ trackEvent('shopAllClicks'); }
 
   async function loadFits(){
     // 1) instant paint from local cache if we have one (kills the blank-loading wait)
@@ -901,7 +954,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       `;
       list.appendChild(wrap);
       wrap.querySelector('#shopAllBtn').addEventListener('click', ()=>{
-        if(!isAdmin) trackClick(fit);
+        if(!isAdmin){ trackClick(fit); trackShopAll(); }
         let blocked = 0;
         linkedItems.forEach(it=>{
           const w = window.open(it.url, '_blank', 'noopener');
@@ -1156,6 +1209,23 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     if(isAdmin) showAddFitShortcut();
   });
 
+  // plain-english read of where the funnel is leaking, so the numbers are actionable
+  function funnelInsight(reachedRate, engagedRate, ctr, bounceRate){
+    if(reachedRate > 0 && reachedRate < 55){
+      return `⚠️ Only ${reachedRate}% scroll down far enough to see the fits — a lot of people leave at the hero. Consider making the fits visible sooner (shorter intro / smaller hero).`;
+    }
+    if(engagedRate > 0 && engagedRate < 30){
+      return `⚠️ People reach the fits but only ${engagedRate}% open one. The covers may not be pulling them in — try stronger cover shots or more variety.`;
+    }
+    if(ctr > 0 && engagedRate > 0 && ctr < engagedRate * 0.5){
+      return `⚠️ People open fits but few click Shop. The breakdowns may need clearer or more tempting buy buttons.`;
+    }
+    if(ctr >= 25){
+      return `✅ Healthy funnel — a good share of visitors click through. Your biggest lever now is more traffic, not site changes.`;
+    }
+    return `Not enough data yet — the picture sharpens as more people visit. Check back once you have a few hundred visits.`;
+  }
+
   // ---------- analytics view ----------
   const analyticsModal = document.getElementById('analyticsModal');
   document.getElementById('analyticsFab').addEventListener('click', async ()=>{
@@ -1174,6 +1244,23 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     const totalClicks = data.totalClicks || 0;
     const ctr = visits > 0 ? Math.round((totalClicks / visits) * 100) : 0;
     const fitStats = data.fitStats || {};
+
+    // funnel + engagement metrics
+    const reachedFits = data.reachedFits || 0;
+    const engaged = data.engagedSessions || 0;          // sessions that opened >=1 fit
+    const visitsMobile = data.visitsMobile || 0;
+    const visitsDesktop = data.visitsDesktop || 0;
+    const shopAllClicks = data.shopAllClicks || 0;
+    const tabMenViews = data.tabMenViews || 0;
+    const tabWomenViews = data.tabWomenViews || 0;
+    // total opens across all fits
+    const totalOpens = Object.keys(fitStats).reduce((s,id)=> s + (fitStats[id].opens||0), 0);
+    // rates (guard divide-by-zero)
+    const pct = (a,b)=> b>0 ? Math.round((a/b)*100) : 0;
+    const reachedRate = pct(reachedFits, visits);       // % who scrolled to the fits
+    const engagedRate = pct(engaged, visits);           // % who opened a fit
+    const bounceRate = 100 - engagedRate;               // % who left without opening a fit
+    const mobilePct = pct(visitsMobile, visitsMobile+visitsDesktop);
 
     // map each tracked fit to its category using the loaded catalog
     const catById = {};
@@ -1213,8 +1300,50 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         <div class="stat-card"><div class="stat-num">${totalClicks}</div><div class="stat-label">Shop clicks</div></div>
         <div class="stat-card"><div class="stat-num">${ctr}%</div><div class="stat-label">Click rate</div></div>
       </div>
+
+      <div class="funnel-block">
+        <div class="cat-head">The Funnel <span class="cat-sub">where people drop off</span></div>
+        <div class="funnel">
+          <div class="funnel-step">
+            <div class="funnel-bar"><div class="funnel-fill" style="width:100%"></div></div>
+            <div class="funnel-row"><span>Landed on site</span><b>${visits}</b></div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar"><div class="funnel-fill" style="width:${reachedRate}%"></div></div>
+            <div class="funnel-row"><span>Scrolled to the fits</span><b>${reachedFits} · ${reachedRate}%</b></div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar"><div class="funnel-fill" style="width:${engagedRate}%"></div></div>
+            <div class="funnel-row"><span>Opened a fit</span><b>${engaged} · ${engagedRate}%</b></div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar"><div class="funnel-fill funnel-fill-gold" style="width:${ctr}%"></div></div>
+            <div class="funnel-row"><span>Clicked to shop</span><b>${totalClicks} · ${ctr}%</b></div>
+          </div>
+        </div>
+        <div class="insight">${funnelInsight(reachedRate, engagedRate, ctr, bounceRate)}</div>
+      </div>
+
+      <div class="stat-row stat-row-mini">
+        <div class="stat-card"><div class="stat-num">${bounceRate}%</div><div class="stat-label">Bounced (no fit opened)</div></div>
+        <div class="stat-card"><div class="stat-num">${mobilePct}%</div><div class="stat-label">On mobile</div></div>
+        <div class="stat-card"><div class="stat-num">${totalOpens}</div><div class="stat-label">Total fit opens</div></div>
+      </div>
+
+      <div class="cat-block">
+        <div class="cat-head">Engagement details</div>
+        <table class="stat-table">
+          <tbody>
+            <tr><td>Mobile vs Desktop visits</td><td class="num">${visitsMobile} / ${visitsDesktop}</td></tr>
+            <tr><td>Men's tab views</td><td class="num">${tabMenViews}</td></tr>
+            <tr><td>Women's tab views</td><td class="num">${tabWomenViews}</td></tr>
+            <tr><td>"Shop the whole fit" clicks</td><td class="num">${shopAllClicks}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
       ${tableHtml}
-      <p class="analytics-note">Visits count once per browser session. "Opens" = times a fit's breakdown was viewed; "Shop clicks" = times a Shop button was tapped. Your own admin activity isn't counted.</p>
+      <p class="analytics-note">Visits, "scrolled to fits", "opened a fit", and bounce each count once per browser session. Opens &amp; shop clicks count every tap. Your own admin activity isn't counted.</p>
       <div class="admin-section" id="reviewsAdmin"><div class="section-head">Reviews & Questions</div><div id="reviewsAdminBody"><div class="hint">Loading…</div></div></div>
       <div class="admin-section" id="subsAdmin"><div class="section-head">Email Subscribers <span id="subCount"></span></div><div id="subsAdminBody"><div class="hint">Loading…</div></div></div>
     `;
@@ -1368,6 +1497,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       const cat = tab.getAttribute('data-cat');
       if(cat === activeCat) return;
       activeCat = cat;
+      if(!isAdmin) trackTabView(cat);
       render();
     });
   });
@@ -1781,6 +1911,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   // ---------- intro / boot ----------
   trackVisit();
   loadPublicReviews();
+  if(!isAdmin) initScrollTracking();
   (async ()=>{
     try{ const snap = await getDoc(ANALYTICS_DOC); analyticsCache = snap.exists()?snap.data():{}; }catch(e){ analyticsCache = {}; }
     await loadFits();
