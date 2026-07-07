@@ -196,6 +196,9 @@
   .modal-title{font-family:var(--font-display);font-weight:700;font-size:22px;letter-spacing:-.02em;margin:0 0 20px;}
   .field{margin-bottom:16px;}
   .field label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;}
+  .cat-select{display:flex;gap:8px;}
+  .cat-opt{flex:1;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--text-dim);font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;transition:background .15s,color .15s,border-color .15s;}
+  .cat-opt.active{background:var(--text);color:var(--bg);border-color:var(--text);}
   .field input, .field select, .field textarea{width:100%;padding:11px 12px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;transition:border-color .15s, box-shadow .15s;}
   .field textarea{font-family:var(--font-mono);font-size:12.5px;line-height:1.6;resize:vertical;min-height:200px;}
   .field input::placeholder, .field textarea::placeholder{color:var(--text-dim);}
@@ -541,6 +544,14 @@ OUTER | Cream Cardigan | https://..."></textarea>
       <input type="text" id="fitTitleInput" placeholder="e.g. Dark Aura">
     </div>
     <div class="field">
+      <label>Category</label>
+      <div class="cat-select">
+        <button type="button" class="cat-opt active" id="fitCatMen" data-cat="men">Men</button>
+        <button type="button" class="cat-opt" id="fitCatWomen" data-cat="women">Women</button>
+      </div>
+      <div class="hint">Double-check this — it decides which tab the fit shows under and how analytics groups it.</div>
+    </div>
+    <div class="field">
       <label>Cover / thumbnail image URL</label>
       <input type="text" id="fitCoverInput" placeholder="https://...">
       <div class="hint">This shows on the grid card. Use the same model shot from your carousel cover slide. Imgur links must start with i.imgur.com (right-click the full-size image → "Copy image address"), not imgur.com/a/... page links.</div>
@@ -655,21 +666,19 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     window.addEventListener('scroll', check, { passive:true });
     check(); // in case it's already visible (desktop)
   }
-  // Use setDoc with a merged plain object per fit id. Reading-then-writing guarantees
-  // brand-new fit ids get created (nested increment on a missing path is unreliable).
+  // Atomic per-field increment on the nested fitStats.<id>.<field> path — no read-before-write,
+  // so concurrent opens/clicks from different visitors can never stomp each other's counts.
   async function bumpFitStat(fit, field){
     try{
-      // mark that this session engaged with at least one fit (for bounce rate)
       trackEventOnce('mm-engaged','engagedSessions');
-      let data = {};
-      try{ const snap = await getDoc(ANALYTICS_DOC); data = snap.exists() ? snap.data() : {}; }catch(e){}
-      const fitStats = data.fitStats || {};
-      const entry = fitStats[fit.id] || { title: fit.title, opens: 0, clicks: 0 };
-      entry.title = fit.title; // keep title fresh in case it was renamed
-      entry.opens = entry.opens || 0;
-      entry.clicks = entry.clicks || 0;
-      entry[field] = (entry[field] || 0) + 1;
-      const patch = { fitStats: { [fit.id]: entry } };
+      const patch = {
+        fitStats: {
+          [fit.id]: {
+            title: fit.title,       // idempotent — safe to write every time, keeps it fresh
+            [field]: increment(1)   // atomic on Firestore's servers, no race condition
+          }
+        }
+      };
       if(field === 'clicks') patch.totalClicks = increment(1);
       await setDoc(ANALYTICS_DOC, patch, { merge:true });
     }catch(e){ /* never block */ }
@@ -1078,6 +1087,15 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 
   // ---------- add/edit fit form ----------
   const fitFormModal = document.getElementById('fitFormModal');
+  function setFitCatToggle(cat){
+    document.getElementById('fitCatMen').classList.toggle('active', cat !== 'women');
+    document.getElementById('fitCatWomen').classList.toggle('active', cat === 'women');
+  }
+  function getFitCatToggle(){
+    return document.getElementById('fitCatWomen').classList.contains('active') ? 'women' : 'men';
+  }
+  document.getElementById('fitCatMen').addEventListener('click', ()=> setFitCatToggle('men'));
+  document.getElementById('fitCatWomen').addEventListener('click', ()=> setFitCatToggle('women'));
   function openFitForm(id){
     editingId = id;
     document.getElementById('fitFormError').style.display = 'none';
@@ -1087,12 +1105,14 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       document.getElementById('fitTitleInput').value = fit.title;
       document.getElementById('fitCoverInput').value = fit.cover;
       document.getElementById('fitPhotoInput').value = fit.photo || '';
+      setFitCatToggle(fit.cat || 'men'); // reflects the fit's REAL category, so mistakes are visible & fixable
       itemDraft = (fit.items||[]).map(it => ({...it}));
     } else {
       document.getElementById('fitFormTitle').textContent = 'Add a fit — ' + (activeCat === 'women' ? "Women's" : "Men's");
       document.getElementById('fitTitleInput').value = '';
       document.getElementById('fitCoverInput').value = '';
       document.getElementById('fitPhotoInput').value = '';
+      setFitCatToggle(activeCat);
       itemDraft = [ { id: uid(), label:'OUTER', name:'', price:'', url:'' } ];
     }
     renderItemDraft();
@@ -1188,14 +1208,14 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       return;
     }
 
-    const fitData = { title, cover, photo: photo || cover, items: cleanItems };
+    const fitData = { title, cover, photo: photo || cover, items: cleanItems, cat: getFitCatToggle() };
 
     const prevFits = fits.map(f => ({...f}));
     if(editingId){
       const idx = fits.findIndex(f=>f.id===editingId);
-      fits[idx] = { ...fits[idx], ...fitData }; // keeps existing cat
+      fits[idx] = { ...fits[idx], ...fitData }; // cat now explicitly comes from the toggle, so corrections stick
     } else {
-      fits.push({ id: uid(), cat: activeCat, created: Date.now(), ...fitData });
+      fits.push({ id: uid(), created: Date.now(), ...fitData });
     }
     const ok = await saveFits();
     if(!ok){
