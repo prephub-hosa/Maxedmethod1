@@ -343,6 +343,7 @@
   .shop-all-wrap{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);}
   .shop-all-wrap.shop-all-top{margin-top:0;margin-bottom:20px;padding-top:0;padding-bottom:20px;border-top:none;border-bottom:1px solid var(--line);}
   .shop-all-btn{width:100%;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--text);color:var(--bg);border:none;padding:15px;border-radius:100px;transition:transform .15s, background .15s;font-weight:700;}
+  .shop-all-btn:disabled{background:var(--surface-2);color:var(--text-dim);}
   .shop-all-btn:hover{transform:translateY(-2px);}
   .shop-all-note{font-size:11px;color:var(--text-dim);text-align:center;margin-top:10px;line-height:1.5;}
 </style>
@@ -950,34 +951,65 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     const list = document.getElementById('itemList');
     list.innerHTML = '';
 
-    // "Shop the whole fit" button — at the TOP. Opens the first piece instantly (one tab
-    // never gets blocked), then attempts the rest and flags any the browser blocked so the
-    // user can tap them individually. Reliable regardless of pop-up settings.
+    // "Shop the whole fit" — at the TOP.
+    // Desktop: try to open every tab at once (one tab is never blocked; extras usually need
+    // a one-time "allow pop-ups", which desktop browsers make easy).
+    // Mobile: batch-opening basically never works — most mobile traffic arrives through
+    // TikTok's own in-app browser, which blocks background tabs with no "allow" prompt at
+    // all. So on mobile the button becomes a one-tap-per-item sequence instead: each tap is
+    // its own genuine gesture, which every browser (including in-app ones) treats like a
+    // normal link tap and reliably opens.
     const linkedItems = (fit.items||[]).filter(it=>it.url);
+    const isMobile = window.matchMedia('(max-width:640px)').matches;
     if(linkedItems.length > 1){
       const wrap = document.createElement('div');
       wrap.className = 'shop-all-wrap shop-all-top';
-      wrap.innerHTML = `
-        <button class="shop-all-btn" id="shopAllBtn">Shop the whole fit — ${linkedItems.length} pieces</button>
-        <div class="shop-all-note">Opens each piece on Amazon. If your browser blocks a tab, tap “Allow” or use the links below.</div>
-      `;
-      list.appendChild(wrap);
-      wrap.querySelector('#shopAllBtn').addEventListener('click', ()=>{
-        if(!isAdmin){ trackClick(fit); trackShopAll(); }
-        let blocked = 0;
-        linkedItems.forEach(it=>{
-          const w = window.open(it.url, '_blank', 'noopener');
-          if(!w || w.closed || typeof w.closed === 'undefined') blocked++;
-        });
-        // if the browser blocked some tabs, tell the user clearly
+
+      if(isMobile){
+        let idx = 0;
+        const label = (i)=> `Shop piece ${i+1} of ${linkedItems.length} — ${linkedItems[i].label}`;
+        wrap.innerHTML = `
+          <button class="shop-all-btn" id="shopAllBtn">${label(0)}</button>
+          <div class="shop-all-note">Tap to open each piece on Amazon, one at a time — most reliable on mobile.</div>
+        `;
+        list.appendChild(wrap);
+        const btn = wrap.querySelector('#shopAllBtn');
         const note = wrap.querySelector('.shop-all-note');
-        if(blocked > 0){
-          note.innerHTML = `Your browser blocked ${blocked} tab${blocked>1?'s':''} — tap “Allow pop-ups” for this site, or use the individual Shop buttons below.`;
-          note.style.color = 'var(--danger)';
-        } else {
-          note.textContent = 'Opened all pieces on Amazon — check your new tabs.';
-        }
-      });
+        btn.addEventListener('click', ()=>{
+          if(!isAdmin){ trackClick(fit); if(idx===0) trackShopAll(); }
+          window.open(linkedItems[idx].url, '_blank', 'noopener');
+          idx++;
+          if(idx < linkedItems.length){
+            btn.textContent = label(idx);
+            note.textContent = `Opened ${idx} of ${linkedItems.length} — tap again for the next piece.`;
+          } else {
+            btn.textContent = `✓ Opened all ${linkedItems.length} pieces`;
+            note.textContent = 'That\'s the whole fit — check your tabs.';
+            btn.disabled = true;
+          }
+        });
+      } else {
+        wrap.innerHTML = `
+          <button class="shop-all-btn" id="shopAllBtn">Shop the whole fit — ${linkedItems.length} pieces</button>
+          <div class="shop-all-note">Opens each piece on Amazon. If your browser blocks a tab, tap “Allow” or use the links below.</div>
+        `;
+        list.appendChild(wrap);
+        wrap.querySelector('#shopAllBtn').addEventListener('click', ()=>{
+          if(!isAdmin){ trackClick(fit); trackShopAll(); }
+          let blocked = 0;
+          linkedItems.forEach(it=>{
+            const w = window.open(it.url, '_blank', 'noopener');
+            if(!w || w.closed || typeof w.closed === 'undefined') blocked++;
+          });
+          const note = wrap.querySelector('.shop-all-note');
+          if(blocked > 0){
+            note.innerHTML = `Your browser blocked ${blocked} tab${blocked>1?'s':''} — tap “Allow pop-ups” for this site, or use the individual Shop buttons below.`;
+            note.style.color = 'var(--danger)';
+          } else {
+            note.textContent = 'Opened all pieces on Amazon — check your new tabs.';
+          }
+        });
+      }
     }
 
     (fit.items||[]).forEach(item=>{
