@@ -829,6 +829,17 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         if(c > topClicks){ topClicks = c; fanFavId = f.id; }
       });
       if(topClicks < 5) fanFavId = null; // needs real traction, not just 1-2 clicks
+      // don't let it get silently masked by today's HOT pick (only 1 badge shows per card) —
+      // if they collide, fall back to the next-best performer so Fan Favorite still surfaces
+      if(fanFavId && fanFavId === hotId){
+        let secondId = null, secondClicks = 0;
+        filtered.forEach(({f})=>{
+          if(f.id === hotId) return;
+          const c = (analyticsCache.fitStats[f.id] || {}).clicks || 0;
+          if(c > secondClicks){ secondClicks = c; secondId = f.id; }
+        });
+        fanFavId = (secondClicks >= 5) ? secondId : null;
+      }
     }
     // CREATOR'S PICK: rotates weekly, offset from HOT's cycle so they don't always land together
     let creatorsPickId = null;
