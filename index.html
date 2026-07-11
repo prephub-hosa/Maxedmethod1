@@ -322,6 +322,25 @@
     .squad-slot{height:205px;border-radius:8px;}
   }
 
+  /* ---- Prices & price filter ---- */
+  .pricebar{display:flex;gap:8px;padding:0 28px 14px;flex-wrap:wrap;}
+  .price-tab{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:var(--surface-2);color:var(--text-dim);border:1px solid var(--line);padding:7px 14px;border-radius:100px;transition:background .15s,color .15s,border-color .15s;}
+  .price-tab:hover{color:var(--text-soft);}
+  .price-tab.active{background:var(--text);color:var(--bg);border-color:var(--text);}
+  .fit-card-price{color:#fff;font-weight:700;margin-left:4px;}
+  .item-price{font-family:var(--font-mono);font-size:12px;color:var(--text-soft);white-space:nowrap;margin-right:12px;}
+  .fit-total-row{display:flex;align-items:center;justify-content:space-between;padding:16px 8px 4px;margin-top:8px;border-top:1px solid var(--line);}
+  .ft-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);}
+  .ft-value{font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--text);}
+  .fit-total-preview{font-family:var(--font-mono);font-size:11px;padding:10px 12px;border-radius:8px;margin:10px 0;border:1px solid var(--line);}
+  .fit-total-preview.dim{color:var(--text-dim);background:var(--bg-2);}
+  .fit-total-preview.partial{color:#C9A15A;background:rgba(201,161,90,.08);border-color:rgba(201,161,90,.3);}
+  .fit-total-preview.done{color:#8BAE7C;background:rgba(139,174,124,.08);border-color:rgba(139,174,124,.3);}
+  @media (max-width:640px){
+    .pricebar{padding:0 22px 12px;gap:6px;}
+    .price-tab{font-size:9px;padding:6px 11px;}
+  }
+
   /* ---- Roulette button ---- */
   .roulette-btn{display:inline-flex;align-items:center;gap:10px;margin:0 0 4px;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--surface-2);color:var(--text);border:1px solid var(--line);padding:11px 20px;border-radius:100px;transition:background .15s, transform .15s;}
   .roulette-btn:hover{background:var(--text);color:var(--bg);}
@@ -424,6 +443,12 @@
       <button class="tab" data-cat="women">Women</button>
     </div>
     <span class="count" id="fitCount"></span>
+  </div>
+  <div class="pricebar" id="priceBar">
+    <button class="price-tab active" data-price="all">All prices</button>
+    <button class="price-tab" data-price="under100">Under $100</button>
+    <button class="price-tab" data-price="100to200">$100 – $200</button>
+    <button class="price-tab" data-price="over200">$200+</button>
   </div>
   <div id="gridArea"><div class="loading">Loading fits…</div></div>
 
@@ -566,6 +591,7 @@ OUTER | Cream Cardigan | https://..."></textarea>
       <div class="error-text" id="fitPhotoWarning" style="display:none;"></div>
     </div>
     <div id="itemsEditArea"></div>
+    <div id="fitTotalPreview" class="fit-total-preview dim">Add prices to see the fit total</div>
     <button class="add-item-btn" id="addItemBtn">+ Add item</button>
     <div class="error-text" id="fitFormError" style="display:none;"></div>
     <div class="modal-actions">
@@ -611,11 +637,27 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   let wishlist = {};          // { fitId: true } saved in this browser
   let analyticsCache = null;  // opens data for trending calc
   let showSaved = false;      // saved-only view toggle
+  let activePrice = 'all';    // price filter tab
   try{ wishlist = JSON.parse(localStorage.getItem('mm-wishlist')||'{}'); }catch(e){}
 
   // fits without a cat are treated as men's (preserves everything built before tabs existed)
   function catOf(fit){ return fit.cat || 'men'; }
-  function getFiltered(){ return fits.map((f,gi)=>({f,gi})).filter(x=>catOf(x.f)===activeCat); }
+  // price bucket for a fit, based on the sum of its item prices. Unpriced fits are always
+  // shown (never hide a fit just because I haven't got round to pricing it yet).
+  function priceMatches(fit){
+    if(activePrice === 'all') return true;
+    const total = fitTotal(fit.items);
+    if(total === null) return true; // no prices entered -> don't filter it out
+    if(activePrice === 'under100') return total < 100;
+    if(activePrice === '100to200') return total >= 100 && total <= 200;
+    if(activePrice === 'over200')  return total > 200;
+    return true;
+  }
+  function getFiltered(){
+    return fits.map((f,gi)=>({f,gi}))
+      .filter(x=>catOf(x.f)===activeCat)
+      .filter(x=>priceMatches(x.f));
+  }
 
   const gridArea = document.getElementById('gridArea');
   const adminFab = document.getElementById('adminFab');
@@ -877,7 +919,9 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         <div class="fit-card-footer">
           <span class="fit-tag">FIT ${String(i+1).padStart(2,'0')}</span>
           <h3 class="fit-title">${escapeHtml(fit.title)}</h3>
-          <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →</div>
+          <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →${
+            fitTotal(fit.items) !== null ? ` <span class="fit-card-price">≈ ${fmtPrice(fitTotal(fit.items))}</span>` : ''
+          }</div>
         </div>
         ${!isAdmin ? `
         <button class="fit-heart ${saved?'saved':''}" data-heart="${fit.id}" title="${saved?'Saved':'Save for later'}">${saved?'♥':'♡'}</button>
@@ -1050,9 +1094,12 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     (fit.items||[]).forEach(item=>{
       const row = document.createElement('div');
       row.className = 'item-row';
+      const priceTag = parseFloat(item.price) > 0
+        ? `<span class="item-price">${fmtPrice(parseFloat(item.price))}</span>` : '';
       row.innerHTML = `
         <span class="item-label">${escapeHtml(item.label)}</span>
         <span class="item-name">${escapeHtml(item.name)}</span>
+        ${priceTag}
         <a class="item-buy" href="${escapeAttr(item.url)}" target="_blank" rel="noopener">Shop <span class="arrow">→</span></a>
       `;
       const buyLink = row.querySelector('.item-buy');
@@ -1061,6 +1108,18 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       }
       list.appendChild(row);
     });
+    // fit total (only when at least one piece is priced) — sets expectations before the click
+    const total = fitTotal(fit.items);
+    if(total !== null){
+      const allPriced = (fit.items||[]).every(it => parseFloat(it.price) > 0);
+      const totalRow = document.createElement('div');
+      totalRow.className = 'fit-total-row';
+      totalRow.innerHTML = `
+        <span class="ft-label">${allPriced ? 'Full fit' : 'Priced pieces'}</span>
+        <span class="ft-value">≈ ${fmtPrice(total)}</span>
+      `;
+      list.appendChild(totalRow);
+    }
     if(!isAdmin) trackOpen(fit);
     detailOverlay.classList.add('open');
     // lock the background so touch-scroll stays inside the panel, not the homepage
@@ -1187,6 +1246,31 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   }
   document.getElementById('fitFormCancel').addEventListener('click', ()=> fitFormModal.classList.remove('open'));
 
+  // sum the prices of a fit's items — returns null if nothing is priced yet
+  function fitTotal(items){
+    const priced = (items||[]).filter(it => parseFloat(it.price) > 0);
+    if(!priced.length) return null;
+    return priced.reduce((s,it)=> s + parseFloat(it.price), 0);
+  }
+  function fmtPrice(n){
+    return '$' + (Math.round(n*100)/100).toFixed(2).replace(/\.00$/,'');
+  }
+  function updateDraftTotal(){
+    const el = document.getElementById('fitTotalPreview');
+    if(!el) return;
+    const total = fitTotal(itemDraft);
+    const missing = itemDraft.filter(it => it.name.trim() && !(parseFloat(it.price) > 0)).length;
+    if(total === null){
+      el.textContent = 'Add prices to see the fit total';
+      el.className = 'fit-total-preview dim';
+    } else if(missing > 0){
+      el.textContent = `Total so far: ${fmtPrice(total)} — ${missing} item${missing>1?'s':''} still unpriced`;
+      el.className = 'fit-total-preview partial';
+    } else {
+      el.textContent = `Full fit total: ${fmtPrice(total)}`;
+      el.className = 'fit-total-preview done';
+    }
+  }
   function renderItemDraft(){
     const area = document.getElementById('itemsEditArea');
     area.innerHTML = '';
@@ -1206,6 +1290,10 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
           <input type="text" data-field="name" data-idx="${idx}" value="${escapeAttr(item.name||'')}" placeholder="Oversized Knit Cardigan">
         </div>
         <div class="field">
+          <label>Price ($)</label>
+          <input type="number" step="0.01" min="0" data-field="price" data-idx="${idx}" value="${escapeAttr(item.price||'')}" placeholder="38">
+        </div>
+        <div class="field">
           <label>Product / affiliate link</label>
           <input type="text" data-field="url" data-idx="${idx}" value="${escapeAttr(item.url||'')}" placeholder="https://...">
         </div>
@@ -1217,6 +1305,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         const idx = +e.target.getAttribute('data-idx');
         const field = e.target.getAttribute('data-field');
         itemDraft[idx][field] = e.target.value;
+        if(field === 'price' || field === 'name') updateDraftTotal(); // live total as you type
       });
     });
     area.querySelectorAll('.remove-item').forEach(btn=>{
@@ -1224,8 +1313,10 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         const idx = +btn.getAttribute('data-idx');
         itemDraft.splice(idx,1);
         renderItemDraft();
+        updateDraftTotal();
       });
     });
+    updateDraftTotal();
   }
   function checkImageUrl(inputEl, warnEl){
     const val = inputEl.value.trim();
@@ -1253,7 +1344,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   fitPhotoInput.addEventListener('blur', ()=> checkImageUrl(fitPhotoInput, document.getElementById('fitPhotoWarning')));
 
   document.getElementById('addItemBtn').addEventListener('click', ()=>{
-    itemDraft.push({ id: uid(), label:'TOP', name:'', url:'' });
+    itemDraft.push({ id: uid(), label:'TOP', name:'', price:'', url:'' });
     renderItemDraft();
   });
 
@@ -1596,6 +1687,16 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       if(cat === activeCat) return;
       activeCat = cat;
       if(!isAdmin) trackTabView(cat);
+      render();
+    });
+  });
+
+  document.querySelectorAll('.price-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      const p = tab.getAttribute('data-price');
+      if(p === activePrice) return;
+      activePrice = p;
+      document.querySelectorAll('.price-tab').forEach(t=> t.classList.toggle('active', t === tab));
       render();
     });
   });
