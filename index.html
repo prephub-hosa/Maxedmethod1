@@ -1282,7 +1282,12 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       const idx = fits.findIndex(f=>f.id===editingId);
       fits[idx] = { ...fits[idx], ...fitData }; // cat now explicitly comes from the toggle, so corrections stick
     } else {
-      fits.push({ id: uid(), created: Date.now(), ...fitData });
+      const newFit = { id: uid(), created: Date.now(), ...fitData };
+      // insert at the TOP of this fit's category — it becomes Fit 01 and everything
+      // else in that section shifts down, instead of getting buried at the end
+      const insertAt = fits.findIndex(f => (f.cat || 'men') === newFit.cat);
+      if(insertAt === -1) fits.push(newFit);       // first fit in this category — nothing to insert before
+      else fits.splice(insertAt, 0, newFit);
     }
     const ok = await saveFits();
     if(!ok){
@@ -1563,7 +1568,13 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     errEl.style.display = 'none';
 
     const prevFits = fits.map(f=>({...f}));
-    fits = fits.concat(newFits);
+    // insert the whole imported batch at the TOP of its category (same behavior as adding
+    // a single fit) — they land as Fit 01, 02... and push existing fits down, instead of
+    // getting buried at the end. The batch's internal order (as pasted) is preserved.
+    const batchCat = newFits[0].cat || activeCat;
+    const insertAt = fits.findIndex(f => (f.cat || 'men') === batchCat);
+    if(insertAt === -1) fits = fits.concat(newFits);
+    else fits.splice(insertAt, 0, ...newFits);
     const ok = await saveFits();
     if(!ok){
       fits = prevFits;
