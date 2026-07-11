@@ -327,15 +327,22 @@
   .price-tab{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:var(--surface-2);color:var(--text-dim);border:1px solid var(--line);padding:7px 14px;border-radius:100px;transition:background .15s,color .15s,border-color .15s;}
   .price-tab:hover{color:var(--text-soft);}
   .price-tab.active{background:var(--text);color:var(--bg);border-color:var(--text);}
-  .fit-card-price{color:#fff;font-weight:700;margin-left:4px;}
+  .fit-card-price{display:block;margin-top:6px;font-family:var(--font-mono);font-size:11px;color:#fff;font-weight:700;letter-spacing:.04em;}
+  .fcp-note{font-weight:400;color:rgba(255,255,255,.6);font-size:10px;}
   .item-price{font-family:var(--font-mono);font-size:12px;color:var(--text-soft);white-space:nowrap;margin-right:12px;}
-  .fit-total-row{display:flex;align-items:center;justify-content:space-between;padding:16px 8px 4px;margin-top:8px;border-top:1px solid var(--line);}
-  .ft-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);}
+  .fit-total-row{padding:16px 8px 4px;margin-top:8px;border-top:1px solid var(--line);}
+  .ft-line{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:5px 0;}
+  .ft-line-sub .ft-label{color:var(--text-dim);}
+  .ft-line-full{border-top:1px solid var(--line-soft);margin-top:6px;padding-top:10px;}
+  .ft-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);}
   .ft-value{font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--text);}
-  .fit-total-preview{font-family:var(--font-mono);font-size:11px;padding:10px 12px;border-radius:8px;margin:10px 0;border:1px solid var(--line);}
+  .ft-value-sub{font-family:var(--font-mono);font-size:13px;color:var(--text-soft);}
+  .ft-note{font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.5;}
+  .fit-total-preview{font-family:var(--font-mono);font-size:11px;padding:10px 12px;border-radius:8px;margin:10px 0;border:1px solid var(--line);line-height:1.7;}
   .fit-total-preview.dim{color:var(--text-dim);background:var(--bg-2);}
   .fit-total-preview.partial{color:#C9A15A;background:rgba(201,161,90,.08);border-color:rgba(201,161,90,.3);}
   .fit-total-preview.done{color:#8BAE7C;background:rgba(139,174,124,.08);border-color:rgba(139,174,124,.3);}
+  .tp-warn{color:#C9A15A;}
   @media (max-width:640px){
     .pricebar{padding:0 22px 12px;gap:6px;}
     .price-tab{font-size:9px;padding:6px 11px;}
@@ -642,11 +649,11 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 
   // fits without a cat are treated as men's (preserves everything built before tabs existed)
   function catOf(fit){ return fit.cat || 'men'; }
-  // price bucket for a fit, based on the sum of its item prices. Unpriced fits are always
-  // shown (never hide a fit just because I haven't got round to pricing it yet).
+  // Filter on BASE price so the buckets match the price shown on the card — a fit that
+  // reads "Base fit ≈ $80" belongs in Under $100 even if the sneakers push the full look higher.
   function priceMatches(fit){
     if(activePrice === 'all') return true;
-    const total = fitTotal(fit.items);
+    const total = basePrice(fit.items);
     if(total === null) return true; // no prices entered -> don't filter it out
     if(activePrice === 'under100') return total < 100;
     if(activePrice === '100to200') return total >= 100 && total <= 200;
@@ -919,9 +926,12 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         <div class="fit-card-footer">
           <span class="fit-tag">FIT ${String(i+1).padStart(2,'0')}</span>
           <h3 class="fit-title">${escapeHtml(fit.title)}</h3>
-          <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →${
-            fitTotal(fit.items) !== null ? ` <span class="fit-card-price">≈ ${fmtPrice(fitTotal(fit.items))}</span>` : ''
-          }</div>
+          <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →</div>
+          ${basePrice(fit.items) !== null
+            ? `<div class="fit-card-price">Base fit ≈ ${fmtPrice(basePrice(fit.items))}${
+                extrasPrice(fit.items) !== null ? ` <span class="fcp-note">+ shoes & extras</span>` : ''
+              }</div>`
+            : ''}
         </div>
         ${!isAdmin ? `
         <button class="fit-heart ${saved?'saved':''}" data-heart="${fit.id}" title="${saved?'Saved':'Save for later'}">${saved?'♥':'♡'}</button>
@@ -1108,16 +1118,27 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       }
       list.appendChild(row);
     });
-    // fit total (only when at least one piece is priced) — sets expectations before the click
-    const total = fitTotal(fit.items);
-    if(total !== null){
-      const allPriced = (fit.items||[]).every(it => parseFloat(it.price) > 0);
+    // Split totals — base fit vs. the full look. Shown separately so the headline price
+    // isn't inflated by footwear, but nobody gets a surprise when they reach Amazon.
+    const base = basePrice(fit.items);
+    const extras = extrasPrice(fit.items);
+    const full = fitTotal(fit.items);
+    if(full !== null){
+      const anyUnpriced = (fit.items||[]).some(it => !(parseFloat(it.price) > 0));
       const totalRow = document.createElement('div');
       totalRow.className = 'fit-total-row';
-      totalRow.innerHTML = `
-        <span class="ft-label">${allPriced ? 'Full fit' : 'Priced pieces'}</span>
-        <span class="ft-value">≈ ${fmtPrice(total)}</span>
-      `;
+      let rows = '';
+      if(base !== null){
+        rows += `<div class="ft-line"><span class="ft-label">Base fit — outer, top, bottom</span><span class="ft-value">≈ ${fmtPrice(base)}</span></div>`;
+      }
+      if(extras !== null){
+        rows += `<div class="ft-line ft-line-sub"><span class="ft-label">+ shoes &amp; accessories</span><span class="ft-value-sub">+ ${fmtPrice(extras)}</span></div>`;
+        rows += `<div class="ft-line ft-line-full"><span class="ft-label">Full look</span><span class="ft-value">≈ ${fmtPrice(full)}</span></div>`;
+      }
+      if(anyUnpriced){
+        rows += `<div class="ft-note">Some pieces aren't priced yet — the real total may be higher.</div>`;
+      }
+      totalRow.innerHTML = rows;
       list.appendChild(totalRow);
     }
     if(!isAdmin) trackOpen(fit);
@@ -1246,28 +1267,41 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   }
   document.getElementById('fitFormCancel').addEventListener('click', ()=> fitFormModal.classList.remove('open'));
 
-  // sum the prices of a fit's items — returns null if nothing is priced yet
-  function fitTotal(items){
+  // Prices split into a BASE fit (outerwear, top, bottom) and the EXTRAS (shoes, accessories).
+  // Cards show the base price so the headline isn't inflated by a $110 sneaker — but the
+  // breakdown always shows the full total too, so nobody gets a surprise on Amazon.
+  const BASE_LABELS = ["OUTER","TOP","BOTTOM"];
+  function isBaseItem(it){ return BASE_LABELS.includes((it.label||'').toUpperCase()); }
+  function sumPrices(items){
     const priced = (items||[]).filter(it => parseFloat(it.price) > 0);
     if(!priced.length) return null;
     return priced.reduce((s,it)=> s + parseFloat(it.price), 0);
   }
+  function basePrice(items){ return sumPrices((items||[]).filter(isBaseItem)); }
+  function extrasPrice(items){ return sumPrices((items||[]).filter(it => !isBaseItem(it))); }
+  // full total = everything priced (base + shoes + accessories)
+  function fitTotal(items){ return sumPrices(items); }
   function fmtPrice(n){
     return '$' + (Math.round(n*100)/100).toFixed(2).replace(/\.00$/,'');
   }
   function updateDraftTotal(){
     const el = document.getElementById('fitTotalPreview');
     if(!el) return;
-    const total = fitTotal(itemDraft);
+    const base = basePrice(itemDraft);
+    const full = fitTotal(itemDraft);
     const missing = itemDraft.filter(it => it.name.trim() && !(parseFloat(it.price) > 0)).length;
-    if(total === null){
+    if(full === null){
       el.textContent = 'Add prices to see the fit total';
       el.className = 'fit-total-preview dim';
-    } else if(missing > 0){
-      el.textContent = `Total so far: ${fmtPrice(total)} — ${missing} item${missing>1?'s':''} still unpriced`;
+      return;
+    }
+    const baseTxt = base !== null ? `Base (outer/top/bottom): ${fmtPrice(base)}` : 'Base: no base pieces priced';
+    const fullTxt = `Full fit (with shoes & accessories): ${fmtPrice(full)}`;
+    if(missing > 0){
+      el.innerHTML = `${baseTxt}<br>${fullTxt}<br><span class="tp-warn">${missing} item${missing>1?'s':''} still unpriced</span>`;
       el.className = 'fit-total-preview partial';
     } else {
-      el.textContent = `Full fit total: ${fmtPrice(total)}`;
+      el.innerHTML = `${baseTxt}<br>${fullTxt}`;
       el.className = 'fit-total-preview done';
     }
   }
