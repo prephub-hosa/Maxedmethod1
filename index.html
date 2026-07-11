@@ -903,49 +903,28 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       if(p !== null && p < cheapest){ cheapest = p; lowestPriceId = f.id; }
     });
 
-    // MOST SHOPPED: the fit with the most real shop-clicks in this section. Needs genuine
-    // traction (5+) so it's never handed out on a couple of stray clicks.
-    // Note: click stats are keyed by fit id, but ids can drift (a fit deleted + re-added, or
-    // re-imported, gets a fresh id) which would orphan its history. So if the id lookup finds
-    // nothing, fall back to matching on title, which survives that.
-    let mostShoppedId = null;
+    // MOST SHOPPED: the fit with the most real shop-clicks in this section.
+    // Matched by TITLE, not id. Ids are fragile — they change when a fit is deleted and
+    // re-added or re-imported, and a cached copy of the catalog can hold outdated ones — so
+    // an id-based match kept silently pointing at a fit that wasn't on screen. Titles are
+    // stable, so this just works.
+    let mostShoppedTitle = null;
     if(analyticsCache && analyticsCache.fitStats){
       const fs = analyticsCache.fitStats;
-      // build a title -> clicks map as the fallback path
+      // total clicks per title (a title can appear under several old ids — sum them all)
       const clicksByTitle = {};
       Object.keys(fs).forEach(id=>{
         const t = (fs[id].title || '').trim().toLowerCase();
         if(!t) return;
-        clicksByTitle[t] = Math.max(clicksByTitle[t] || 0, fs[id].clicks || 0);
+        clicksByTitle[t] = (clicksByTitle[t] || 0) + (fs[id].clicks || 0);
       });
-      const clicksFor = (f)=>{
-        const byId = (fs[f.id] || {}).clicks || 0;
-        if(byId > 0) return byId;
-        return clicksByTitle[(f.title || '').trim().toLowerCase()] || 0;
-      };
       let topClicks = 0;
       filtered.forEach(({f})=>{
-        const c = clicksFor(f);
-        if(c > topClicks){ topClicks = c; mostShoppedId = f.id; }
+        const t = (f.title || '').trim().toLowerCase();
+        const c = clicksByTitle[t] || 0;
+        if(c > topClicks){ topClicks = c; mostShoppedTitle = t; }
       });
-      if(topClicks < 5) mostShoppedId = null;
-      // TEMP DEBUG — open the browser console to see exactly what the badge logic sees.
-      // Remove once "Most shopped" is confirmed working.
-      try{
-        const idsInGrid = filtered.map(({f})=>f.id);
-        console.log('[MM most-shopped debug]', {
-          section: activeCat,
-          statKeys: Object.keys(fs).length,
-          clicksPerVisibleFit: filtered.map(({f})=>({ title: f.title, id: f.id, clicks: clicksFor(f) })),
-          topClicks,
-          winner: mostShoppedId,
-          winnerIsInGrid: idsInGrid.includes(mostShoppedId),
-          isAdmin: isAdmin,
-          idsInGrid: idsInGrid
-        });
-      }catch(e){}
-    } else {
-      try{ console.log('[MM most-shopped debug] analyticsCache empty at render', analyticsCache); }catch(e){}
+      if(topClicks < 5) mostShoppedTitle = null; // needs real traction, never handed out
     }
 
     // CREATOR'S PICK: rotates weekly. Honest claim — it's simply the one being featured.
@@ -969,7 +948,9 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       // for one slot. Order below is the visual order on the card.
       const badges = [];
       if(!isAdmin){
-        if(fit.id === mostShoppedId)  badges.push('<span class="tag tag-shopped">Most shopped</span>');
+        if(mostShoppedTitle && (fit.title||'').trim().toLowerCase() === mostShoppedTitle){
+          badges.push('<span class="tag tag-shopped">Most shopped</span>');
+        }
         if(fit.id === lowestPriceId)  badges.push('<span class="tag tag-value">Lowest price</span>');
         if(fit.id === creatorsPickId) badges.push('<span class="tag tag-pick">Creator\'s pick</span>');
         if(isNew)                     badges.push('<span class="tag tag-new">New</span>');
@@ -2229,19 +2210,14 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     try{
       const snap = await getDoc(ANALYTICS_DOC);
       analyticsCache = snap.exists() ? snap.data() : {};
-      if(!analyticsCache.fitStats){
-        console.warn('[MM] analytics loaded but has no fitStats — badges that depend on click data will not show.');
-      }
     }catch(e){
-      // Don't swallow this silently: if the read fails (e.g. Firestore rules allow writes but
-      // not reads), every click-based badge would quietly never appear and we'd have no idea.
-      console.error('[MM] FAILED to load analytics — "Most shopped" cannot render:', e);
       analyticsCache = {};
     }
     await loadFits();
     updateSavedCount();
-    // If analytics came back empty but we now have fits, try once more — a transient failure
-    // on first load would otherwise leave badges dead for the whole session.
+    // If analytics didn't come back the first time, try once more now that fits are in —
+    // a transient failure on first load would otherwise leave click-based badges dead
+    // for the whole session.
     if(!analyticsCache || !analyticsCache.fitStats){
       try{
         const snap2 = await getDoc(ANALYTICS_DOC);
@@ -2249,7 +2225,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
           analyticsCache = snap2.data();
           render();
         }
-      }catch(e){ /* already logged above */ }
+      }catch(e){ /* badges that need clicks just won't show; nothing else breaks */ }
     }
   })();
 })();
