@@ -883,11 +883,27 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 
     // MOST SHOPPED: the fit with the most real shop-clicks in this section. Needs genuine
     // traction (5+) so it's never handed out on a couple of stray clicks.
+    // Note: click stats are keyed by fit id, but ids can drift (a fit deleted + re-added, or
+    // re-imported, gets a fresh id) which would orphan its history. So if the id lookup finds
+    // nothing, fall back to matching on title, which survives that.
     let mostShoppedId = null;
     if(analyticsCache && analyticsCache.fitStats){
+      const fs = analyticsCache.fitStats;
+      // build a title -> clicks map as the fallback path
+      const clicksByTitle = {};
+      Object.keys(fs).forEach(id=>{
+        const t = (fs[id].title || '').trim().toLowerCase();
+        if(!t) return;
+        clicksByTitle[t] = Math.max(clicksByTitle[t] || 0, fs[id].clicks || 0);
+      });
+      const clicksFor = (f)=>{
+        const byId = (fs[f.id] || {}).clicks || 0;
+        if(byId > 0) return byId;
+        return clicksByTitle[(f.title || '').trim().toLowerCase()] || 0;
+      };
       let topClicks = 0;
       filtered.forEach(({f})=>{
-        const c = (analyticsCache.fitStats[f.id] || {}).clicks || 0;
+        const c = clicksFor(f);
         if(c > topClicks){ topClicks = c; mostShoppedId = f.id; }
       });
       if(topClicks < 5) mostShoppedId = null;
