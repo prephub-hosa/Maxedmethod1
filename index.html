@@ -324,20 +324,22 @@
 
   /* ---- Prices & price filter ---- */
   .pricebar{display:flex;gap:8px;padding:14px 28px 14px;flex-wrap:wrap;}
-  .price-tab{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:var(--surface-2);color:var(--text-dim);border:1px solid var(--line);padding:7px 14px;border-radius:100px;transition:background .15s,color .15s,border-color .15s;}
+  .price-tab{font-family:var(--font-body);font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;background:var(--surface-2);color:var(--text-soft);border:1px solid var(--line);padding:8px 16px;border-radius:100px;transition:background .15s,color .15s,border-color .15s;-webkit-font-smoothing:antialiased;}
   .price-tab:hover{color:var(--text-soft);}
   .price-tab.active{background:var(--text);color:var(--bg);border-color:var(--text);}
-  .fit-card-price{display:block;margin-top:6px;font-family:var(--font-mono);font-size:11px;color:#fff;font-weight:700;letter-spacing:.04em;}
-  .fcp-note{font-weight:400;color:rgba(255,255,255,.6);font-size:10px;}
-  .item-price{font-family:var(--font-mono);font-size:12px;color:var(--text-soft);white-space:nowrap;margin-right:12px;}
-  .fit-total-row{padding:16px 8px 4px;margin-top:8px;border-top:1px solid var(--line);}
-  .ft-line{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:5px 0;}
+  .fit-card-price{display:flex;align-items:baseline;gap:7px;margin-top:8px;-webkit-font-smoothing:antialiased;}
+  .fcp-amount{font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;}
+  .fcp-note{font-family:var(--font-body);font-size:11px;font-weight:400;color:rgba(255,255,255,.65);letter-spacing:.01em;}
+  .item-price{font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--text-soft);white-space:nowrap;margin-right:14px;-webkit-font-smoothing:antialiased;}
+  .fit-total-row{padding:18px 8px 4px;margin-top:10px;border-top:1px solid var(--line);-webkit-font-smoothing:antialiased;}
+  .ft-line{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:7px 0;}
   .ft-line-sub .ft-label{color:var(--text-dim);}
-  .ft-line-full{border-top:1px solid var(--line-soft);margin-top:6px;padding-top:10px;}
-  .ft-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);}
-  .ft-value{font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--text);}
-  .ft-value-sub{font-family:var(--font-mono);font-size:13px;color:var(--text-soft);}
-  .ft-note{font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.5;}
+  .ft-line-full{border-top:1px solid var(--line-soft);margin-top:8px;padding-top:12px;}
+  .ft-label{font-family:var(--font-body);font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-soft);}
+  .ft-line-full .ft-label{color:var(--text);font-weight:600;}
+  .ft-value{font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.01em;line-height:1;}
+  .ft-value-sub{font-family:var(--font-body);font-size:14px;color:var(--text-soft);}
+  .ft-note{font-family:var(--font-body);font-size:12px;color:var(--text-dim);margin-top:10px;line-height:1.5;}
   .fit-total-preview{font-family:var(--font-mono);font-size:11px;padding:10px 12px;border-radius:8px;margin:10px 0;border:1px solid var(--line);line-height:1.7;}
   .fit-total-preview.dim{color:var(--text-dim);background:var(--bg-2);}
   .fit-total-preview.partial{color:#C9A15A;background:rgba(201,161,90,.08);border-color:rgba(201,161,90,.3);}
@@ -345,7 +347,9 @@
   .tp-warn{color:#C9A15A;}
   @media (max-width:640px){
     .pricebar{padding:12px 22px 12px;gap:6px;}
-    .price-tab{font-size:9px;padding:6px 11px;}
+    .price-tab{font-size:12px;padding:7px 13px;}
+    .fcp-amount{font-size:17px;}
+    .fcp-note{font-size:10px;}
   }
 
   /* ---- Roulette button ---- */
@@ -931,9 +935,10 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
           <h3 class="fit-title">${escapeHtml(fit.title)}</h3>
           <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →</div>
           ${basePrice(fit.items) !== null
-            ? `<div class="fit-card-price">Base fit ≈ ${fmtPrice(basePrice(fit.items))}${
-                extrasPrice(fit.items) !== null ? ` <span class="fcp-note">+ shoes & extras</span>` : ''
-              }</div>`
+            ? `<div class="fit-card-price">
+                 <span class="fcp-amount">$${Math.round(basePrice(fit.items))}</span>
+                 <span class="fcp-note">base fit${extrasPrice(fit.items) !== null ? ' · + shoes' : ''}</span>
+               </div>`
             : ''}
         </div>
         ${!isAdmin ? `
@@ -1285,7 +1290,9 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   // full total = everything priced (base + shoes + accessories)
   function fitTotal(items){ return sumPrices(items); }
   function fmtPrice(n){
-    return '$' + (Math.round(n*100)/100).toFixed(2).replace(/\.00$/,'');
+    // whole dollars — cents are visual noise on a browse page, and these are
+    // approximations anyway (Amazon prices drift)
+    return '$' + Math.round(n);
   }
   function updateDraftTotal(){
     const el = document.getElementById('fitTotalPreview');
