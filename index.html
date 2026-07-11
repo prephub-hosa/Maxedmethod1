@@ -93,13 +93,13 @@
   .fit-title{font-family:var(--font-display);font-weight:700;font-size:20px;line-height:1.02;margin:0;letter-spacing:-.02em;}
   .fit-shop-cue{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:rgba(255,255,255,.72);text-transform:uppercase;margin-top:10px;opacity:0;transform:translateY(6px);transition:opacity .3s ease, transform .3s ease;}
   .fit-card:hover .fit-shop-cue{opacity:1;transform:translateY(0);}
-  .badge-stack{position:absolute;top:10px;left:10px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:5px;max-width:calc(100% - 20px);}
-  .tag{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:4px 8px;border-radius:4px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;line-height:1;}
-  .tag-new{background:var(--text);color:var(--bg);}
-  .tag-trending{background:#5B7C99;color:#fff;}
-  .tag-hot{background:#D9534F;color:#fff;}
-  .tag-fanfav{background:#C9A15A;color:#0C0C0B;}
-  .tag-creatorspick{background:#7B6E96;color:#fff;}
+  .badge-stack{position:absolute;top:12px;left:12px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:5px;max-width:calc(100% - 24px);}
+  .tag{font-family:var(--font-body);font-size:11px;font-weight:600;letter-spacing:.01em;padding:5px 10px;border-radius:100px;white-space:nowrap;display:inline-flex;align-items:center;line-height:1.2;backdrop-filter:blur(8px);-webkit-font-smoothing:antialiased;border:1px solid transparent;}
+  /* muted, editorial palette — each reads as a quiet fact, not a sales shout */
+  .tag-shopped{background:rgba(12,12,11,.72);color:#F5F3ED;border-color:rgba(255,255,255,.18);}
+  .tag-value{background:rgba(139,174,124,.9);color:#0C0C0B;}
+  .tag-pick{background:rgba(201,161,90,.92);color:#0C0C0B;}
+  .tag-new{background:rgba(245,243,237,.94);color:#0C0C0B;}
 
   .admin-controls{position:absolute;top:10px;right:10px;display:flex;gap:6px;z-index:3;}
   .admin-icon-btn{width:30px;height:30px;background:rgba(12,12,11,.72);backdrop-filter:blur(6px);color:#fff;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:6px;transition:background .15s;}
@@ -865,46 +865,41 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     }
     gridArea.innerHTML = '<div class="fits-grid" id="fitsGrid"></div>';
     const grid = document.getElementById('fitsGrid');
-    // "new" = the 2 most recently created in this category
+
+    // ---- badges: every one is a fact we can actually verify. No fake urgency, no
+    // "selling fast" (we can't see Amazon's stock), no emoji. Sentence case, quiet styling.
+
+    // NEW: the 2 most recently added fits in this section
     const withTs = filtered.filter(e => e.f.created).map(e => e.f.created).sort((a,b)=>b-a);
     const newThreshold = withTs.length ? withTs[Math.min(1, withTs.length-1)] : Infinity;
-    const trendingId = getTrendingId();
-    // HOT: one fit per section, rotates every 2 days (stable for all visitors, adapts as fits are added)
-    let hotId = null;
-    if(filtered.length){
-      const twoDayPeriod = Math.floor(Date.now() / (1000*60*60*24*2));
-      hotId = filtered[twoDayPeriod % filtered.length].f.id;
-    }
-    // FAN FAVORITE: the fit with the most total shop clicks in this section (real stat, needs
-    // a little traction to earn it — never just handed out).
-    let fanFavId = null;
+
+    // LOWEST PRICE: the cheapest base fit in this section (real, and useful to a teen budget)
+    let lowestPriceId = null;
+    let cheapest = Infinity;
+    filtered.forEach(({f})=>{
+      const p = basePrice(f.items);
+      if(p !== null && p < cheapest){ cheapest = p; lowestPriceId = f.id; }
+    });
+
+    // MOST SHOPPED: the fit with the most real shop-clicks in this section. Needs genuine
+    // traction (5+) so it's never handed out on a couple of stray clicks.
+    let mostShoppedId = null;
     if(analyticsCache && analyticsCache.fitStats){
       let topClicks = 0;
       filtered.forEach(({f})=>{
         const c = (analyticsCache.fitStats[f.id] || {}).clicks || 0;
-        if(c > topClicks){ topClicks = c; fanFavId = f.id; }
+        if(c > topClicks){ topClicks = c; mostShoppedId = f.id; }
       });
-      if(topClicks < 5) fanFavId = null; // needs real traction, not just 1-2 clicks
-      // don't let it get silently masked by today's HOT pick (only 1 badge shows per card) —
-      // if they collide, fall back to the next-best performer so Fan Favorite still surfaces
-      if(fanFavId && fanFavId === hotId){
-        let secondId = null, secondClicks = 0;
-        filtered.forEach(({f})=>{
-          if(f.id === hotId) return;
-          const c = (analyticsCache.fitStats[f.id] || {}).clicks || 0;
-          if(c > secondClicks){ secondClicks = c; secondId = f.id; }
-        });
-        fanFavId = (secondClicks >= 5) ? secondId : null;
-      }
+      if(topClicks < 5) mostShoppedId = null;
     }
-    // CREATOR'S PICK: rotates weekly, offset from HOT's cycle so they don't always land together
+
+    // CREATOR'S PICK: rotates weekly. Honest claim — it's simply the one being featured.
     let creatorsPickId = null;
     if(filtered.length){
       const weekPeriod = Math.floor(Date.now() / (1000*60*60*24*7));
-      let idx = (weekPeriod * 3 + 1) % filtered.length; // different stride than HOT
-      if(filtered[idx].f.id === hotId) idx = (idx + 1) % filtered.length; // avoid stacking on the same card
-      creatorsPickId = filtered[idx].f.id;
+      creatorsPickId = filtered[(weekPeriod * 3 + 1) % filtered.length].f.id;
     }
+
     filtered.forEach((entry, i) => {
       const fit = entry.f;
       const card = document.createElement('div');
@@ -914,18 +909,16 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       if(isAdmin) card.setAttribute('draggable', 'true');
       const itemCount = (fit.items||[]).length;
       const isNew = fit.created && fit.created >= newThreshold;
-      const isTrending = !isAdmin && fit.id === trendingId;
       const saved = wishlist[fit.id];
-      // build the badge stack — priority ordered, capped at 2 so cards never look cluttered
-      let badgeCandidates = [];
+      // a fit can legitimately earn several badges — they stack cleanly rather than fighting
+      // for one slot. Order below is the visual order on the card.
+      const badges = [];
       if(!isAdmin){
-        if(fit.id === hotId) badgeCandidates.push('<span class="tag tag-hot">🔥 HOT</span>');
-        if(fit.id === fanFavId) badgeCandidates.push('<span class="tag tag-fanfav">★ FAN FAVORITE</span>');
-        if(isTrending) badgeCandidates.push('<span class="tag tag-trending">📈 TRENDING</span>');
-        if(fit.id === creatorsPickId) badgeCandidates.push('<span class="tag tag-creatorspick">CREATOR\'S PICK</span>');
-        if(isNew) badgeCandidates.push('<span class="tag tag-new">NEW</span>');
+        if(fit.id === mostShoppedId)  badges.push('<span class="tag tag-shopped">Most shopped</span>');
+        if(fit.id === lowestPriceId)  badges.push('<span class="tag tag-value">Lowest price</span>');
+        if(fit.id === creatorsPickId) badges.push('<span class="tag tag-pick">Creator\'s pick</span>');
+        if(isNew)                     badges.push('<span class="tag tag-new">New</span>');
       }
-      const badges = badgeCandidates.slice(0, 1);
       const badgeStack = badges.length ? `<div class="badge-stack">${badges.join('')}</div>` : '';
       card.innerHTML = `
         <img class="fit-cover" src="${escapeAttr(fit.cover)}" alt="${escapeAttr(fit.title)}" onerror="this.style.background='#201F1D'">
@@ -2130,19 +2123,6 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     const toggle = document.getElementById('savedToggle');
     if(toggle) toggle.classList.toggle('active', showSaved);
   }
-
-  // ---------- trending (most opens) ----------
-  function getTrendingId(){
-    if(!analyticsCache || !analyticsCache.fitStats) return null;
-    const fs = analyticsCache.fitStats;
-    let topId = null, topOpens = 0;
-    Object.keys(fs).forEach(id=>{
-      const o = fs[id].opens || 0;
-      if(o > topOpens){ topOpens = o; topId = id; }
-    });
-    return topOpens >= 3 ? topId : null; // needs a little traction to earn the tag
-  }
-
 
   // ---------- saved view toggle ----------
   document.getElementById('savedToggle').addEventListener('click', ()=>{
