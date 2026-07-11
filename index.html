@@ -932,12 +932,16 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       // TEMP DEBUG — open the browser console to see exactly what the badge logic sees.
       // Remove once "Most shopped" is confirmed working.
       try{
+        const idsInGrid = filtered.map(({f})=>f.id);
         console.log('[MM most-shopped debug]', {
           section: activeCat,
           statKeys: Object.keys(fs).length,
           clicksPerVisibleFit: filtered.map(({f})=>({ title: f.title, id: f.id, clicks: clicksFor(f) })),
           topClicks,
-          winner: mostShoppedId
+          winner: mostShoppedId,
+          winnerIsInGrid: idsInGrid.includes(mostShoppedId),
+          isAdmin: isAdmin,
+          idsInGrid: idsInGrid
         });
       }catch(e){}
     } else {
