@@ -76,6 +76,11 @@
     .fit-tag{font-size:9px;}
     .fit-shop-cue{font-size:9px;}
     .fit-card-footer{padding:12px 10px;}
+    /* badges: row instead of column, and smaller — a stacked column of 2-3 tags on a
+       narrow mobile card reaches down into the model's head/face. A single compact row
+       stays near the top edge no matter how many tags a fit earns. */
+    .fit-card .badge-stack{top:8px;left:8px;flex-direction:row;flex-wrap:wrap;gap:4px;max-width:calc(100% - 16px);}
+    .fit-card .tag{font-size:9px;padding:4px 8px;}
     /* tighten the hero so fits are reachable sooner on phones */
     .hero{padding:32px 22px 20px;}
     .title{font-size:clamp(34px,13vw,56px);}
@@ -235,6 +240,7 @@
   .cat-block{margin-top:22px;}
   .cat-head{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text);margin-bottom:8px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
   .cat-sub{font-size:9px;letter-spacing:.06em;color:var(--text-dim);font-weight:400;}
+  .cat-diagnostic{font-family:var(--font-body);font-size:12px;color:var(--text-dim);margin:2px 0 10px;}
   .funnel-block{margin-top:22px;}
   .funnel{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
   .funnel-step{display:flex;flex-direction:column;gap:4px;}
@@ -1501,13 +1507,27 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     const bounceRate = 100 - engagedRate;               // % who left without opening a fit
     const mobilePct = pct(visitsMobile, visitsMobile+visitsDesktop);
 
-    // map each tracked fit to its category using the loaded catalog
+    // map each tracked fit to its category using the loaded catalog. Falls back to matching
+    // by title if the id has drifted (deleted/re-added or re-imported fits get a fresh id),
+    // otherwise orphaned stats silently default to "men" and quietly inflate that section.
     const catById = {};
-    fits.forEach(f => { catById[f.id] = f.cat || 'men'; });
+    const catByTitle = {};
+    fits.forEach(f => {
+      const c = f.cat || 'men';
+      catById[f.id] = c;
+      const t = (f.title||'').trim().toLowerCase();
+      if(t) catByTitle[t] = c;
+    });
+    function resolveCat(id, title){
+      if(catById[id]) return catById[id];
+      const t = (title||'').trim().toLowerCase();
+      if(t && catByTitle[t]) return catByTitle[t];
+      return null; // truly unknown — don't guess, exclude it rather than silently miscount
+    }
 
     function buildRows(cat){
       return Object.keys(fitStats)
-        .filter(id => (catById[id] || 'men') === cat)
+        .filter(id => resolveCat(id, fitStats[id].title) === cat)
         .map(id=>({
           title: fitStats[id].title || 'Untitled',
           opens: fitStats[id].opens || 0,
@@ -1520,11 +1540,16 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       // per-section totals
       const secOpens = rows.reduce((s,r)=>s+r.opens,0);
       const secClicks = rows.reduce((s,r)=>s+r.clicks,0);
+      const topClicks = rows.length ? rows[0].clicks : 0;
+      const tagNote = topClicks >= 5
+        ? `"Most shopped" tag: on "${rows[0].title}" (${topClicks} clicks)`
+        : `"Most shopped" tag: not showing yet — top fit has ${topClicks} click${topClicks===1?'':'s'}, needs 5+`;
       if(!rows.length){
         return `<div class="cat-block"><div class="cat-head">${label}</div><p class="hint">No ${label.toLowerCase()} activity tracked yet.</p></div>`;
       }
       return `<div class="cat-block">
         <div class="cat-head">${label} <span class="cat-sub">${secOpens} opens · ${secClicks} clicks</span></div>
+        <p class="cat-diagnostic">${tagNote}</p>
         <table class="stat-table">
           <thead><tr><th>Fit</th><th class="num">Opens</th><th class="num">Shop clicks</th></tr></thead>
           <tbody>${rows.map(r=>`<tr><td>${escapeHtml(r.title)}</td><td class="num">${r.opens}</td><td class="num">${r.clicks}</td></tr>`).join('')}</tbody>
