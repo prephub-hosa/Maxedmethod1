@@ -869,9 +869,11 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     // ---- badges: every one is a fact we can actually verify. No fake urgency, no
     // "selling fast" (we can't see Amazon's stock), no emoji. Sentence case, quiet styling.
 
-    // NEW: the 2 most recently added fits in this section
-    const withTs = filtered.filter(e => e.f.created).map(e => e.f.created).sort((a,b)=>b-a);
-    const newThreshold = withTs.length ? withTs[Math.min(1, withTs.length-1)] : Infinity;
+    // NEW: genuinely recent — added within the last 7 days. This is an ABSOLUTE window, not
+    // "the newest in whatever is currently on screen": otherwise filtering to a price bucket
+    // would slap "New" on a months-old fit just because it's the freshest one in that slice.
+    const NEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+    const newCutoff = Date.now() - NEW_WINDOW_MS;
 
     // LOWEST PRICE: the cheapest base fit in this section (real, and useful to a teen budget)
     let lowestPriceId = null;
@@ -924,7 +926,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       card.style.animationDelay = (i * 90) + 'ms'; // sequential fade, no cap so order stays correct
       if(isAdmin) card.setAttribute('draggable', 'true');
       const itemCount = (fit.items||[]).length;
-      const isNew = fit.created && fit.created >= newThreshold;
+      const isNew = fit.created && fit.created >= newCutoff;
       const saved = wishlist[fit.id];
       // a fit can legitimately earn several badges — they stack cleanly rather than fighting
       // for one slot. Order below is the visual order on the card.
