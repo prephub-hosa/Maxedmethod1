@@ -1773,20 +1773,9 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   });
 
   // ---------- tabs ----------
-  // Refreshes analyticsCache from Firestore then re-renders — used on tab switches, since
-  // that's a natural moment the visitor is asking to see something new, and it's cheap (one
-  // small doc read). Keeps badges from silently going stale over a long browsing session.
-  let refreshingAnalytics = false;
-  async function refreshAnalyticsAndRender(){
-    if(refreshingAnalytics) return;
-    refreshingAnalytics = true;
-    try{
-      const snap = await getDoc(ANALYTICS_DOC);
-      analyticsCache = snap.exists() ? snap.data() : (analyticsCache || {});
-    }catch(e){ /* keep whatever we had */ }
-    refreshingAnalytics = false;
-    render();
-  }
+  // Note: deliberately NOT re-fetching analytics on tab switch. Analytics is loaded once at
+  // boot and kept up to date locally by bumpFitStat. An extra fetch here was overwriting the
+  // cache mid-render and making click-based badges flicker out when switching sections.
   document.querySelectorAll('.tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
       const cat = tab.getAttribute('data-cat');
@@ -1794,7 +1783,6 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       activeCat = cat;
       if(!isAdmin) trackTabView(cat);
       render();
-      refreshAnalyticsAndRender();
     });
   });
 
@@ -1805,7 +1793,6 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       activePrice = p;
       document.querySelectorAll('.price-tab').forEach(t=> t.classList.toggle('active', t === tab));
       render();
-      refreshAnalyticsAndRender();
     });
   });
 
