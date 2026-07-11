@@ -869,10 +869,11 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     // ---- badges: every one is a fact we can actually verify. No fake urgency, no
     // "selling fast" (we can't see Amazon's stock), no emoji. Sentence case, quiet styling.
 
-    // NEW: genuinely recent — added within the last 7 days. This is an ABSOLUTE window, not
+    // NEW: genuinely recent — added within the last 2 days. This is an ABSOLUTE window, not
     // "the newest in whatever is currently on screen": otherwise filtering to a price bucket
     // would slap "New" on a months-old fit just because it's the freshest one in that slice.
-    const NEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+    // Kept short deliberately — a long window would tag half the catalog and mean nothing.
+    const NEW_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
     const newCutoff = Date.now() - NEW_WINDOW_MS;
 
     // LOWEST PRICE: the cheapest base fit in this section (real, and useful to a teen budget)
