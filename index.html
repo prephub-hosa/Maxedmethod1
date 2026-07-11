@@ -929,6 +929,19 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         if(c > topClicks){ topClicks = c; mostShoppedId = f.id; }
       });
       if(topClicks < 5) mostShoppedId = null;
+      // TEMP DEBUG — open the browser console to see exactly what the badge logic sees.
+      // Remove once "Most shopped" is confirmed working.
+      try{
+        console.log('[MM most-shopped debug]', {
+          section: activeCat,
+          statKeys: Object.keys(fs).length,
+          clicksPerVisibleFit: filtered.map(({f})=>({ title: f.title, id: f.id, clicks: clicksFor(f) })),
+          topClicks,
+          winner: mostShoppedId
+        });
+      }catch(e){}
+    } else {
+      try{ console.log('[MM most-shopped debug] analyticsCache empty at render', analyticsCache); }catch(e){}
     }
 
     // CREATOR'S PICK: rotates weekly. Honest claim — it's simply the one being featured.
@@ -2209,9 +2222,31 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   loadPublicReviews();
   if(!isAdmin) initScrollTracking();
   (async ()=>{
-    try{ const snap = await getDoc(ANALYTICS_DOC); analyticsCache = snap.exists()?snap.data():{}; }catch(e){ analyticsCache = {}; }
+    try{
+      const snap = await getDoc(ANALYTICS_DOC);
+      analyticsCache = snap.exists() ? snap.data() : {};
+      if(!analyticsCache.fitStats){
+        console.warn('[MM] analytics loaded but has no fitStats — badges that depend on click data will not show.');
+      }
+    }catch(e){
+      // Don't swallow this silently: if the read fails (e.g. Firestore rules allow writes but
+      // not reads), every click-based badge would quietly never appear and we'd have no idea.
+      console.error('[MM] FAILED to load analytics — "Most shopped" cannot render:', e);
+      analyticsCache = {};
+    }
     await loadFits();
     updateSavedCount();
+    // If analytics came back empty but we now have fits, try once more — a transient failure
+    // on first load would otherwise leave badges dead for the whole session.
+    if(!analyticsCache || !analyticsCache.fitStats){
+      try{
+        const snap2 = await getDoc(ANALYTICS_DOC);
+        if(snap2.exists()){
+          analyticsCache = snap2.data();
+          render();
+        }
+      }catch(e){ /* already logged above */ }
+    }
   })();
 })();
 </script>
