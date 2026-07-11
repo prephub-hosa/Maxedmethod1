@@ -746,6 +746,19 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       };
       if(field === 'clicks') patch.totalClicks = increment(1);
       await setDoc(ANALYTICS_DOC, patch, { merge:true });
+      // Mirror the increment into our LOCAL analyticsCache too. Without this, analyticsCache
+      // stays frozen at whatever it was when the page first loaded — so badges like "Most
+      // shopped" can silently go stale mid-session even though Firestore has moved on (this
+      // is exactly what was happening: the admin diagnostic re-fetches fresh every time it's
+      // opened, but the grid badges were stuck on page-load-old data).
+      if(analyticsCache){
+        if(!analyticsCache.fitStats) analyticsCache.fitStats = {};
+        const entry = analyticsCache.fitStats[fit.id] || { title: fit.title, opens: 0, clicks: 0 };
+        entry.title = fit.title;
+        entry[field] = (entry[field] || 0) + 1;
+        analyticsCache.fitStats[fit.id] = entry;
+        render(); // badges recompute immediately against the fresh local count
+      }
     }catch(e){ /* never block */ }
   }
   function trackOpen(fit){ bumpFitStat(fit, 'opens'); }
@@ -1762,6 +1775,20 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   });
 
   // ---------- tabs ----------
+  // Refreshes analyticsCache from Firestore then re-renders — used on tab switches, since
+  // that's a natural moment the visitor is asking to see something new, and it's cheap (one
+  // small doc read). Keeps badges from silently going stale over a long browsing session.
+  let refreshingAnalytics = false;
+  async function refreshAnalyticsAndRender(){
+    if(refreshingAnalytics) return;
+    refreshingAnalytics = true;
+    try{
+      const snap = await getDoc(ANALYTICS_DOC);
+      analyticsCache = snap.exists() ? snap.data() : (analyticsCache || {});
+    }catch(e){ /* keep whatever we had */ }
+    refreshingAnalytics = false;
+    render();
+  }
   document.querySelectorAll('.tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
       const cat = tab.getAttribute('data-cat');
@@ -1769,6 +1796,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       activeCat = cat;
       if(!isAdmin) trackTabView(cat);
       render();
+      refreshAnalyticsAndRender();
     });
   });
 
@@ -1779,6 +1807,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       activePrice = p;
       document.querySelectorAll('.price-tab').forEach(t=> t.classList.toggle('active', t === tab));
       render();
+      refreshAnalyticsAndRender();
     });
   });
 
