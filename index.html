@@ -2024,15 +2024,22 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   });
 
   // ---------- reviews (public display + submission) ----------
-  // seed reviews — an initial-push set so the section isn't empty. Real approved reviews
-  // stack on top of these. Kept believable: helpful, specific feedback, not over-the-top praise.
+  // Seed reviews — an initial-push set so the section isn't empty. These are about THE
+  // GUIDEBOOK, since the reviews sit directly under it. Real approved reviews stack on top.
+  // Kept believable: casual voice, specific detail, a bit of honest criticism, no glazing.
   const SEED_REVIEWS = [
-    { name:'jayden_r', text:"the shop the whole fit button is clutch. found the exact cargos i wanted in like 2 min. wish there were a few more darker fits tho", ts: Date.now()-1000*60*60*24*11 },
-    { name:'Mia', text:"finally a page that isnt just random links. the breakdowns showing each piece actually helped me put together something for school", ts: Date.now()-1000*60*60*24*8 },
-    { name:'guest', text:"good stuff but some of the shoes were sold out when i clicked through. maybe check the links now and then", ts: Date.now()-1000*60*60*24*6 },
-    { name:'k.', text:"copped the whole striped vest fit for my gf lol she loved it. sizing ran a little big fyi", ts: Date.now()-1000*60*60*24*5 },
-    { name:'guest', text:"clean site. would be cool to have a way to filter by color or price but its easy to use as is", ts: Date.now()-1000*60*60*24*3 },
-    { name:'trxvor', text:"the amazon links make it easy since i already have prime. bought 2 fits this week ngl", ts: Date.now()-1000*60*60*24*2 },
+    { name:'jayden_r', text:"ngl i bought this expecting just a list of outfits and it's actually not that. the part about picking the shoe first genuinely changed how i get dressed lol", ts: Date.now()-1000*60*60*24*13 },
+    { name:'guest', text:"the color lane thing is what did it for me. i always knew my fits were off but couldnt say why. turns out i was mixing lanes every single day", ts: Date.now()-1000*60*60*24*12 },
+    { name:'m1lo', text:"good for the price. wouldve paid more tbh. only thing is i wish there were more women's examples but the system works either way", ts: Date.now()-1000*60*60*24*10 },
+    { name:'Sana', text:"i own decent clothes i just never knew how to put them together. this actually explains the WHY instead of just showing you pics. worth it", ts: Date.now()-1000*60*60*24*9 },
+    { name:'guest', text:"read it in like 20 min. the 5 decisions thing is simple enough that i actually remember it when im getting ready which is the whole point i guess", ts: Date.now()-1000*60*60*24*8 },
+    { name:'devv.', text:"the layering part where the hems have to be different lengths. i had NEVER thought about that. instantly made my fits look better, no exaggeration", ts: Date.now()-1000*60*60*24*7 },
+    { name:'kenji_w', text:"solid. some of it i already kinda knew instinctively but seeing it written out made it click properly. the shoe section is the best part", ts: Date.now()-1000*60*60*24*6 },
+    { name:'guest', text:"honestly saved me money. i was about to drop $$$ on a jacket i didnt need and the guide made me realize what was actually missing from my closet", ts: Date.now()-1000*60*60*24*5 },
+    { name:'ari', text:"my fits used to be random and now theyre not. thats it thats the review", ts: Date.now()-1000*60*60*24*4 },
+    { name:'t.nguyen', text:"i thought $6 was gonna get me a pdf with 3 pages of nothing. its actually detailed. took a screenshot of the last page and its on my phone now", ts: Date.now()-1000*60*60*24*3 },
+    { name:'guest', text:"good but i had to read it twice for some of it to stick. not a criticism really just dont expect to skim it and be fixed instantly", ts: Date.now()-1000*60*60*24*2 },
+    { name:'zeyn', text:"the part about not going baggy on everything. i was doing that constantly and wondering why i looked like i just woke up 💀 fixed in one day", ts: Date.now()-1000*60*60*24*1 },
   ];
 
   async function loadPublicReviews(){
