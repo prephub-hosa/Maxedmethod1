@@ -365,6 +365,7 @@
   .gs-title{font-family:var(--font-display);font-size:clamp(30px,4vw,44px);line-height:1.05;text-transform:uppercase;color:var(--text);margin:0 0 18px;font-weight:800;letter-spacing:-.01em;}
   .gs-lead{font-family:var(--font-body);font-size:16px;line-height:1.6;color:var(--text-soft);margin:0 0 12px;max-width:520px;}
   .gs-body{font-family:var(--font-body);font-size:14px;line-height:1.65;color:var(--text-dim);margin:0 0 22px;max-width:520px;}
+  .gs-sub{font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-soft);margin:22px 0 8px;font-weight:500;}
   .gs-list{list-style:none;margin:0 0 26px;padding:0;max-width:520px;}
   .gs-list li{font-family:var(--font-body);font-size:13.5px;line-height:1.5;color:var(--text-dim);padding:7px 0 7px 20px;position:relative;border-bottom:1px solid rgba(255,255,255,.05);}
   .gs-list li b{color:var(--text-soft);font-weight:600;}
@@ -1886,23 +1887,21 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   const GUIDE_URL   = 'https://tykimm.gumroad.com/l/cpcjio';
   const GUIDE_PRICE = '$5.99';
 
-  // Contents mirror the real guide: 20 formulas (men's / women's / duos), the five-decision
-  // system, 6 colour lanes, a 7-day rotation, and 2 printable worksheets.
+  // Sell the SKILL, not the inventory. Listing "20 outfits" makes it read like a lookbook —
+  // the actual product is that you stop needing one.
   function guideSectionHTML(opts){
     const inTab = !!(opts && opts.inTab);
 
     const bullets = [
-      '<b>20 ready-to-use formulas</b> — men\'s, women\'s and duo fits you can copy today',
-      '<b>The five-decision system</b> — shape, palette, footwear, layer, finish',
-      '<b>Six colour lanes</b> that rarely miss, with the exact shades',
-      '<b>A 7-day rotation</b> so you stop guessing every morning',
-      '<b>The starter closet</b> — what to buy first, and what you don\'t need',
-      '<b>2 printable worksheets</b> — closet audit + outfit builder'
+      '<b>How to decide, in what order</b> — so getting dressed stops being a guessing game',
+      '<b>Why some colours work and others fight</b> — you\'ll spot it in seconds, not minutes',
+      '<b>What actually makes a fit look expensive</b> — it\'s never the price tag',
+      '<b>How to read your own closet</b> — and build from what\'s already in it',
+      '<b>What to buy next, and what to skip</b> — stop wasting money on pieces you won\'t wear'
     ];
 
     const chips = [
-      ['20','Formulas'], ['05','Decisions'], ['06','Colour lanes'],
-      ['07','Day rotation'], ['02','Worksheets']
+      ['20','Worked examples'], ['05','Decisions'], ['06','Colour lanes'], ['07','Day rotation']
     ];
 
     const cta = `
@@ -1916,44 +1915,45 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         <div class="gsc-kick">MaxedMethod · Volume One</div>
         <div class="gsc-title">The<br>Formula</div>
         <div class="gsc-rule"></div>
-        <div class="gsc-sub">Five decisions.<br>Twenty formulas.</div>
-        <div class="gsc-foot"><span>20 Formulas</span><span>05 Decisions</span></div>
+        <div class="gsc-sub">Learn the system.<br>Build your own fits.</div>
+        <div class="gsc-foot"><span>The System</span><span>Vol. 01</span></div>
       </div>`;
 
     if(inTab){
-      // TAB LAYOUT — cover + CTA visible immediately, detail underneath
       return `
         <div class="gs-inner gs-tab">
           <div class="gs-copy">
             <div class="gs-kick">The guidebook</div>
-            <h2 class="gs-title">Your clothes<br>are fine. Your<br>outfits aren't.</h2>
-            <p class="gs-lead">If you already own decent basics but the fits still come out random, this is the fix. One clear order for building outfits, plus 20 formulas you can copy straight away.</p>
+            <h2 class="gs-title">Stop copying<br>fits. Start<br>building them.</h2>
+            <p class="gs-lead">Anyone can copy an outfit off their feed. This teaches you the thinking underneath it — so you can build your own, from your own closet, without needing anyone's inspo again.</p>
             ${cta}
             <div class="gs-chip-row">
               ${chips.map(([n,t])=>`<span class="gs-chip"><b>${n}</b>${t}</span>`).join('')}
             </div>
+            <h3 class="gs-sub">What you'll actually learn</h3>
             <ul class="gs-list">${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
-            <p class="gs-body">The goal isn't more clothes. It's making the clothes you already own look better together — so you get dressed faster, stop buying pieces you don't need, and look like you actually meant it.</p>
+            <p class="gs-body">You already own decent clothes. The problem was never the clothes — it's that nobody ever taught you how the pieces are supposed to talk to each other. Once you can see the five decisions happening in every fit that stops your scroll, you can run them yourself. That's the whole point: <b>you stop needing me.</b></p>
           </div>
           <div class="gs-visual">
             ${cover}
             <div class="gs-stats">
-              <div><b>20</b><span>Formulas</span></div>
               <div><b>05</b><span>Decisions</span></div>
+              <div><b>20</b><span>Examples</span></div>
               <div><b>PDF</b><span>Instant</span></div>
             </div>
           </div>
         </div>`;
     }
 
-    // BOTTOM-OF-PAGE LAYOUT — compact
+    // BOTTOM-OF-PAGE
     return `
       <div class="gs-inner">
         <div class="gs-copy">
           <div class="gs-kick">The guidebook</div>
-          <h2 class="gs-title">Your clothes<br>are fine. Your<br>outfits aren't.</h2>
-          <p class="gs-lead">You can shop every look on this site. But the fits change — the system behind them doesn't.</p>
-          <p class="gs-body">Five decisions, always in the same order, plus 20 formulas you can copy today and remix with what's already in your closet.</p>
+          <h2 class="gs-title">Stop copying<br>fits. Start<br>building them.</h2>
+          <p class="gs-lead">You can shop every look on this site. But you'll always be copying someone else's eye — until you learn how the fits are put together in the first place.</p>
+          <p class="gs-body">The Formula teaches the system behind every outfit here: five decisions, always in the same order. Learn it once and you can build fits out of whatever's already hanging in your closet.</p>
+          <h3 class="gs-sub">What you'll actually learn</h3>
           <ul class="gs-list">${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
           ${cta}
         </div>
