@@ -401,6 +401,28 @@
     .gs-btn{width:100%;justify-content:center;}
   }
 
+  /* expanded view inside the Guidebook tab */
+  .guide-sell #gridArea,
+  #gridArea .gs-inner{padding:0;}
+  #gridArea > .gs-inner{max-width:1200px;margin:0 auto;padding:44px 28px 56px;display:grid;grid-template-columns:1fr 300px;gap:56px;align-items:start;}
+  .gs-chapters{margin:8px 0 26px;max-width:560px;}
+  .gs-ch{display:grid;grid-template-columns:26px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06);align-items:baseline;}
+  .gs-ch:last-child{border-bottom:none;}
+  .gs-ch-n{font-family:var(--font-mono);font-size:10px;color:#B8935A;letter-spacing:.08em;}
+  .gs-ch-t{font-family:var(--font-body);font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;}
+  .gs-ch-d{font-family:var(--font-body);font-size:12.5px;color:var(--text-dim);line-height:1.45;}
+  .gs-stats{display:flex;gap:14px;margin-top:22px;justify-content:center;}
+  .gs-stats div{text-align:center;}
+  .gs-stats b{display:block;font-family:var(--font-display);font-size:20px;color:var(--text);font-weight:800;}
+  .gs-stats span{font-family:var(--font-mono);font-size:8px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;}
+  .tab-guide{color:#B8935A !important;}
+  .tab-guide.active{color:var(--text) !important;}
+
+  @media (max-width:900px){
+    #gridArea > .gs-inner{grid-template-columns:1fr;gap:30px;padding:30px 22px 40px;}
+    #gridArea > .gs-inner .gs-visual{order:-1;}
+  }
+
   /* ---- Roulette button ---- */
   .roulette-btn{display:inline-flex;align-items:center;gap:10px;margin:0 0 4px;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--surface-2);color:var(--text);border:1px solid var(--line);padding:11px 20px;border-radius:100px;transition:background .15s, transform .15s;}
   .roulette-btn:hover{background:var(--text);color:var(--bg);}
@@ -501,6 +523,7 @@
     <div class="tabs">
       <button class="tab active" data-cat="men">Men</button>
       <button class="tab" data-cat="women">Women</button>
+      <button class="tab tab-guide" data-cat="guide">Guidebook</button>
     </div>
     <span class="count" id="fitCount"></span>
   </div>
@@ -513,43 +536,8 @@
   </div>
   <div id="gridArea"><div class="loading">Loading fits…</div></div>
 
-  <!-- ===== The Formula — guidebook ===== -->
-  <section class="guide-sell" id="guideSell">
-    <div class="gs-inner">
-      <div class="gs-copy">
-        <div class="gs-kick">The guidebook</div>
-        <h2 class="gs-title">Stop copying<br>fits. Learn the<br>system.</h2>
-        <p class="gs-lead">You can shop every look on this page. But the fits change — the thinking behind them doesn't.</p>
-        <p class="gs-body">The Formula is the exact system behind every outfit I post. Five decisions, made in the same order, every time. Once you can see them, you stop saving other people's fits and start building your own.</p>
-
-        <ul class="gs-list">
-          <li>The five decisions, and the order they happen in</li>
-          <li>The two colour lanes that always work</li>
-          <li>The nine shoes that carry an entire outfit</li>
-          <li>How to adapt it to your build — tall, short, bigger, broad</li>
-          <li>A 12-piece starter wardrobe that builds every fit here</li>
-          <li>Troubleshooting: why your fit looks off, and how to fix it</li>
-        </ul>
-
-        <div class="gs-cta">
-          <a class="gs-btn" id="guideBtn" href="#" target="_blank" rel="noopener">Get the guide — $7.99</a>
-          <span class="gs-meta">16 pages · instant PDF download</span>
-        </div>
-      </div>
-
-      <div class="gs-visual">
-        <div class="gs-cover">
-          <div class="gsc-kick">MaxedMethod · Volume One</div>
-          <div class="gsc-title">The<br>Formula</div>
-          <div class="gsc-rule"></div>
-          <div class="gsc-sub">Five decisions.<br>That's the whole thing.</div>
-          <div class="gsc-foot">
-            <span>05 Decisions</span><span>16 Pages</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- ===== The Formula — guidebook (bottom of Men's / Women's) ===== -->
+  <section class="guide-sell" id="guideSell"></section>
 
   <!-- Community footer: reviews + email signup -->
   <div class="community">
@@ -938,6 +926,22 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   }
 
   function render(){
+    // ---- Guidebook tab: swap the fit grid out for the guide, hide the fit-only controls ----
+    const isGuide = (activeCat === 'guide');
+    document.querySelectorAll('.tab').forEach(t=> t.classList.toggle('active', t.getAttribute('data-cat')===activeCat));
+    const priceBar  = document.getElementById('priceBar');
+    const countEl0  = document.getElementById('fitCount');
+    const bottomSell = document.getElementById('guideSell');
+    if(priceBar)  priceBar.style.display  = isGuide ? 'none' : '';
+    if(countEl0)  countEl0.style.display  = isGuide ? 'none' : '';
+    // the bottom sell block is redundant while the guide tab is open
+    if(bottomSell) bottomSell.style.display = isGuide ? 'none' : '';
+    if(isGuide){
+      gridArea.innerHTML = guideSectionHTML({ inTab:true });
+      wireGuideButtons();
+      return;
+    }
+
     let filtered = getFiltered();
     // saved-only view
     if(showSaved){
@@ -945,8 +949,6 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     }
     const countEl = document.getElementById('fitCount');
     if(countEl) animateCount(countEl, filtered.length);
-    // sync tab active states
-    document.querySelectorAll('.tab').forEach(t=> t.classList.toggle('active', t.getAttribute('data-cat')===activeCat));
 
     if(filtered.length === 0){
       const label = activeCat === 'women' ? "Women's" : "Men's";
@@ -1878,17 +1880,88 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     });
   });
 
-  // ---------- guidebook link ----------
-  // PASTE YOUR GUMROAD LINK HERE (the whole thing, e.g. https://yourname.gumroad.com/l/formula)
-  const GUIDE_URL = 'https://gumroad.com/';
+  // ---------- guidebook ----------
+  const GUIDE_URL = 'https://tykimm.gumroad.com/l/cpcjio';
+
+  // One template, rendered in two places: the Guidebook tab (expanded) and the bottom of
+  // the Men's/Women's pages (compact). Contents mirror the actual 16-page guide.
+  function guideSectionHTML(opts){
+    const inTab = !!(opts && opts.inTab);
+    const chapters = [
+      ['01','Shape','Why baggy-on-baggy fails, and where the contrast has to go'],
+      ['02','Palette','The two colour lanes that always work — and the one-dye-batch test'],
+      ['03','Footwear','The nine shoes that carry an entire outfit on their own'],
+      ['04','Layering','Stagger the hems. The "peek" that makes a fit look considered'],
+      ['05','The finish','One accessory. Then stop.'],
+      ['06','Texture','Why a fit looks boring even when the colours are right'],
+      ['07','The two lanes','Baggy softboy and clean Korean-girl, broken down piece by piece'],
+      ['08','Dressing your build','Tall, short, bigger, broad — where to move the volume'],
+      ['09','The starter wardrobe','12 pieces, in buy-order, that build every fit on this site'],
+      ['10','Troubleshooting','Your fit looks off and you can\'t say why. Here\'s the diagnosis'],
+      ['11','The cheat sheet','The whole guide on one page. Screenshot it.']
+    ];
+
+    const chapterList = inTab
+      ? `<div class="gs-chapters">
+           ${chapters.map(([n,t,d])=>`
+             <div class="gs-ch">
+               <span class="gs-ch-n">${n}</span>
+               <div><div class="gs-ch-t">${t}</div><div class="gs-ch-d">${d}</div></div>
+             </div>`).join('')}
+         </div>`
+      : `<ul class="gs-list">
+           <li>The five decisions, and the order they happen in</li>
+           <li>The two colour lanes that always work</li>
+           <li>The nine shoes that carry an entire outfit</li>
+           <li>How to adapt it to your build — tall, short, bigger, broad</li>
+           <li>A 12-piece starter wardrobe, in buy-order</li>
+           <li>Troubleshooting: why your fit looks off, and how to fix it</li>
+         </ul>`;
+
+    return `
+      <div class="gs-inner ${inTab ? 'gs-tab' : ''}">
+        <div class="gs-copy">
+          <div class="gs-kick">The guidebook</div>
+          <h2 class="gs-title">Stop copying<br>fits. Learn the<br>system.</h2>
+          <p class="gs-lead">You can shop every look on this site. But the fits change — the thinking behind them doesn't.</p>
+          <p class="gs-body">The Formula is the exact system behind every outfit I post. Five decisions, made in the same order, every time. Once you can see them you stop saving other people's fits and start building your own — mostly out of things you already own.</p>
+          <p class="gs-body">It isn't a shopping list. Shopping lists run out. Swap every piece in the guide for something else and the logic still holds.</p>
+          ${chapterList}
+          <div class="gs-cta">
+            <a class="gs-btn" data-guide-btn href="${GUIDE_URL}" target="_blank" rel="noopener">Get the guide — $7.99</a>
+            <span class="gs-meta">16 pages · instant PDF download</span>
+          </div>
+        </div>
+
+        <div class="gs-visual">
+          <div class="gs-cover">
+            <div class="gsc-kick">MaxedMethod · Volume One</div>
+            <div class="gsc-title">The<br>Formula</div>
+            <div class="gsc-rule"></div>
+            <div class="gsc-sub">Five decisions.<br>That's the whole thing.</div>
+            <div class="gsc-foot"><span>05 Decisions</span><span>16 Pages</span></div>
+          </div>
+          ${inTab ? `<div class="gs-stats">
+            <div><b>16</b><span>Pages</span></div>
+            <div><b>11</b><span>Chapters</span></div>
+            <div><b>PDF</b><span>Instant</span></div>
+          </div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function wireGuideButtons(){
+    document.querySelectorAll('[data-guide-btn]').forEach(btn=>{
+      if(btn.dataset.wired) return;
+      btn.dataset.wired = '1';
+      btn.addEventListener('click', ()=>{ if(!isAdmin) trackEvent('guideClicks'); });
+    });
+  }
 
   (function initGuide(){
-    const btn = document.getElementById('guideBtn');
-    if(!btn) return;
-    btn.href = GUIDE_URL;
-    btn.addEventListener('click', ()=>{
-      if(!isAdmin) trackEvent('guideClicks'); // shows up in your analytics
-    });
+    const bottom = document.getElementById('guideSell');
+    if(bottom) bottom.innerHTML = guideSectionHTML({ inTab:false });
+    wireGuideButtons();
   })();
 
   // ---------- hero squad → jump to that gender's fits ----------
