@@ -2020,17 +2020,17 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
         </div>`;
     }
 
-    // BOTTOM-OF-PAGE
+    // BOTTOM-OF-PAGE LAYOUT — compact, but CTA-first like the tab view
     return `
       <div class="gs-inner">
         <div class="gs-copy">
           <div class="gs-kick">The guidebook</div>
           <h2 class="gs-title">Stop copying<br>fits. Start<br>building them.</h2>
           <p class="gs-lead">You can shop every look on this site. But you'll always be copying someone else's eye — until you learn how the fits are put together in the first place.</p>
-          <p class="gs-body">The Formula teaches the system behind every outfit here: five decisions, always in the same order. Learn it once and you can build fits out of whatever's already hanging in your closet.</p>
+          ${cta}
           <h3 class="gs-sub">What you'll actually learn</h3>
           <ul class="gs-list">${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
-          ${cta}
+          <p class="gs-body">The Formula teaches the system behind every outfit here: five decisions, always in the same order. Learn it once and you can build fits out of whatever's already hanging in your closet.</p>
         </div>
         <div class="gs-visual">${cover}</div>
       </div>`;
