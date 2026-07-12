@@ -358,6 +358,49 @@
     .fcp-note{font-size:10px;}
   }
 
+  /* ---- The Formula — guidebook sell ---- */
+  .guide-sell{margin:40px 0 0;padding:56px 28px;background:linear-gradient(180deg,#131210 0%,#0C0C0B 100%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .gs-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 300px;gap:56px;align-items:center;}
+  .gs-kick{font-family:var(--font-mono);font-size:10px;letter-spacing:.24em;color:#B8935A;text-transform:uppercase;margin-bottom:16px;}
+  .gs-title{font-family:var(--font-display);font-size:clamp(30px,4vw,44px);line-height:1.05;text-transform:uppercase;color:var(--text);margin:0 0 18px;font-weight:800;letter-spacing:-.01em;}
+  .gs-lead{font-family:var(--font-body);font-size:16px;line-height:1.6;color:var(--text-soft);margin:0 0 12px;max-width:520px;}
+  .gs-body{font-family:var(--font-body);font-size:14px;line-height:1.65;color:var(--text-dim);margin:0 0 22px;max-width:520px;}
+  .gs-list{list-style:none;margin:0 0 26px;padding:0;max-width:520px;}
+  .gs-list li{font-family:var(--font-body);font-size:13.5px;line-height:1.5;color:var(--text-soft);padding:7px 0 7px 20px;position:relative;border-bottom:1px solid rgba(255,255,255,.05);}
+  .gs-list li:last-child{border-bottom:none;}
+  .gs-list li:before{content:"—";position:absolute;left:0;color:#B8935A;font-family:var(--font-mono);font-size:11px;}
+  .gs-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .gs-btn{display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:#B8935A;color:#0C0C0B;padding:15px 26px;border-radius:100px;text-decoration:none;transition:transform .15s, background .15s;}
+  .gs-btn:hover{transform:translateY(-2px);background:#C9A15A;}
+  .gs-meta{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;}
+
+  /* mock cover */
+  .gs-visual{display:flex;justify-content:center;}
+  .gs-cover{
+    width:280px;aspect-ratio:210/297;background:#0A0A09;border:1px solid rgba(255,255,255,.08);
+    padding:26px 22px;display:flex;flex-direction:column;position:relative;
+    box-shadow:0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(184,147,90,.12);
+    transform:rotate(-2deg);transition:transform .3s ease;
+  }
+  .gs-cover:hover{transform:rotate(0deg) translateY(-4px);}
+  .gsc-kick{font-family:var(--font-mono);font-size:7px;letter-spacing:.2em;color:#6E6B64;text-transform:uppercase;}
+  .gsc-title{font-family:var(--font-display);font-size:44px;line-height:1.02;text-transform:uppercase;color:var(--text);margin-top:26px;font-weight:800;}
+  .gsc-rule{width:34px;height:2px;background:#B8935A;margin:16px 0 12px;}
+  .gsc-sub{font-family:var(--font-body);font-size:11px;line-height:1.6;color:#8A8780;}
+  .gsc-foot{margin-top:auto;display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.07);padding-top:12px;
+    font-family:var(--font-mono);font-size:7.5px;letter-spacing:.14em;color:#6E6B64;text-transform:uppercase;}
+
+  @media (max-width:900px){
+    .guide-sell{padding:40px 22px;}
+    .gs-inner{grid-template-columns:1fr;gap:32px;}
+    .gs-visual{order:-1;}
+    .gs-cover{width:210px;transform:rotate(-1.5deg);}
+    .gsc-title{font-size:34px;}
+    .gs-title{font-size:28px;}
+    .gs-cta{width:100%;}
+    .gs-btn{width:100%;justify-content:center;}
+  }
+
   /* ---- Roulette button ---- */
   .roulette-btn{display:inline-flex;align-items:center;gap:10px;margin:0 0 4px;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--surface-2);color:var(--text);border:1px solid var(--line);padding:11px 20px;border-radius:100px;transition:background .15s, transform .15s;}
   .roulette-btn:hover{background:var(--text);color:var(--bg);}
@@ -469,6 +512,44 @@
     <button class="price-tab" data-price="over100">$100+</button>
   </div>
   <div id="gridArea"><div class="loading">Loading fits…</div></div>
+
+  <!-- ===== The Formula — guidebook ===== -->
+  <section class="guide-sell" id="guideSell">
+    <div class="gs-inner">
+      <div class="gs-copy">
+        <div class="gs-kick">The guidebook</div>
+        <h2 class="gs-title">Stop copying<br>fits. Learn the<br>system.</h2>
+        <p class="gs-lead">You can shop every look on this page. But the fits change — the thinking behind them doesn't.</p>
+        <p class="gs-body">The Formula is the exact system behind every outfit I post. Five decisions, made in the same order, every time. Once you can see them, you stop saving other people's fits and start building your own.</p>
+
+        <ul class="gs-list">
+          <li>The five decisions, and the order they happen in</li>
+          <li>The two colour lanes that always work</li>
+          <li>The nine shoes that carry an entire outfit</li>
+          <li>How to adapt it to your build — tall, short, bigger, broad</li>
+          <li>A 12-piece starter wardrobe that builds every fit here</li>
+          <li>Troubleshooting: why your fit looks off, and how to fix it</li>
+        </ul>
+
+        <div class="gs-cta">
+          <a class="gs-btn" id="guideBtn" href="#" target="_blank" rel="noopener">Get the guide — $7.99</a>
+          <span class="gs-meta">16 pages · instant PDF download</span>
+        </div>
+      </div>
+
+      <div class="gs-visual">
+        <div class="gs-cover">
+          <div class="gsc-kick">MaxedMethod · Volume One</div>
+          <div class="gsc-title">The<br>Formula</div>
+          <div class="gsc-rule"></div>
+          <div class="gsc-sub">Five decisions.<br>That's the whole thing.</div>
+          <div class="gsc-foot">
+            <span>05 Decisions</span><span>16 Pages</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Community footer: reviews + email signup -->
   <div class="community">
@@ -1613,6 +1694,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
             <tr><td>Men's tab views</td><td class="num">${tabMenViews}</td></tr>
             <tr><td>Women's tab views</td><td class="num">${tabWomenViews}</td></tr>
             <tr><td>"Shop the whole fit" clicks</td><td class="num">${shopAllClicks}</td></tr>
+            <tr><td>Guidebook clicks</td><td class="num">${data.guideClicks || 0}</td></tr>
           </tbody>
         </table>
       </div>
@@ -1795,6 +1877,19 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       render();
     });
   });
+
+  // ---------- guidebook link ----------
+  // PASTE YOUR GUMROAD LINK HERE (the whole thing, e.g. https://yourname.gumroad.com/l/formula)
+  const GUIDE_URL = 'https://gumroad.com/';
+
+  (function initGuide(){
+    const btn = document.getElementById('guideBtn');
+    if(!btn) return;
+    btn.href = GUIDE_URL;
+    btn.addEventListener('click', ()=>{
+      if(!isAdmin) trackEvent('guideClicks'); // shows up in your analytics
+    });
+  })();
 
   // ---------- hero squad → jump to that gender's fits ----------
   function goToCategory(cat){
