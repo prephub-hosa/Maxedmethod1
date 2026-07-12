@@ -402,25 +402,26 @@
   }
 
   /* expanded view inside the Guidebook tab */
-  .guide-sell #gridArea,
-  #gridArea .gs-inner{padding:0;}
   #gridArea > .gs-inner{max-width:1200px;margin:0 auto;padding:44px 28px 56px;display:grid;grid-template-columns:1fr 300px;gap:56px;align-items:start;}
-  .gs-chapters{margin:8px 0 26px;max-width:560px;}
-  .gs-ch{display:grid;grid-template-columns:26px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06);align-items:baseline;}
-  .gs-ch:last-child{border-bottom:none;}
-  .gs-ch-n{font-family:var(--font-mono);font-size:10px;color:#B8935A;letter-spacing:.08em;}
-  .gs-ch-t{font-family:var(--font-body);font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;}
-  .gs-ch-d{font-family:var(--font-body);font-size:12.5px;color:var(--text-dim);line-height:1.45;}
+  /* chapters as compact chips — the full list was a wall of text that pushed the buy
+     button below the fold. This shows the same scope in a fraction of the height. */
+  .gs-chip-row{display:flex;flex-wrap:wrap;gap:7px;margin:24px 0;max-width:560px;}
+  .gs-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-body);font-size:12.5px;
+    color:var(--text-soft);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+    padding:7px 12px;border-radius:100px;}
+  .gs-chip b{font-family:var(--font-mono);font-size:9px;color:#B8935A;font-weight:500;letter-spacing:.06em;}
   .gs-stats{display:flex;gap:14px;margin-top:22px;justify-content:center;}
   .gs-stats div{text-align:center;}
   .gs-stats b{display:block;font-family:var(--font-display);font-size:20px;color:var(--text);font-weight:800;}
   .gs-stats span{font-family:var(--font-mono);font-size:8px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;}
+  .gs-tab .gs-cta{margin-bottom:4px;}
   .tab-guide{color:#B8935A !important;}
   .tab-guide.active{color:var(--text) !important;}
 
   @media (max-width:900px){
-    #gridArea > .gs-inner{grid-template-columns:1fr;gap:30px;padding:30px 22px 40px;}
+    #gridArea > .gs-inner{grid-template-columns:1fr;gap:26px;padding:26px 22px 40px;}
     #gridArea > .gs-inner .gs-visual{order:-1;}
+    .gs-chip{font-size:11.5px;padding:6px 10px;}
   }
 
   /* ---- Roulette button ---- */
@@ -1881,58 +1882,82 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   });
 
   // ---------- guidebook ----------
-  const GUIDE_URL = 'https://tykimm.gumroad.com/l/cpcjio';
+  const GUIDE_URL   = 'https://tykimm.gumroad.com/l/cpcjio';
+  const GUIDE_PRICE = '$5.99';
+  const GUIDE_PAGES = '16 pages';
 
-  // One template, rendered in two places: the Guidebook tab (expanded) and the bottom of
-  // the Men's/Women's pages (compact). Contents mirror the actual 16-page guide.
+  // One template, two layouts. The Guidebook tab leads with the buy button (nobody should
+  // have to scroll through a wall of text to find out how to pay); the bottom-of-page
+  // version is the compact pitch that catches people after they've browsed the fits.
   function guideSectionHTML(opts){
     const inTab = !!(opts && opts.inTab);
-    const chapters = [
-      ['01','Shape','Why baggy-on-baggy fails, and where the contrast has to go'],
-      ['02','Palette','The two colour lanes that always work — and the one-dye-batch test'],
-      ['03','Footwear','The nine shoes that carry an entire outfit on their own'],
-      ['04','Layering','Stagger the hems. The "peek" that makes a fit look considered'],
-      ['05','The finish','One accessory. Then stop.'],
-      ['06','Texture','Why a fit looks boring even when the colours are right'],
-      ['07','The two lanes','Baggy softboy and clean Korean-girl, broken down piece by piece'],
-      ['08','Dressing your build','Tall, short, bigger, broad — where to move the volume'],
-      ['09','The starter wardrobe','12 pieces, in buy-order, that build every fit on this site'],
-      ['10','Troubleshooting','Your fit looks off and you can\'t say why. Here\'s the diagnosis'],
-      ['11','The cheat sheet','The whole guide on one page. Screenshot it.']
+
+    const bullets = [
+      'The five decisions, and the order they happen in',
+      'The two colour lanes that always work',
+      'The nine shoes that carry an entire outfit',
+      'How to adapt it to your build — tall, short, bigger, broad',
+      'A 20-piece starter wardrobe, in buy-order',
+      'Troubleshooting: why your fit looks off, and how to fix it'
     ];
 
-    const chapterList = inTab
-      ? `<div class="gs-chapters">
-           ${chapters.map(([n,t,d])=>`
-             <div class="gs-ch">
-               <span class="gs-ch-n">${n}</span>
-               <div><div class="gs-ch-t">${t}</div><div class="gs-ch-d">${d}</div></div>
-             </div>`).join('')}
-         </div>`
-      : `<ul class="gs-list">
-           <li>The five decisions, and the order they happen in</li>
-           <li>The two colour lanes that always work</li>
-           <li>The nine shoes that carry an entire outfit</li>
-           <li>How to adapt it to your build — tall, short, bigger, broad</li>
-           <li>A 12-piece starter wardrobe, in buy-order</li>
-           <li>Troubleshooting: why your fit looks off, and how to fix it</li>
-         </ul>`;
+    const chapters = [
+      ['01','Shape'],              ['02','Palette'],
+      ['03','Footwear'],           ['04','Layering'],
+      ['05','The finish'],         ['06','Texture'],
+      ['07','The two lanes'],      ['08','Dressing your build'],
+      ['09','The starter wardrobe'],['10','Troubleshooting'],
+      ['11','The cheat sheet']
+    ];
 
+    const cta = `
+      <div class="gs-cta">
+        <a class="gs-btn" data-guide-btn href="${GUIDE_URL}" target="_blank" rel="noopener">Get the guide — ${GUIDE_PRICE}</a>
+        <span class="gs-meta">${GUIDE_PAGES} · instant PDF download</span>
+      </div>`;
+
+    if(inTab){
+      // TAB LAYOUT — cover + CTA visible immediately, detail sits underneath
+      return `
+        <div class="gs-inner gs-tab">
+          <div class="gs-copy">
+            <div class="gs-kick">The guidebook</div>
+            <h2 class="gs-title">Stop copying<br>fits. Learn the<br>system.</h2>
+            <p class="gs-lead">The exact system behind every outfit on this site. Five decisions, made in the same order, every time.</p>
+            ${cta}
+            <div class="gs-chip-row">
+              ${chapters.map(([n,t])=>`<span class="gs-chip"><b>${n}</b>${t}</span>`).join('')}
+            </div>
+            <p class="gs-body">It isn't a shopping list — shopping lists run out. Swap every piece in the guide for something else and the logic still holds. Once you can see the five decisions, you stop saving other people's fits and start building your own, mostly out of things you already own.</p>
+          </div>
+          <div class="gs-visual">
+            <div class="gs-cover">
+              <div class="gsc-kick">MaxedMethod · Volume One</div>
+              <div class="gsc-title">The<br>Formula</div>
+              <div class="gsc-rule"></div>
+              <div class="gsc-sub">Five decisions.<br>That's the whole thing.</div>
+              <div class="gsc-foot"><span>05 Decisions</span><span>16 Pages</span></div>
+            </div>
+            <div class="gs-stats">
+              <div><b>16</b><span>Pages</span></div>
+              <div><b>11</b><span>Chapters</span></div>
+              <div><b>PDF</b><span>Instant</span></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // BOTTOM-OF-PAGE LAYOUT — compact pitch
     return `
-      <div class="gs-inner ${inTab ? 'gs-tab' : ''}">
+      <div class="gs-inner">
         <div class="gs-copy">
           <div class="gs-kick">The guidebook</div>
           <h2 class="gs-title">Stop copying<br>fits. Learn the<br>system.</h2>
           <p class="gs-lead">You can shop every look on this site. But the fits change — the thinking behind them doesn't.</p>
-          <p class="gs-body">The Formula is the exact system behind every outfit I post. Five decisions, made in the same order, every time. Once you can see them you stop saving other people's fits and start building your own — mostly out of things you already own.</p>
-          <p class="gs-body">It isn't a shopping list. Shopping lists run out. Swap every piece in the guide for something else and the logic still holds.</p>
-          ${chapterList}
-          <div class="gs-cta">
-            <a class="gs-btn" data-guide-btn href="${GUIDE_URL}" target="_blank" rel="noopener">Get the guide — $7.99</a>
-            <span class="gs-meta">16 pages · instant PDF download</span>
-          </div>
+          <p class="gs-body">The Formula is the exact system behind every outfit I post. Five decisions, made in the same order, every time.</p>
+          <ul class="gs-list">${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
+          ${cta}
         </div>
-
         <div class="gs-visual">
           <div class="gs-cover">
             <div class="gsc-kick">MaxedMethod · Volume One</div>
@@ -1941,11 +1966,6 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
             <div class="gsc-sub">Five decisions.<br>That's the whole thing.</div>
             <div class="gsc-foot"><span>05 Decisions</span><span>16 Pages</span></div>
           </div>
-          ${inTab ? `<div class="gs-stats">
-            <div><b>16</b><span>Pages</span></div>
-            <div><b>11</b><span>Chapters</span></div>
-            <div><b>PDF</b><span>Instant</span></div>
-          </div>` : ''}
         </div>
       </div>`;
   }
