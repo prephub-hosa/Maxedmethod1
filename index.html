@@ -363,7 +363,7 @@
 
   /* ---- The Formula — guidebook sell ---- */
   .guide-sell{margin:40px 0 0;padding:56px 28px;background:linear-gradient(180deg,#131210 0%,#0C0C0B 100%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-  .gs-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 300px;gap:56px;align-items:center;}
+  .gs-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 420px;gap:48px;align-items:center;}
   .gs-kick{font-family:var(--font-mono);font-size:10px;letter-spacing:.24em;color:#B8935A;text-transform:uppercase;margin-bottom:16px;}
   .gs-title{font-family:var(--font-display);font-size:clamp(30px,4vw,44px);line-height:1.05;text-transform:uppercase;color:var(--text);margin:0 0 18px;font-weight:800;letter-spacing:-.01em;}
   .gs-lead{font-family:var(--font-body);font-size:16px;line-height:1.6;color:var(--text-soft);margin:0 0 12px;max-width:520px;}
@@ -379,26 +379,77 @@
   .gs-btn:hover{transform:translateY(-2px);background:#C9A15A;}
   .gs-meta{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;}
 
-  /* cover art — a real transparent PNG, so no blend hacks needed. Just a soft shadow so it
-     sits on the dark background like a physical object rather than a flat sticker. */
+  /* cover art — real transparent PNG. Treated as a hero object: floating, lit from behind
+     with a warm aura, and orbited by a few slow drifting motes. */
   .gs-visual{display:flex;justify-content:center;flex-direction:column;align-items:center;}
-  .gs-cover-wrap{width:300px;max-width:100%;display:flex;justify-content:center;
-    filter:drop-shadow(0 26px 46px rgba(0,0,0,.7));transition:transform .35s ease;}
-  .gs-cover-wrap:hover{transform:translateY(-6px) scale(1.02);}
-  .gs-cover-img{width:100%;height:auto;display:block;}
+  .gs-cover-wrap{
+    position:relative;width:400px;max-width:100%;display:flex;justify-content:center;align-items:center;
+    padding:36px 0;
+  }
+  /* layered glow behind the book */
+  .gs-cover-wrap::before{
+    content:"";position:absolute;top:50%;left:50%;width:82%;height:70%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(ellipse at center, rgba(184,147,90,.34) 0%, rgba(184,147,90,.14) 42%, rgba(184,147,90,0) 72%);
+    filter:blur(34px);z-index:0;animation:gs-pulse 6s ease-in-out infinite;
+  }
+  /* tighter hot core so the edges of the book catch light */
+  .gs-cover-wrap::after{
+    content:"";position:absolute;top:52%;left:50%;width:52%;height:46%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(ellipse at center, rgba(255,214,150,.22) 0%, rgba(255,214,150,0) 70%);
+    filter:blur(26px);z-index:0;animation:gs-pulse 6s ease-in-out infinite reverse;
+  }
+  .gs-cover-img{
+    position:relative;z-index:2;width:100%;height:auto;display:block;
+    filter:drop-shadow(0 30px 44px rgba(0,0,0,.75)) drop-shadow(0 0 26px rgba(184,147,90,.28));
+    animation:gs-float 7s ease-in-out infinite;
+    transition:transform .4s cubic-bezier(.22,1,.36,1), filter .4s ease;
+  }
+  .gs-cover-wrap:hover .gs-cover-img{
+    transform:translateY(-10px) scale(1.045) rotate(-1deg);
+    filter:drop-shadow(0 40px 56px rgba(0,0,0,.8)) drop-shadow(0 0 40px rgba(184,147,90,.5));
+  }
+  @keyframes gs-float{
+    0%,100%{transform:translateY(0) rotate(0deg);}
+    50%{transform:translateY(-14px) rotate(.6deg);}
+  }
+  @keyframes gs-pulse{
+    0%,100%{opacity:.75;transform:translate(-50%,-50%) scale(1);}
+    50%{opacity:1;transform:translate(-50%,-50%) scale(1.09);}
+  }
+  /* drifting aura motes */
+  .gs-aura{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:visible;}
+  .gs-aura span{
+    position:absolute;border-radius:50%;
+    background:radial-gradient(circle, rgba(232,199,140,.9) 0%, rgba(184,147,90,0) 70%);
+    animation:gs-drift 9s ease-in-out infinite;
+  }
+  .gs-aura span:nth-child(1){width:7px;height:7px;top:16%;left:12%;animation-delay:0s;animation-duration:8s;}
+  .gs-aura span:nth-child(2){width:5px;height:5px;top:70%;left:8%;animation-delay:-2s;animation-duration:11s;}
+  .gs-aura span:nth-child(3){width:9px;height:9px;top:28%;right:9%;animation-delay:-4s;animation-duration:9.5s;}
+  .gs-aura span:nth-child(4){width:4px;height:4px;top:82%;right:16%;animation-delay:-1s;animation-duration:12s;}
+  .gs-aura span:nth-child(5){width:6px;height:6px;top:8%;right:26%;animation-delay:-5s;animation-duration:10s;}
+  .gs-aura span:nth-child(6){width:5px;height:5px;top:52%;left:4%;animation-delay:-3s;animation-duration:13s;}
+  @keyframes gs-drift{
+    0%,100%{transform:translate(0,0);opacity:.25;}
+    25%{opacity:.85;}
+    50%{transform:translate(10px,-22px);opacity:.5;}
+    75%{opacity:.8;}
+  }
 
   @media (max-width:900px){
     .guide-sell{padding:40px 22px;}
     .gs-inner{grid-template-columns:1fr;gap:32px;}
     .gs-visual{order:-1;}
-    .gs-cover-wrap{width:190px;}
+    .gs-cover-wrap{width:250px;padding:20px 0;}
     .gs-title{font-size:28px;}
     .gs-cta{width:100%;}
     .gs-btn{width:100%;justify-content:center;}
   }
 
   /* expanded view inside the Guidebook tab */
-  #gridArea > .gs-inner{max-width:1200px;margin:0 auto;padding:44px 28px 56px;display:grid;grid-template-columns:1fr 300px;gap:56px;align-items:start;}
+  #gridArea > .gs-inner{max-width:1200px;margin:0 auto;padding:44px 28px 56px;display:grid;grid-template-columns:1fr 420px;gap:48px;align-items:center;}
   /* chapters as compact chips — the full list was a wall of text that pushed the buy
      button below the fold. This shows the same scope in a fraction of the height. */
   .gs-chip-row{display:flex;flex-wrap:wrap;gap:7px;margin:24px 0;max-width:560px;}
@@ -1920,6 +1971,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 
     const cover = `
       <div class="gs-cover-wrap">
+        <div class="gs-aura"><span></span><span></span><span></span><span></span><span></span><span></span></div>
         <img class="gs-cover-img" src="https://i.postimg.cc/X7ZFgwNc/d4e03ead-fcc1-4a69-8dd0-3febb6953754.png" alt="The Formula — MaxedMethod guidebook">
       </div>`;
 
