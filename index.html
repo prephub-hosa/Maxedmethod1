@@ -379,15 +379,13 @@
   .gs-btn:hover{transform:translateY(-2px);background:#C9A15A;}
   .gs-meta{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;}
 
-  /* mock cover */
+  /* cover art — a real transparent PNG, so no blend hacks needed. Just a soft shadow so it
+     sits on the dark background like a physical object rather than a flat sticker. */
   .gs-visual{display:flex;justify-content:center;flex-direction:column;align-items:center;}
-  /* The cover art is a JPEG, so it carries a solid (dark) background rather than real
-     transparency. `screen` blending drops pure black to nothing against our near-black
-     section, so the book reads as floating instead of sitting in a visible grey box. */
-  .gs-cover-wrap{width:290px;max-width:100%;display:flex;justify-content:center;
-    filter:drop-shadow(0 24px 50px rgba(0,0,0,.65));transition:transform .35s ease;}
+  .gs-cover-wrap{width:300px;max-width:100%;display:flex;justify-content:center;
+    filter:drop-shadow(0 26px 46px rgba(0,0,0,.7));transition:transform .35s ease;}
   .gs-cover-wrap:hover{transform:translateY(-6px) scale(1.02);}
-  .gs-cover-img{width:100%;height:auto;display:block;mix-blend-mode:screen;border-radius:2px;}
+  .gs-cover-img{width:100%;height:auto;display:block;}
 
   @media (max-width:900px){
     .guide-sell{padding:40px 22px;}
@@ -1922,7 +1920,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 
     const cover = `
       <div class="gs-cover-wrap">
-        <img class="gs-cover-img" src="https://i.imgur.com/b2oY12Y.jpeg" alt="The Formula — MaxedMethod guidebook">
+        <img class="gs-cover-img" src="https://i.postimg.cc/X7ZFgwNc/d4e03ead-fcc1-4a69-8dd0-3febb6953754.png" alt="The Formula — MaxedMethod guidebook">
       </div>`;
 
     if(inTab){
