@@ -474,7 +474,9 @@
     color:var(--text-soft);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
     padding:7px 12px;border-radius:100px;}
   .gs-chip b{font-family:var(--font-mono);font-size:9px;color:#B8935A;font-weight:500;letter-spacing:.06em;}
-  .gs-stats{display:flex;gap:14px;margin-top:22px;justify-content:center;}
+  /* The cover wrap carries padding + a big blurred glow, so a normal top margin drops the
+     stats miles below the book. Pull them back up so they sit right under it. */
+  .gs-stats{display:flex;gap:22px;margin-top:-18px;justify-content:center;position:relative;z-index:3;}
   .gs-stats div{text-align:center;}
   .gs-stats b{display:block;font-family:var(--font-display);font-size:20px;color:var(--text);font-weight:800;}
   .gs-stats span{font-family:var(--font-mono);font-size:8px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;}
