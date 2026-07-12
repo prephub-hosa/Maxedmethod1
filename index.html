@@ -57,6 +57,9 @@
   .title .thin{font-weight:600;color:var(--text-soft);}
   .subtitle{font-family:var(--font-body);font-size:15px;color:var(--text-soft);margin-top:24px;max-width:440px;line-height:1.6;}
   .amazon-note{font-family:var(--font-body);font-size:13px;color:var(--text-soft);margin-top:24px;max-width:460px;line-height:1.6;}
+  .guide-note{font-family:var(--font-body);font-size:13px;color:var(--text-dim);margin-top:10px;max-width:460px;line-height:1.6;}
+  .guide-note a{color:#B8935A;text-decoration:none;font-weight:600;border-bottom:1px solid rgba(184,147,90,.35);transition:border-color .15s;}
+  .guide-note a:hover{border-color:#B8935A;}
   .status-badge{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:8px 14px;border:1px solid var(--line);border-radius:100px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--text-soft);}
   .status-dot{width:6px;height:6px;border-radius:50%;background:#8BAE7C;flex-shrink:0;animation:pulse-dot 2s ease-in-out infinite;}
   @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.35;}}
@@ -424,6 +427,19 @@
     #gridArea > .gs-inner{grid-template-columns:1fr;gap:26px;padding:26px 22px 40px;}
     #gridArea > .gs-inner .gs-visual{order:-1;}
     .gs-chip{font-size:11.5px;padding:6px 10px;}
+    /* everything inside the tab view must obey the container, not its own desktop max-width —
+       these were overhanging the right edge by ~13px and clipping the button and chips */
+    #gridArea > .gs-inner,
+    #gridArea > .gs-inner *{min-width:0;}
+    #gridArea .gs-copy{width:100%;max-width:100%;overflow-wrap:anywhere;}
+    #gridArea .gs-list,
+    #gridArea .gs-chip-row,
+    #gridArea .gs-lead,
+    #gridArea .gs-body{max-width:100%;}
+    #gridArea .gs-cta{width:100%;flex-direction:column;align-items:stretch;gap:10px;}
+    #gridArea .gs-btn{width:100%;max-width:100%;justify-content:center;box-sizing:border-box;}
+    #gridArea .gs-meta{text-align:center;}
+    #gridArea .gs-title{font-size:26px;}
   }
 
   /* ---- Roulette button ---- */
@@ -473,6 +489,7 @@
       <div class="eyebrow">Curated fits, fully shoppable</div>
       <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
       <p class="amazon-note">Every piece links to Amazon — for the best prices, trusted checkout, and the most size &amp; color options in one place.</p>
+      <p class="guide-note">Want to build your own fits instead of copying them? <a href="#" id="guideTeaser">Check out the guidebook →</a></p>
       <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
     </div>
     <div class="squad-banner" id="squadBanner">
@@ -1973,6 +1990,19 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     const bottom = document.getElementById('guideSell');
     if(bottom) bottom.innerHTML = guideSectionHTML({ inTab:false });
     wireGuideButtons();
+    // homepage teaser → open the Guidebook tab and scroll to it
+    const teaser = document.getElementById('guideTeaser');
+    if(teaser){
+      teaser.addEventListener('click', (e)=>{
+        e.preventDefault();
+        activeCat = 'guide';
+        render();
+        const target = document.querySelector('.tabbar');
+        if(target){
+          window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 12, behavior:'smooth' });
+        }
+      });
+    }
   })();
 
   // ---------- hero squad → jump to that gender's fits ----------
