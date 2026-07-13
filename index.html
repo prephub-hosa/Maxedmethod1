@@ -1127,12 +1127,6 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
           <span class="fit-tag">FIT ${String(i+1).padStart(2,'0')}</span>
           <h3 class="fit-title">${escapeHtml(fit.title)}</h3>
           <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →</div>
-          ${basePrice(fit.items) !== null
-            ? `<div class="fit-card-price">
-                 <span class="fcp-amount">$${Math.round(basePrice(fit.items))}</span>
-                 <span class="fcp-note">base fit${extrasPrice(fit.items) !== null ? ' · + shoes' : ''}</span>
-               </div>`
-            : ''}
         </div>
         ${!isAdmin ? `
         <button class="fit-heart ${saved?'saved':''}" data-heart="${fit.id}" title="${saved?'Saved':'Save for later'}">${saved?'♥':'♡'}</button>
