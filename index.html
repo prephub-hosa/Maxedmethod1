@@ -609,11 +609,10 @@
     <span class="count" id="fitCount"></span>
   </div>
   <div class="pricebar" id="priceBar">
-    <button class="price-tab active" data-price="all">All prices</button>
-    <button class="price-tab" data-price="under60">Under $60</button>
-    <button class="price-tab" data-price="60to80">$60 – $80</button>
-    <button class="price-tab" data-price="80to100">$80 – $100</button>
-    <button class="price-tab" data-price="over100">$100+</button>
+    <button class="price-tab active" data-style="all">All</button>
+    <button class="price-tab" data-style="streetwear">Streetwear</button>
+    <button class="price-tab" data-style="softboy">Softboy</button>
+    <button class="price-tab" data-style="datenight">Date Night</button>
   </div>
   <div id="gridArea"><div class="loading">Loading fits…</div></div>
 
@@ -748,6 +747,16 @@ OUTER | Cream Cardigan | https://..."></textarea>
       <div class="hint">Double-check this — it decides which tab the fit shows under and how analytics groups it.</div>
     </div>
     <div class="field">
+      <label>Style</label>
+      <select id="fitStyleInput">
+        <option value="">— None (only shows under "All") —</option>
+        <option value="streetwear">Streetwear</option>
+        <option value="softboy">Softboy</option>
+        <option value="datenight">Date Night</option>
+      </select>
+      <div class="hint">Which style tab this fit appears under. Leave as None and it only shows under "All".</div>
+    </div>
+    <div class="field">
       <label>Cover / thumbnail image URL</label>
       <input type="text" id="fitCoverInput" placeholder="https://...">
       <div class="hint">This shows on the grid card. Use the same model shot from your carousel cover slide. Imgur links must start with i.imgur.com (right-click the full-size image → "Copy image address"), not imgur.com/a/... page links.</div>
@@ -805,28 +814,33 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   let wishlist = {};          // { fitId: true } saved in this browser
   let analyticsCache = null;  // opens data for trending calc
   let showSaved = false;      // saved-only view toggle
-  let activePrice = 'all';    // price filter tab
+  let activeStyle = 'all';    // style filter tab
   try{ wishlist = JSON.parse(localStorage.getItem('mm-wishlist')||'{}'); }catch(e){}
+
+  // The style tabs. To add another, drop it in here AND add a matching button in the
+  // pricebar markup — everything else (admin dropdown, empty state) picks it up for free.
+  const STYLES = [
+    { id:'streetwear', label:'Streetwear' },
+    { id:'softboy',    label:'Softboy'    },
+    { id:'datenight',  label:'Date Night' }
+  ];
+  function styleLabel(id){
+    const s = STYLES.find(s => s.id === id);
+    return s ? s.label : id;
+  }
 
   // fits without a cat are treated as men's (preserves everything built before tabs existed)
   function catOf(fit){ return fit.cat || 'men'; }
-  // Filter on BASE price so the buckets match the price shown on the card — a fit that
-  // reads "Base fit ≈ $80" belongs in its bucket even if the sneakers push the full look higher.
-  // Ranges are tuned to how the real catalog actually spreads (most base fits land $30–$120).
-  function priceMatches(fit){
-    if(activePrice === 'all') return true;
-    const total = basePrice(fit.items);
-    if(total === null) return true; // no prices entered -> don't filter it out
-    if(activePrice === 'under60')  return total < 60;
-    if(activePrice === '60to80')   return total >= 60 && total < 80;
-    if(activePrice === '80to100')  return total >= 80 && total < 100;
-    if(activePrice === 'over100')  return total >= 100;
-    return true;
+  // Fits carry an optional `style` field set manually in the admin editor. Unassigned fits
+  // show only under "All", so a half-categorised catalog never looks broken.
+  function styleMatches(fit){
+    if(activeStyle === 'all') return true;
+    return (fit.style || '') === activeStyle;
   }
   function getFiltered(){
     return fits.map((f,gi)=>({f,gi}))
       .filter(x=>catOf(x.f)===activeCat)
-      .filter(x=>priceMatches(x.f));
+      .filter(x=>styleMatches(x.f));
   }
 
   const gridArea = document.getElementById('gridArea');
@@ -1035,6 +1049,16 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       const label = activeCat === 'women' ? "Women's" : "Men's";
       if(showSaved){
         gridArea.innerHTML = `<div class="empty-state"><h2 class="title">No saved fits</h2><p>Tap the ♡ on any fit to save it here for later.</p></div>`;
+        return;
+      }
+      // A style tab with nothing in it yet — say "coming soon" rather than looking broken.
+      if(activeStyle !== 'all'){
+        const sLabel = styleLabel(activeStyle);
+        if(isAdmin){
+          gridArea.innerHTML = `<div class="empty-state"><h2 class="title">No ${sLabel} fits yet</h2><p>Nothing in ${label} is tagged <b>${sLabel}</b> yet. Edit a fit and set its style to add it here.</p></div>`;
+        } else {
+          gridArea.innerHTML = `<div class="empty-state"><h2 class="title">${sLabel}</h2><p>None yet — coming soon.</p></div>`;
+        }
         return;
       }
       if(isAdmin){
@@ -1448,6 +1472,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       document.getElementById('fitCoverInput').value = fit.cover;
       document.getElementById('fitPhotoInput').value = fit.photo || '';
       setFitCatToggle(fit.cat || 'men'); // reflects the fit's REAL category, so mistakes are visible & fixable
+      document.getElementById('fitStyleInput').value = fit.style || '';
       itemDraft = (fit.items||[]).map(it => ({...it}));
     } else {
       document.getElementById('fitFormTitle').textContent = 'Add a fit — ' + (activeCat === 'women' ? "Women's" : "Men's");
@@ -1455,6 +1480,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       document.getElementById('fitCoverInput').value = '';
       document.getElementById('fitPhotoInput').value = '';
       setFitCatToggle(activeCat);
+      document.getElementById('fitStyleInput').value = (activeStyle !== 'all') ? activeStyle : '';
       itemDraft = [ { id: uid(), label:'OUTER', name:'', price:'', url:'' } ];
     }
     renderItemDraft();
@@ -1597,7 +1623,8 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       return;
     }
 
-    const fitData = { title, cover, photo: photo || cover, items: cleanItems, cat: getFitCatToggle() };
+    const fitData = { title, cover, photo: photo || cover, items: cleanItems, cat: getFitCatToggle(),
+                      style: document.getElementById('fitStyleInput').value || '' };
 
     const prevFits = fits.map(f => ({...f}));
     if(editingId){
@@ -1947,9 +1974,9 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 
   document.querySelectorAll('.price-tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
-      const p = tab.getAttribute('data-price');
-      if(p === activePrice) return;
-      activePrice = p;
+      const s = tab.getAttribute('data-style');
+      if(s === activeStyle) return;
+      activeStyle = s;
       document.querySelectorAll('.price-tab').forEach(t=> t.classList.toggle('active', t === tab));
       render();
     });
