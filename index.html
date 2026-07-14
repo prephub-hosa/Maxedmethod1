@@ -751,7 +751,7 @@ OUTER | Cream Cardigan | https://..."></textarea>
       <select id="fitStyleInput">
         <option value="">— None (only shows under "All") —</option>
         <option value="streetwear">Streetwear</option>
-        <option value="softboy">Softboy</option>
+        <option value="softboy" id="fitStyleSoft">Softboy</option>
         <option value="datenight">Date Night</option>
       </select>
       <div class="hint">Which style tab this fit appears under. Leave as None and it only shows under "All".</div>
@@ -819,14 +819,24 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 
   // The style tabs. To add another, drop it in here AND add a matching button in the
   // pricebar markup — everything else (admin dropdown, empty state) picks it up for free.
+  // Some styles read differently per category, so a label can vary by men's/women's while
+  // the underlying id stays the same (a fit tagged 'softboy' shows as "Soft Girl" in women's).
   const STYLES = [
     { id:'streetwear', label:'Streetwear' },
-    { id:'softboy',    label:'Softboy'    },
+    { id:'softboy',    label:'Softboy', labelWomen:'Soft Girl' },
     { id:'datenight',  label:'Date Night' }
   ];
   function styleLabel(id){
     const s = STYLES.find(s => s.id === id);
-    return s ? s.label : id;
+    if(!s) return id;
+    return (activeCat === 'women' && s.labelWomen) ? s.labelWomen : s.label;
+  }
+  // keep the visible tab text in sync with whichever category is showing
+  function syncStyleTabLabels(){
+    document.querySelectorAll('.price-tab').forEach(tab=>{
+      const id = tab.getAttribute('data-style');
+      if(id && id !== 'all') tab.textContent = styleLabel(id);
+    });
   }
 
   // fits without a cat are treated as men's (preserves everything built before tabs existed)
@@ -1028,6 +1038,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     const countEl0  = document.getElementById('fitCount');
     const bottomSell = document.getElementById('guideSell');
     if(priceBar)  priceBar.style.display  = isGuide ? 'none' : '';
+    syncStyleTabLabels(); // "Softboy" in men's, "Soft Girl" in women's
     if(countEl0)  countEl0.style.display  = isGuide ? 'none' : '';
     // the bottom sell block is redundant while the guide tab is open
     if(bottomSell) bottomSell.style.display = isGuide ? 'none' : '';
@@ -1456,6 +1467,9 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   function setFitCatToggle(cat){
     document.getElementById('fitCatMen').classList.toggle('active', cat !== 'women');
     document.getElementById('fitCatWomen').classList.toggle('active', cat === 'women');
+    // the same style id reads differently per category — keep the dropdown honest
+    const softOpt = document.getElementById('fitStyleSoft');
+    if(softOpt) softOpt.textContent = (cat === 'women') ? 'Soft Girl' : 'Softboy';
   }
   function getFitCatToggle(){
     return document.getElementById('fitCatWomen').classList.contains('active') ? 'women' : 'men';
