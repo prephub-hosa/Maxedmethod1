@@ -185,7 +185,9 @@
   .reviews-head-title{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:-.01em;color:var(--text);line-height:1.25;}
   .reviews-head-title b{color:#C9A15A;}
   .reviews-agg{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;color:var(--text-soft);letter-spacing:.03em;}
-  .reviews-agg .agg-stars{color:#C9A15A;letter-spacing:.06em;font-size:12px;}
+  .reviews-agg .agg-stars{position:relative;display:inline-block;font-size:12px;letter-spacing:.06em;line-height:1;white-space:nowrap;}
+  .reviews-agg .agg-stars .s-bg{color:rgba(201,161,90,.26);}
+  .reviews-agg .agg-stars .s-fg{position:absolute;left:0;top:0;overflow:hidden;color:#C9A15A;white-space:nowrap;}
   .reviews-agg .agg-score{color:var(--text);font-weight:700;}
   .reviews-nav{display:flex;gap:8px;margin-left:auto;flex:0 0 auto;align-self:flex-start;}
   .rev-arrow{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--bg-2);color:var(--text);border-radius:100px;cursor:pointer;font-size:18px;line-height:1;padding:0 0 2px;transition:border-color .15s,color .15s,background .15s,opacity .15s;}
@@ -2208,7 +2210,12 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     const aggEl = document.getElementById('reviewsAgg');
     if(aggEl){
       const n = combined.length;
-      aggEl.innerHTML = `<span class="agg-stars">★★★★★</span><span class="agg-score">5.0</span><span>·</span><span>${n} review${n===1?'':'s'}</span>`;
+      aggEl.innerHTML =
+        `<span class="agg-stars" aria-label="4.9 out of 5 stars">`+
+          `<span class="s-bg">★★★★★</span>`+
+          `<span class="s-fg" style="width:98%;">★★★★★</span>`+
+        `</span>`+
+        `<span class="agg-score">4.9</span><span>·</span><span>${n} review${n===1?'':'s'}</span>`;
     }
     // hide the swipe hint if it all fits without scrolling
     const hint = document.getElementById('reviewsScrollHint');
