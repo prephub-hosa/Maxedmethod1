@@ -187,6 +187,10 @@
   .reviews-agg{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;color:var(--text-soft);letter-spacing:.03em;}
   .reviews-agg .agg-stars{color:#C9A15A;letter-spacing:.06em;font-size:12px;}
   .reviews-agg .agg-score{color:var(--text);font-weight:700;}
+  .reviews-nav{display:flex;gap:8px;margin-left:auto;flex:0 0 auto;align-self:flex-start;}
+  .rev-arrow{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--bg-2);color:var(--text);border-radius:100px;cursor:pointer;font-size:18px;line-height:1;padding:0 0 2px;transition:border-color .15s,color .15s,background .15s,opacity .15s;}
+  .rev-arrow:hover{border-color:var(--text-soft);background:var(--surface);}
+  .rev-arrow:disabled{opacity:.28;cursor:default;border-color:var(--line);background:var(--bg-2);}
   /* horizontal swipe carousel — easier to scroll, mobile-native */
   .reviews-list{display:flex;flex-direction:row;gap:12px;margin-bottom:8px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:2px 2px 12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;}
   .reviews-list::-webkit-scrollbar{height:6px;}
@@ -645,8 +649,12 @@
         <div class="reviews-head">
           <img class="reviews-head-cover" src="https://i.postimg.cc/X7ZFgwNc/d4e03ead-fcc1-4a69-8dd0-3febb6953754.png" alt="The Formula — MaxedMethod guidebook">
           <div class="reviews-head-txt">
-            <div class="reviews-head-title">What readers say about <b>The Formula</b></div>
+            <div class="reviews-head-title">Guidebook Reviews</div>
             <div class="reviews-agg" id="reviewsAgg"></div>
+          </div>
+          <div class="reviews-nav">
+            <button class="rev-arrow" id="revPrev" type="button" aria-label="Previous reviews">&lsaquo;</button>
+            <button class="rev-arrow" id="revNext" type="button" aria-label="Next reviews">&rsaquo;</button>
           </div>
         </div>
         <div id="reviewsList" class="reviews-list"><div class="hint">Loading…</div></div>
@@ -2205,6 +2213,34 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     // hide the swipe hint if it all fits without scrolling
     const hint = document.getElementById('reviewsScrollHint');
     if(hint){ hint.style.display = (listEl.scrollWidth > listEl.clientWidth + 8) ? '' : 'none'; }
+    // refresh arrow nav (enabled/disabled + visibility) now that content changed
+    if(window.__updateReviewArrows) window.__updateReviewArrows();
+  }
+
+  // arrow-button nav for the review carousel — scrolls one card per tap,
+  // disables at the ends, hides entirely if nothing overflows.
+  function initReviewNav(){
+    const listEl = document.getElementById('reviewsList');
+    const prev = document.getElementById('revPrev');
+    const next = document.getElementById('revNext');
+    if(!listEl || !prev || !next) return;
+    const step = ()=>{
+      const card = listEl.querySelector('.review-item');
+      return card ? card.getBoundingClientRect().width + 12 : listEl.clientWidth * 0.85;
+    };
+    const update = ()=>{
+      const overflow = listEl.scrollWidth > listEl.clientWidth + 8;
+      const max = listEl.scrollWidth - listEl.clientWidth - 2;
+      [prev,next].forEach(b=> b.style.display = overflow ? '' : 'none');
+      prev.disabled = listEl.scrollLeft <= 2;
+      next.disabled = listEl.scrollLeft >= max;
+    };
+    prev.addEventListener('click', ()=> listEl.scrollBy({ left:-step(), behavior:'smooth' }));
+    next.addEventListener('click', ()=> listEl.scrollBy({ left: step(), behavior:'smooth' }));
+    listEl.addEventListener('scroll', update, { passive:true });
+    window.addEventListener('resize', update);
+    window.__updateReviewArrows = update;
+    update();
   }
 
   document.getElementById('reviewSubmit').addEventListener('click', async ()=>{
@@ -2551,6 +2587,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   // ---------- intro / boot ----------
   trackVisit();
   loadPublicReviews();
+  initReviewNav();
   if(!isAdmin) initScrollTracking();
   (async ()=>{
     try{
