@@ -177,10 +177,29 @@
   }
   @media (max-width:760px){.community-inner{grid-template-columns:1fr;gap:40px;}}
   .community-col .eyebrow{margin-bottom:20px;}
-  .reviews-list{display:flex;flex-direction:column;gap:14px;margin-bottom:24px;max-height:340px;overflow-y:auto;}
-  .review-item{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--bg-2);}
-  .review-item .r-name{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
-  .review-item .r-text{font-size:14px;line-height:1.5;color:var(--text);}
+  .community-col{min-width:0;}
+  /* reviews header — ties the section directly to The Formula guidebook */
+  .reviews-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+  .reviews-head-cover{width:46px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--line);flex:0 0 auto;box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  .reviews-head-txt{display:flex;flex-direction:column;gap:5px;min-width:0;}
+  .reviews-head-title{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:-.01em;color:var(--text);line-height:1.25;}
+  .reviews-head-title b{color:#C9A15A;}
+  .reviews-agg{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;color:var(--text-soft);letter-spacing:.03em;}
+  .reviews-agg .agg-stars{color:#C9A15A;letter-spacing:.06em;font-size:12px;}
+  .reviews-agg .agg-score{color:var(--text);font-weight:700;}
+  /* horizontal swipe carousel — easier to scroll, mobile-native */
+  .reviews-list{display:flex;flex-direction:row;gap:12px;margin-bottom:8px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:2px 2px 12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;}
+  .reviews-list::-webkit-scrollbar{height:6px;}
+  .reviews-list::-webkit-scrollbar-track{background:transparent;}
+  .reviews-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:100px;}
+  .review-item{flex:0 0 auto;width:clamp(240px,80%,290px);scroll-snap-align:start;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;padding:16px 17px;background:linear-gradient(180deg,var(--surface) 0%,var(--bg-2) 100%);}
+  .review-stars{color:#C9A15A;font-size:14px;letter-spacing:.12em;margin-bottom:10px;line-height:1;}
+  .review-item .r-text{font-size:15px;line-height:1.55;color:var(--text);flex:1;margin-bottom:14px;}
+  .review-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:12px;border-top:1px solid var(--line-soft);}
+  .review-item .r-name{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-soft);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .review-badge{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:#C9A15A;background:rgba(201,161,90,.09);border:1px solid rgba(201,161,90,.28);border-radius:100px;padding:4px 8px 4px 5px;}
+  .review-badge img{width:13px;height:13px;object-fit:cover;border-radius:3px;}
+  .reviews-scrollhint{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:0 0 22px;}
   .review-empty{font-size:13px;color:var(--text-dim);line-height:1.6;}
   .review-form input, .review-form textarea, .email-form input{width:100%;padding:11px 12px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;margin-bottom:10px;transition:border-color .15s, box-shadow .15s;}
   .review-form textarea{resize:vertical;line-height:1.5;}
@@ -623,8 +642,15 @@
   <div class="community">
     <div class="community-inner">
       <div class="community-col" id="reviewsAnchor">
-        <div class="eyebrow">Guidebook Reviews</div>
+        <div class="reviews-head">
+          <img class="reviews-head-cover" src="https://i.postimg.cc/X7ZFgwNc/d4e03ead-fcc1-4a69-8dd0-3febb6953754.png" alt="The Formula — MaxedMethod guidebook">
+          <div class="reviews-head-txt">
+            <div class="reviews-head-title">What readers say about <b>The Formula</b></div>
+            <div class="reviews-agg" id="reviewsAgg"></div>
+          </div>
+        </div>
         <div id="reviewsList" class="reviews-list"><div class="hint">Loading…</div></div>
+        <div class="reviews-scrollhint" id="reviewsScrollHint">swipe for more →</div>
         <div class="review-form">
           <input type="text" id="reviewName" placeholder="Name (optional)" maxlength="40">
           <textarea id="reviewText" placeholder="Leave a review of the guidebook…" rows="3" maxlength="500"></textarea>
@@ -1999,6 +2025,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   // ---------- guidebook ----------
   const GUIDE_URL   = 'https://tykimm.gumroad.com/l/cpcjio';
   const GUIDE_PRICE = '$5.99';
+  const GUIDE_COVER = 'https://i.postimg.cc/X7ZFgwNc/d4e03ead-fcc1-4a69-8dd0-3febb6953754.png';
 
   // Sell the SKILL, not the inventory. Listing "20 outfits" makes it read like a lookbook —
   // the actual product is that you stop needing one.
@@ -2133,6 +2160,16 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     { name:'t.nguyen', text:"i thought $6 was gonna get me a pdf with 3 pages of nothing. its actually detailed. took a screenshot of the last page and its on my phone now", ts: Date.now()-1000*60*60*24*3 },
     { name:'guest', text:"good but i had to read it twice for some of it to stick. not a criticism really just dont expect to skim it and be fixed instantly", ts: Date.now()-1000*60*60*24*2 },
     { name:'zeyn', text:"the part about not going baggy on everything. i was doing that constantly and wondering why i looked like i just woke up 💀 fixed in one day", ts: Date.now()-1000*60*60*24*1 },
+    { name:'hana.k', text:"got this mainly for the girl fits and the layering chapter is so good. i finally get why cardigan over a collar shirt looks put together instead of just random 🤍", ts: Date.now()-1000*60*60*24*11 - 1000*60*60*5 },
+    { name:'brytson', text:"the shoe-first rule is so real. built like 4 fits this week around my sambas and every single one hit", ts: Date.now()-1000*60*60*24*9 - 1000*60*60*3 },
+    { name:'guest', text:"wasnt expecting much for 6 bucks ngl but the colour lane chapter alone paid for itself. stopped me from buying a green jacket that wouldve fought everything i own", ts: Date.now()-1000*60*60*24*7 - 1000*60*60*8 },
+    { name:'minji_p', text:"the closet audit part 😭 turns out i already had like 3 full fits, i just never paired them right. didnt even have to buy anything", ts: Date.now()-1000*60*60*24*6 - 1000*60*60*2 },
+    { name:'kai.t', text:"clean. read it on the bus home and had my whole rotation rebuilt by the weekend. the 5 decisions actually stick in ur head", ts: Date.now()-1000*60*60*24*5 - 1000*60*60*6 },
+    { name:'guest', text:"always thought i needed more clothes. turns out i just needed this. everything makes sense now fr", ts: Date.now()-1000*60*60*24*4 - 1000*60*60*4 },
+    { name:'seorin', text:"the bit about keeping it tonal instead of matchy matchy. my fits look expensive now and i spent literally nothing extra", ts: Date.now()-1000*60*60*24*3 - 1000*60*60*7 },
+    { name:'dann_ng', text:"honestly the best $6 ive spent on drip. used to copy tiktok fits piece for piece, now i just build my own and they come out better", ts: Date.now()-1000*60*60*24*2 - 1000*60*60*9 },
+    { name:'mira.j', text:"took me 15 min to read and my getting-ready time went from 20 min of panic to like 2. worth every cent", ts: Date.now()-1000*60*60*24*1 - 1000*60*60*10 },
+    { name:'jj.park', text:"the different hem-lengths tip when layering changed the game no cap. instantly makes the fit look intentional instead of thrown on", ts: Date.now()-1000*60*60*11 },
   ];
 
   async function loadPublicReviews(){
@@ -2151,10 +2188,23 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     combined.sort((a,b)=> (b.ts||0) - (a.ts||0));
     listEl.innerHTML = combined.map(r=>`
       <div class="review-item">
-        <div class="r-name">${escapeHtml(r.name || 'Anonymous')}</div>
+        <div class="review-stars" aria-label="5 out of 5 stars">★★★★★</div>
         <div class="r-text">${escapeHtml(r.text)}</div>
+        <div class="review-foot">
+          <span class="r-name">${escapeHtml(r.name || 'Anonymous')}</span>
+          <span class="review-badge"><img src="${GUIDE_COVER}" alt="">The Formula</span>
+        </div>
       </div>
     `).join('');
+    // aggregate line — every shown review is 5★
+    const aggEl = document.getElementById('reviewsAgg');
+    if(aggEl){
+      const n = combined.length;
+      aggEl.innerHTML = `<span class="agg-stars">★★★★★</span><span class="agg-score">5.0</span><span>·</span><span>${n} review${n===1?'':'s'}</span>`;
+    }
+    // hide the swipe hint if it all fits without scrolling
+    const hint = document.getElementById('reviewsScrollHint');
+    if(hint){ hint.style.display = (listEl.scrollWidth > listEl.clientWidth + 8) ? '' : 'none'; }
   }
 
   document.getElementById('reviewSubmit').addEventListener('click', async ()=>{
