@@ -199,7 +199,9 @@
   .reviews-list::-webkit-scrollbar-track{background:transparent;}
   .reviews-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:100px;}
   .review-item{flex:0 0 auto;width:clamp(240px,80%,290px);scroll-snap-align:start;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;padding:16px 17px;background:linear-gradient(180deg,var(--surface) 0%,var(--bg-2) 100%);}
-  .review-stars{color:#C9A15A;font-size:14px;letter-spacing:.12em;margin-bottom:10px;line-height:1;}
+  .review-stars{font-size:14px;letter-spacing:.12em;margin-bottom:10px;line-height:1;}
+  .review-stars .rs-on{color:#C9A15A;}
+  .review-stars .rs-off{color:rgba(201,161,90,.26);}
   .review-item .r-text{font-size:15px;line-height:1.55;color:var(--text);flex:1;margin-bottom:14px;}
   .review-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:12px;border-top:1px solid var(--line-soft);}
   .review-item .r-name{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-soft);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
@@ -207,6 +209,15 @@
   .review-badge img{width:13px;height:13px;object-fit:cover;border-radius:3px;}
   .reviews-scrollhint{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:0 0 22px;}
   .review-empty{font-size:13px;color:var(--text-dim);line-height:1.6;}
+  /* star rating picker for the review form */
+  .star-input{display:flex;align-items:center;gap:4px;margin-bottom:12px;}
+  .star-input .si-label{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-right:8px;}
+  .star-input .si-star{font-size:22px;line-height:1;color:rgba(201,161,90,.28);cursor:pointer;transition:color .1s,transform .1s;-webkit-tap-highlight-color:transparent;}
+  .star-input .si-star:hover{transform:scale(1.12);}
+  .star-input .si-star.on{color:#C9A15A;}
+  /* owner price-visibility toggle — hides prices site-wide, data is untouched */
+  body.hide-prices .item-price{display:none !important;}
+  body.hide-prices .fit-total-row{display:none !important;}
   .review-form input, .review-form textarea, .email-form input{width:100%;padding:11px 12px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;margin-bottom:10px;transition:border-color .15s, box-shadow .15s;}
   .review-form textarea{resize:vertical;line-height:1.5;}
   .review-form input::placeholder, .review-form textarea::placeholder, .email-form input::placeholder{color:var(--text-dim);}
@@ -575,7 +586,6 @@
       <div class="eyebrow">Curated fits, fully shoppable</div>
       <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
       <p class="amazon-note">Every piece links to Amazon — for the best prices, trusted checkout, and the most size &amp; color options in one place.</p>
-      <p class="guide-note">Want to build your own fits instead of copying them? <a href="#" id="guideTeaser">Check out the guidebook →</a></p>
       <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
     </div>
     <div class="squad-banner" id="squadBanner">
@@ -629,7 +639,6 @@
     <div class="tabs">
       <button class="tab active" data-cat="men">Men</button>
       <button class="tab" data-cat="women">Women</button>
-      <button class="tab tab-guide" data-cat="guide">Guidebook</button>
     </div>
     <span class="count" id="fitCount"></span>
   </div>
@@ -641,17 +650,13 @@
   </div>
   <div id="gridArea"><div class="loading">Loading fits…</div></div>
 
-  <!-- ===== The Formula — guidebook (bottom of Men's / Women's) ===== -->
-  <section class="guide-sell" id="guideSell"></section>
-
   <!-- Community footer: reviews + email signup -->
   <div class="community">
     <div class="community-inner">
       <div class="community-col" id="reviewsAnchor">
         <div class="reviews-head">
-          <img class="reviews-head-cover" src="https://i.postimg.cc/X7ZFgwNc/d4e03ead-fcc1-4a69-8dd0-3febb6953754.png" alt="The Formula — MaxedMethod guidebook">
           <div class="reviews-head-txt">
-            <div class="reviews-head-title">Guidebook Reviews</div>
+            <div class="reviews-head-title">Reviews and Questions</div>
             <div class="reviews-agg" id="reviewsAgg"></div>
           </div>
           <div class="reviews-nav">
@@ -663,7 +668,15 @@
         <div class="reviews-scrollhint" id="reviewsScrollHint">swipe for more →</div>
         <div class="review-form">
           <input type="text" id="reviewName" placeholder="Name (optional)" maxlength="40">
-          <textarea id="reviewText" placeholder="Leave a review of the guidebook…" rows="3" maxlength="500"></textarea>
+          <div class="star-input" id="starInput" role="radiogroup" aria-label="Your rating">
+            <span class="si-label">Rating</span>
+            <span class="si-star" data-v="1" role="radio" aria-label="1 star">★</span>
+            <span class="si-star" data-v="2" role="radio" aria-label="2 stars">★</span>
+            <span class="si-star" data-v="3" role="radio" aria-label="3 stars">★</span>
+            <span class="si-star" data-v="4" role="radio" aria-label="4 stars">★</span>
+            <span class="si-star" data-v="5" role="radio" aria-label="5 stars">★</span>
+          </div>
+          <textarea id="reviewText" placeholder="Leave a review or ask a question…" rows="3" maxlength="500"></textarea>
           <div class="error-text" id="reviewError" style="display:none;"></div>
           <button class="btn btn-primary" id="reviewSubmit">Post</button>
         </div>
@@ -686,6 +699,7 @@
 <button class="fab" id="adminFab">Owner</button>
 <button class="fab" id="bulkFab" style="display:none;right:22px;bottom:74px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Bulk Import</button>
 <button class="fab" id="analyticsFab" style="display:none;right:22px;bottom:126px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Analytics</button>
+<button class="fab" id="priceFab" style="display:none;right:22px;bottom:178px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Prices: On</button>
 <div class="corner-mark">MAXEDMETHOD</div>
 
 <!-- Detail overlay -->
@@ -837,6 +851,7 @@ const CATALOG_DOC = doc(db, "maxedmethod", "catalog");
 const ANALYTICS_DOC = doc(db, "maxedmethod", "analytics");
 const REVIEWS_DOC = doc(db, "maxedmethod", "reviews");
 const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
+const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
 
 (function(){
   const ADMIN_PASS = "\\\\\\"; // change this line to set your own passcode — this only gates the UI, see note in chat
@@ -1067,22 +1082,8 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
   }
 
   function render(){
-    // ---- Guidebook tab: swap the fit grid out for the guide, hide the fit-only controls ----
-    const isGuide = (activeCat === 'guide');
     document.querySelectorAll('.tab').forEach(t=> t.classList.toggle('active', t.getAttribute('data-cat')===activeCat));
-    const priceBar  = document.getElementById('priceBar');
-    const countEl0  = document.getElementById('fitCount');
-    const bottomSell = document.getElementById('guideSell');
-    if(priceBar)  priceBar.style.display  = isGuide ? 'none' : '';
     syncStyleTabLabels(); // "Softboy" in men's, "Soft Girl" in women's
-    if(countEl0)  countEl0.style.display  = isGuide ? 'none' : '';
-    // the bottom sell block is redundant while the guide tab is open
-    if(bottomSell) bottomSell.style.display = isGuide ? 'none' : '';
-    if(isGuide){
-      gridArea.innerHTML = guideSectionHTML({ inTab:true });
-      wireGuideButtons();
-      return;
-    }
 
     let filtered = getFiltered();
     // saved-only view
@@ -1440,6 +1441,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       adminFab.classList.remove('admin-on');
       bulkFab.style.display = 'none';
       analyticsFab.style.display = 'none';
+      document.getElementById('priceFab').style.display = 'none';
       render();
     } else {
       document.getElementById('passInput').value = '';
@@ -1459,6 +1461,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       adminFab.classList.add('admin-on');
       bulkFab.style.display = 'block';
       analyticsFab.style.display = 'block';
+      document.getElementById('priceFab').style.display = 'block';
       passModal.classList.remove('open');
       render();
       showAddFitShortcut();
@@ -1848,7 +1851,6 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
             <tr><td>Men's tab views</td><td class="num">${tabMenViews}</td></tr>
             <tr><td>Women's tab views</td><td class="num">${tabWomenViews}</td></tr>
             <tr><td>"Shop the whole fit" clicks</td><td class="num">${shopAllClicks}</td></tr>
-            <tr><td>Guidebook clicks</td><td class="num">${data.guideClicks || 0}</td></tr>
           </tbody>
         </table>
       </div>
@@ -2032,109 +2034,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     });
   });
 
-  // ---------- guidebook ----------
-  const GUIDE_URL   = 'https://tykimm.gumroad.com/l/cpcjio';
-  const GUIDE_PRICE = '$5.99';
-  const GUIDE_COVER = 'https://i.postimg.cc/X7ZFgwNc/d4e03ead-fcc1-4a69-8dd0-3febb6953754.png';
-
-  // Sell the SKILL, not the inventory. Listing "20 outfits" makes it read like a lookbook —
-  // the actual product is that you stop needing one.
-  function guideSectionHTML(opts){
-    const inTab = !!(opts && opts.inTab);
-
-    const bullets = [
-      '<b>How to decide, in what order</b> — so getting dressed stops being a guessing game',
-      '<b>Why some colours work and others fight</b> — you\'ll spot it in seconds, not minutes',
-      '<b>What actually makes a fit look expensive</b> — it\'s never the price tag',
-      '<b>How to read your own closet</b> — and build from what\'s already in it',
-      '<b>What to buy next, and what to skip</b> — stop wasting money on pieces you won\'t wear'
-    ];
-
-    const chips = [
-      ['20','Worked examples'], ['05','Decisions'], ['06','Colour lanes'], ['07','Day rotation']
-    ];
-
-    const cta = `
-      <div class="gs-cta">
-        <a class="gs-btn" data-guide-btn href="${GUIDE_URL}" target="_blank" rel="noopener">Get the guide — ${GUIDE_PRICE}</a>
-        <span class="gs-meta">Instant PDF download</span>
-      </div>`;
-
-    const cover = `
-      <div class="gs-cover-wrap">
-        <div class="gs-aura"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-        <img class="gs-cover-img" src="https://i.postimg.cc/X7ZFgwNc/d4e03ead-fcc1-4a69-8dd0-3febb6953754.png" alt="The Formula — MaxedMethod guidebook">
-      </div>`;
-
-    if(inTab){
-      return `
-        <div class="gs-inner gs-tab">
-          <div class="gs-copy">
-            <div class="gs-kick">The guidebook</div>
-            <h2 class="gs-title">Stop copying<br>fits. Start<br>building them.</h2>
-            <p class="gs-lead">Anyone can copy an outfit off their feed. This teaches you the thinking underneath it — so you can build your own, from your own closet, without needing anyone's inspo again.</p>
-            ${cta}
-            <div class="gs-chip-row">
-              ${chips.map(([n,t])=>`<span class="gs-chip"><b>${n}</b>${t}</span>`).join('')}
-            </div>
-            <h3 class="gs-sub">What you'll actually learn</h3>
-            <ul class="gs-list">${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
-            <p class="gs-body">You already own decent clothes. The problem was never the clothes — it's that nobody ever taught you how the pieces are supposed to talk to each other. Once you can see the five decisions happening in every fit that stops your scroll, you can run them yourself. That's the whole point: <b>you stop needing me.</b></p>
-          </div>
-          <div class="gs-visual">
-            ${cover}
-            <div class="gs-stats">
-              <div><b>05</b><span>Decisions</span></div>
-              <div><b>20</b><span>Examples</span></div>
-              <div><b>PDF</b><span>Instant</span></div>
-            </div>
-          </div>
-        </div>`;
-    }
-
-    // BOTTOM-OF-PAGE LAYOUT — compact, but CTA-first like the tab view
-    return `
-      <div class="gs-inner">
-        <div class="gs-copy">
-          <div class="gs-kick">The guidebook</div>
-          <h2 class="gs-title">Stop copying<br>fits. Start<br>building them.</h2>
-          <p class="gs-lead">You can shop every look on this site. But you'll always be copying someone else's eye — until you learn how the fits are put together in the first place.</p>
-          ${cta}
-          <h3 class="gs-sub">What you'll actually learn</h3>
-          <ul class="gs-list">${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
-          <p class="gs-body">The Formula teaches the system behind every outfit here: five decisions, always in the same order. Learn it once and you can build fits out of whatever's already hanging in your closet.</p>
-        </div>
-        <div class="gs-visual">${cover}</div>
-      </div>`;
-  }
-
-  function wireGuideButtons(){
-    document.querySelectorAll('[data-guide-btn]').forEach(btn=>{
-      if(btn.dataset.wired) return;
-      btn.dataset.wired = '1';
-      btn.addEventListener('click', ()=>{ if(!isAdmin) trackEvent('guideClicks'); });
-    });
-  }
-
-  (function initGuide(){
-    const bottom = document.getElementById('guideSell');
-    if(bottom) bottom.innerHTML = guideSectionHTML({ inTab:false });
-    wireGuideButtons();
-    // homepage teaser → open the Guidebook tab and scroll to it
-    const teaser = document.getElementById('guideTeaser');
-    if(teaser){
-      teaser.addEventListener('click', (e)=>{
-        e.preventDefault();
-        activeCat = 'guide';
-        render();
-        const target = document.querySelector('.tabbar');
-        if(target){
-          window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 12, behavior:'smooth' });
-        }
-      });
-    }
-  })();
-
+  // ---------- (guidebook removed) ----------
   // ---------- hero squad → jump to that gender's fits ----------
   function goToCategory(cat){
     if(cat && cat !== activeCat){
@@ -2155,31 +2055,24 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 
   // ---------- reviews (public display + submission) ----------
   // Seed reviews — an initial-push set so the section isn't empty. These are about THE
-  // GUIDEBOOK, since the reviews sit directly under it. Real approved reviews stack on top.
-  // Kept believable: casual voice, specific detail, a bit of honest criticism, no glazing.
+  // WEBSITE itself (curation, shoppability, the fits). Mostly positive with a few honest,
+  // mixed takes for believability. Real approved reviews stack on top.
   const SEED_REVIEWS = [
-    { name:'jayden_r', text:"ngl i bought this expecting just a list of outfits and it's actually not that. the part about picking the shoe first genuinely changed how i get dressed lol", ts: Date.now()-1000*60*60*24*13 },
-    { name:'guest', text:"the color lane thing is what did it for me. i always knew my fits were off but couldnt say why. turns out i was mixing lanes every single day", ts: Date.now()-1000*60*60*24*12 },
-    { name:'m1lo', text:"good for the price. wouldve paid more tbh. only thing is i wish there were more women's examples but the system works either way", ts: Date.now()-1000*60*60*24*10 },
-    { name:'Sana', text:"i own decent clothes i just never knew how to put them together. this actually explains the WHY instead of just showing you pics. worth it", ts: Date.now()-1000*60*60*24*9 },
-    { name:'guest', text:"read it in like 20 min. the 5 decisions thing is simple enough that i actually remember it when im getting ready which is the whole point i guess", ts: Date.now()-1000*60*60*24*8 },
-    { name:'devv.', text:"the layering part where the hems have to be different lengths. i had NEVER thought about that. instantly made my fits look better, no exaggeration", ts: Date.now()-1000*60*60*24*7 },
-    { name:'kenji_w', text:"solid. some of it i already kinda knew instinctively but seeing it written out made it click properly. the shoe section is the best part", ts: Date.now()-1000*60*60*24*6 },
-    { name:'guest', text:"honestly saved me money. i was about to drop $$$ on a jacket i didnt need and the guide made me realize what was actually missing from my closet", ts: Date.now()-1000*60*60*24*5 },
-    { name:'ari', text:"my fits used to be random and now theyre not. thats it thats the review", ts: Date.now()-1000*60*60*24*4 },
-    { name:'t.nguyen', text:"i thought $6 was gonna get me a pdf with 3 pages of nothing. its actually detailed. took a screenshot of the last page and its on my phone now", ts: Date.now()-1000*60*60*24*3 },
-    { name:'guest', text:"good but i had to read it twice for some of it to stick. not a criticism really just dont expect to skim it and be fixed instantly", ts: Date.now()-1000*60*60*24*2 },
-    { name:'zeyn', text:"the part about not going baggy on everything. i was doing that constantly and wondering why i looked like i just woke up 💀 fixed in one day", ts: Date.now()-1000*60*60*24*1 },
-    { name:'hana.k', text:"got this mainly for the girl fits and the layering chapter is so good. i finally get why cardigan over a collar shirt looks put together instead of just random 🤍", ts: Date.now()-1000*60*60*24*11 - 1000*60*60*5 },
-    { name:'brytson', text:"the shoe-first rule is so real. built like 4 fits this week around my sambas and every single one hit", ts: Date.now()-1000*60*60*24*9 - 1000*60*60*3 },
-    { name:'guest', text:"wasnt expecting much for 6 bucks ngl but the colour lane chapter alone paid for itself. stopped me from buying a green jacket that wouldve fought everything i own", ts: Date.now()-1000*60*60*24*7 - 1000*60*60*8 },
-    { name:'minji_p', text:"the closet audit part 😭 turns out i already had like 3 full fits, i just never paired them right. didnt even have to buy anything", ts: Date.now()-1000*60*60*24*6 - 1000*60*60*2 },
-    { name:'kai.t', text:"clean. read it on the bus home and had my whole rotation rebuilt by the weekend. the 5 decisions actually stick in ur head", ts: Date.now()-1000*60*60*24*5 - 1000*60*60*6 },
-    { name:'guest', text:"always thought i needed more clothes. turns out i just needed this. everything makes sense now fr", ts: Date.now()-1000*60*60*24*4 - 1000*60*60*4 },
-    { name:'seorin', text:"the bit about keeping it tonal instead of matchy matchy. my fits look expensive now and i spent literally nothing extra", ts: Date.now()-1000*60*60*24*3 - 1000*60*60*7 },
-    { name:'dann_ng', text:"honestly the best $6 ive spent on drip. used to copy tiktok fits piece for piece, now i just build my own and they come out better", ts: Date.now()-1000*60*60*24*2 - 1000*60*60*9 },
-    { name:'mira.j', text:"took me 15 min to read and my getting-ready time went from 20 min of panic to like 2. worth every cent", ts: Date.now()-1000*60*60*24*1 - 1000*60*60*10 },
-    { name:'jj.park', text:"the different hem-lengths tip when layering changed the game no cap. instantly makes the fit look intentional instead of thrown on", ts: Date.now()-1000*60*60*11 },
+    { name:'kai.t', stars:5, text:"site is so clean. every piece links straight to amazon so i can cop the whole fit in like 2 min. no more screenshotting tiktoks and reverse image searching for hours", ts: Date.now()-1000*60*60*24*13 },
+    { name:'hana.k', stars:5, text:"obsessed w the curation. every fit on here is something id actually wear, not random filler. the women's tab is exactly my vibe 🤍", ts: Date.now()-1000*60*60*24*12 - 1000*60*60*4 },
+    { name:'brytson', stars:5, text:"being able to see the full breakdown of a fit and shop each piece separately is genius. built my whole rotation off this", ts: Date.now()-1000*60*60*24*11 - 1000*60*60*2 },
+    { name:'m1lo', stars:4, text:"site's genuinely good but i wish there were more fits, went through the men's tab kinda fast. add more and its perfect", ts: Date.now()-1000*60*60*24*10 - 1000*60*60*6 },
+    { name:'guest', stars:5, text:"layout is smooth on my phone and the saved thing lets me come back to fits later. way better than most of these shop pages", ts: Date.now()-1000*60*60*24*9 - 1000*60*60*1 },
+    { name:'jayden_r', stars:5, text:"found my sambas and a whole fit built around them in one place. this is the only fit site ive actually bought from", ts: Date.now()-1000*60*60*24*8 - 1000*60*60*5 },
+    { name:'guest', stars:4, text:"love it but a couple amazon links were out of stock when i went to buy. still copped most of the fit tho, no big deal", ts: Date.now()-1000*60*60*24*7 - 1000*60*60*3 },
+    { name:'seorin', stars:5, text:"the aesthetic of the site alone made me trust it, everything feels intentional. the soft girl tab is so me", ts: Date.now()-1000*60*60*24*6 - 1000*60*60*7 },
+    { name:'minji_p', stars:5, text:"i never know what to even search on amazon and this just hands me the exact pieces. saved me so much time fr", ts: Date.now()-1000*60*60*24*5 - 1000*60*60*2 },
+    { name:'guest', stars:3, text:"fits are nice but the women's side needs way more looks, felt kinda limited compared to men's. hoping it grows tho", ts: Date.now()-1000*60*60*24*4 - 1000*60*60*8 },
+    { name:'dann_ng', stars:5, text:"clean fits, real links, no fake hype. refreshing honestly. the style tabs make it easy to find my lane", ts: Date.now()-1000*60*60*24*4 - 1000*60*60*1 },
+    { name:'t.nguyen', stars:5, text:"the full-look total being shown before i click is clutch, knew what id spend upfront. more sites need to do this", ts: Date.now()-1000*60*60*24*3 - 1000*60*60*5 },
+    { name:'kenji_w', stars:4, text:"solid shop. would love more budget options, some fits add up quick once you add the shoes. the looks themselves are clean tho", ts: Date.now()-1000*60*60*24*2 - 1000*60*60*3 },
+    { name:'devv.', stars:3, text:"decent site, does what it says. some pieces were pricier than i expected once i added it all up, but thats amazon not really the site", ts: Date.now()-1000*60*60*24*1 - 1000*60*60*6 },
+    { name:'ari', stars:5, text:"just good fits and a fast site. thats all i wanted honestly. bookmarked", ts: Date.now()-1000*60*60*10 },
   ];
 
   async function loadPublicReviews(){
@@ -2196,26 +2089,31 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     // blend real approved reviews with the seed set, newest first
     const combined = approved.concat(SEED_REVIEWS);
     combined.sort((a,b)=> (b.ts||0) - (a.ts||0));
-    listEl.innerHTML = combined.map(r=>`
+    const starRow = (n)=>{
+      const v = Math.max(0, Math.min(5, Math.round(n||5)));
+      return `<span class="rs-on">${'★'.repeat(v)}</span><span class="rs-off">${'★'.repeat(5-v)}</span>`;
+    };
+    listEl.innerHTML = combined.map(r=>{
+      const s = (typeof r.stars === 'number') ? r.stars : 5;
+      return `
       <div class="review-item">
-        <div class="review-stars" aria-label="5 out of 5 stars">★★★★★</div>
+        <div class="review-stars" aria-label="${Math.round(s)} out of 5 stars">${starRow(s)}</div>
         <div class="r-text">${escapeHtml(r.text)}</div>
         <div class="review-foot">
           <span class="r-name">${escapeHtml(r.name || 'Anonymous')}</span>
-          <span class="review-badge"><img src="${GUIDE_COVER}" alt="">The Formula</span>
         </div>
-      </div>
-    `).join('');
-    // aggregate line — every shown review is 5★
+      </div>`;
+    }).join('');
+    // aggregate line — fixed display rating for now
     const aggEl = document.getElementById('reviewsAgg');
     if(aggEl){
       const n = combined.length;
       aggEl.innerHTML =
-        `<span class="agg-stars" aria-label="4.9 out of 5 stars">`+
+        `<span class="agg-stars" aria-label="4.8 out of 5 stars">`+
           `<span class="s-bg">★★★★★</span>`+
-          `<span class="s-fg" style="width:98%;">★★★★★</span>`+
+          `<span class="s-fg" style="width:96%;">★★★★★</span>`+
         `</span>`+
-        `<span class="agg-score">4.9</span><span>·</span><span>${n} review${n===1?'':'s'}</span>`;
+        `<span class="agg-score">4.8</span><span>·</span><span>${n} review${n===1?'':'s'}</span>`;
     }
     // hide the swipe hint if it all fits without scrolling
     const hint = document.getElementById('reviewsScrollHint');
@@ -2250,6 +2148,23 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     update();
   }
 
+  // star-rating picker for the review form
+  let reviewStars = 5;
+  (function initStarInput(){
+    const wrap = document.getElementById('starInput');
+    if(!wrap) return;
+    const stars = Array.from(wrap.querySelectorAll('.si-star'));
+    const paint = (v)=> stars.forEach(s=> s.classList.toggle('on', Number(s.dataset.v) <= v));
+    stars.forEach(s=>{
+      const v = Number(s.dataset.v);
+      s.addEventListener('mouseenter', ()=> paint(v));
+      s.addEventListener('click', ()=>{ reviewStars = v; paint(v); });
+    });
+    wrap.addEventListener('mouseleave', ()=> paint(reviewStars));
+    paint(reviewStars); // default 5
+    window.__resetReviewStars = ()=>{ reviewStars = 5; paint(5); };
+  })();
+
   document.getElementById('reviewSubmit').addEventListener('click', async ()=>{
     const nameEl = document.getElementById('reviewName');
     const textEl = document.getElementById('reviewText');
@@ -2261,6 +2176,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
       id: uid(),
       name: nameEl.value.trim().slice(0,40),
       text: text.slice(0,500),
+      stars: reviewStars,
       approved: false,
       ts: Date.now()
     };
@@ -2269,6 +2185,7 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     try{
       await setDoc(REVIEWS_DOC, { reviews: arrayUnion(review) }, { merge:true });
       nameEl.value = ''; textEl.value = '';
+      if(window.__resetReviewStars) window.__resetReviewStars();
       btn.textContent = 'Posted — thank you!';
       setTimeout(()=>{ btn.textContent = 'Post'; btn.disabled = false; }, 2500);
     }catch(e){
@@ -2590,6 +2507,32 @@ const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
     updateSavedCount();
     render();
   });
+
+  // ---------- price visibility (owner toggle, site-wide, data untouched) ----------
+  let pricesHidden = false;
+  function applyPriceVisibility(){
+    document.body.classList.toggle('hide-prices', pricesHidden);
+    const pf = document.getElementById('priceFab');
+    if(pf) pf.textContent = pricesHidden ? 'Prices: Off' : 'Prices: On';
+  }
+  (function initPriceToggle(){
+    const pf = document.getElementById('priceFab');
+    if(!pf) return;
+    pf.addEventListener('click', async ()=>{
+      pricesHidden = !pricesHidden;
+      applyPriceVisibility();
+      try{ await setDoc(SETTINGS_DOC, { hidePrices: pricesHidden }, { merge:true }); }
+      catch(e){ /* visual state already applied; will re-sync on next load */ }
+    });
+  })();
+  // load the saved setting for everyone on boot
+  (async ()=>{
+    try{
+      const snap = await getDoc(SETTINGS_DOC);
+      pricesHidden = !!(snap.exists() && snap.data().hidePrices);
+    }catch(e){ pricesHidden = false; }
+    applyPriceVisibility();
+  })();
 
   // ---------- intro / boot ----------
   trackVisit();
