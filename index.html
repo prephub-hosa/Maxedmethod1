@@ -892,6 +892,10 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
 
   let fits = [];
   let isAdmin = false;
+  // Once the owner unlocks on this device, we remember it so analytics never counts the owner
+  // again — even after refreshes, and even while just browsing (not in edit mode).
+  let ownerDevice = false;
+  try{ ownerDevice = localStorage.getItem('mm-owner') === '1'; }catch(e){}
   let editingId = null; // id of fit currently being edited, null = new
   let itemDraft = [];
   let activeCat = 'men'; // which tab is showing
@@ -947,6 +951,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
 
   // ---------- analytics tracking ----------
   async function trackVisit(){
+    if(ownerDevice) return; // never count the owner's own visits
     try{
       // count one visit per browser session (a refresh won't inflate it)
       if(sessionStorage.getItem('mm-visit-counted')) return;
@@ -963,6 +968,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
 
   // one-time-per-session event counters (scroll depth, engagement, etc.)
   async function trackEventOnce(key, field){
+    if(ownerDevice) return;
     try{
       if(sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key,'1');
@@ -970,6 +976,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     }catch(e){}
   }
   async function trackEvent(field){
+    if(ownerDevice) return;
     try{ await setDoc(ANALYTICS_DOC, { [field]: increment(1) }, { merge:true }); }catch(e){}
   }
   // fired when the visitor scrolls far enough to actually SEE the fit grid
@@ -992,6 +999,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
   // Atomic per-field increment on the nested fitStats.<id>.<field> path — no read-before-write,
   // so concurrent opens/clicks from different visitors can never stomp each other's counts.
   async function bumpFitStat(fit, field){
+    if(ownerDevice) return; // don't let the owner's own clicks/opens inflate fit stats
     try{
       trackEventOnce('mm-engaged','engagedSessions');
       const patch = {
@@ -1492,6 +1500,8 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     const val = document.getElementById('passInput').value;
     if(val === ADMIN_PASS){
       isAdmin = true;
+      ownerDevice = true;
+      try{ localStorage.setItem('mm-owner','1'); }catch(e){}
       adminFab.textContent = 'Exit / Add Fit';
       adminFab.classList.add('admin-on');
       bulkFab.style.display = 'block';
