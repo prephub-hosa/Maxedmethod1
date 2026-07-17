@@ -673,7 +673,7 @@
       <div class="pt-kick">Before you shop</div>
       <h2 class="pt-title">Get these fits for less, shipped free</h2>
       <p class="pt-body">Everything here ships from Amazon. If you're 18–24 or a student, Amazon's <b>Prime for Young Adults</b> is free for 6 months — so every fit ships free and shows up in a day or two, for less. Cancel anytime.</p>
-      <a class="pt-btn" id="primeBtn" href="YOUR_PRIME_REFERRAL_LINK" target="_blank" rel="noopener">Start 6 months free →</a>
+      <a class="pt-btn" id="primeBtn" href="https://www.amazon.com/amazonprime" target="_blank" rel="noopener">Start 6 months free →</a>
       <p class="pt-note">Heads up — that's a referral link, so I may earn a small credit if you join, at no extra cost to you.</p>
     </div>
   </section>
@@ -2549,16 +2549,13 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
   })();
 
   // ---------- prime referral link (owner-editable, stored site-wide) ----------
+  // Falls back to Amazon's real Prime signup so the section is never dead or hidden;
+  // the owner's referral link overrides it once saved.
+  const PRIME_FALLBACK = 'https://www.amazon.com/amazonprime';
   let primeUrl = '';
   function applyPrimeLink(){
     const btn  = document.getElementById('primeBtn');
-    const tip  = document.getElementById('primeTip');
-    const teas = document.getElementById('primeTeaser');
-    if(btn) btn.href = primeUrl || '#';
-    // show the section + hero teaser once a link exists; before that, only the owner sees it
-    const visible = !!primeUrl || isAdmin;
-    if(tip)  tip.style.display  = visible ? '' : 'none';
-    if(teas && teas.parentElement) teas.parentElement.style.display = visible ? '' : 'none';
+    if(btn) btn.href = primeUrl || PRIME_FALLBACK;
     const lf = document.getElementById('primeLinkFab');
     if(lf) lf.textContent = primeUrl ? 'Prime Link ✓' : 'Set Prime Link';
   }
