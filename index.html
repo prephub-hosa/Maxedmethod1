@@ -225,8 +225,13 @@
   .pt-title{font-family:var(--font-display);font-weight:800;font-size:clamp(22px,4vw,30px);letter-spacing:-.02em;color:var(--text);margin:0 0 14px;line-height:1.05;}
   .pt-body{font-family:var(--font-body);font-size:15px;line-height:1.6;color:var(--text-soft);max-width:640px;margin:0 0 22px;}
   .pt-body b{color:var(--text);font-weight:600;}
-  .pt-btn{display:inline-block;font-family:var(--font-mono);font-size:13px;letter-spacing:.03em;font-weight:700;color:#0C0C0B;background:#C9A15A;border-radius:100px;padding:13px 24px;transition:transform .15s, background .15s;}
+  .pt-btn{display:inline-block;font-family:var(--font-mono);font-size:13px;letter-spacing:.03em;font-weight:700;color:#0C0C0B;background:#C9A15A;border-radius:100px;padding:13px 24px;transition:transform .15s, background .15s;animation:pt-glow 2s ease-in-out infinite;}
   .pt-btn:hover{transform:translateY(-1px);background:#d8b169;}
+  @keyframes pt-glow{0%,100%{box-shadow:0 0 10px rgba(201,161,90,.35), 0 0 0 rgba(201,161,90,0);}50%{box-shadow:0 0 22px rgba(201,161,90,.75), 0 0 42px rgba(201,161,90,.4);}}
+  @media (prefers-reduced-motion:reduce){ .pt-btn{animation:none;} }
+  .prime-teaser{margin-top:14px;}
+  .prime-teaser a{font-family:var(--font-body);font-size:13px;font-weight:600;color:#C9A15A;border-bottom:1px solid rgba(201,161,90,.4);padding-bottom:1px;transition:border-color .15s,color .15s;cursor:pointer;}
+  .prime-teaser a:hover{color:#d8b169;border-color:#d8b169;}
   .pt-note{font-family:var(--font-body);font-size:12px;line-height:1.55;color:var(--text-dim);margin:16px 0 0;max-width:580px;}
   @media (max-width:560px){ .prime-tip-inner{padding:26px 22px;} }
   .review-form input, .review-form textarea, .email-form input{width:100%;padding:11px 12px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;margin-bottom:10px;transition:border-color .15s, box-shadow .15s;}
@@ -597,6 +602,7 @@
       <div class="eyebrow">Curated fits, fully shoppable</div>
       <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
       <p class="amazon-note">Every piece links to Amazon — for the best prices, trusted checkout, and the most size &amp; color options in one place.</p>
+      <p class="prime-teaser"><a href="#" id="primeTeaser">Get the clothes for less and shipped free →</a></p>
       <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
     </div>
     <div class="squad-banner" id="squadBanner">
@@ -665,10 +671,10 @@
   <section class="prime-tip" id="primeTip">
     <div class="prime-tip-inner">
       <div class="pt-kick">Before you shop</div>
-      <h2 class="pt-title">Get these fits shipped free</h2>
-      <p class="pt-body">Every piece here links to Amazon, so the simplest way to keep shipping free and your total lower is <b>Prime for Young Adults</b>. If you're 18–24 or a student, you get <b>6 months free</b> — fast, free 2-day (often next-day) shipping on every piece, plus Prime Video and Music. After the trial it's roughly half the normal Prime price, and you can cancel anytime.</p>
+      <h2 class="pt-title">Get these fits for less, shipped free</h2>
+      <p class="pt-body">Everything here ships from Amazon. If you're 18–24 or a student, Amazon's <b>Prime for Young Adults</b> is free for 6 months — so every fit ships free and shows up in a day or two, for less. Cancel anytime.</p>
       <a class="pt-btn" id="primeBtn" href="YOUR_PRIME_REFERRAL_LINK" target="_blank" rel="noopener">Start 6 months free →</a>
-      <p class="pt-note">Full transparency: that's a referral link, so if you sign up I may earn a small credit — at no extra cost to you. Sharing it because the free shipping genuinely makes buying a full fit cheaper.</p>
+      <p class="pt-note">Heads up — that's a referral link, so I may earn a small credit if you join, at no extra cost to you.</p>
     </div>
   </section>
 
@@ -722,6 +728,7 @@
 <button class="fab" id="bulkFab" style="display:none;right:22px;bottom:74px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Bulk Import</button>
 <button class="fab" id="analyticsFab" style="display:none;right:22px;bottom:126px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Analytics</button>
 <button class="fab" id="priceFab" style="display:none;right:22px;bottom:178px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Prices: On</button>
+<button class="fab" id="primeLinkFab" style="display:none;right:22px;bottom:230px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Prime Link</button>
 <div class="corner-mark">MAXEDMETHOD</div>
 
 <!-- Detail overlay -->
@@ -1464,6 +1471,8 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       bulkFab.style.display = 'none';
       analyticsFab.style.display = 'none';
       document.getElementById('priceFab').style.display = 'none';
+      document.getElementById('primeLinkFab').style.display = 'none';
+      applyPrimeLink();
       render();
     } else {
       document.getElementById('passInput').value = '';
@@ -1484,6 +1493,8 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       bulkFab.style.display = 'block';
       analyticsFab.style.display = 'block';
       document.getElementById('priceFab').style.display = 'block';
+      document.getElementById('primeLinkFab').style.display = 'block';
+      applyPrimeLink();
       passModal.classList.remove('open');
       render();
       showAddFitShortcut();
@@ -2537,6 +2548,42 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     if(b) b.addEventListener('click', ()=>{ if(!isAdmin) trackEvent('primeClicks'); });
   })();
 
+  // ---------- prime referral link (owner-editable, stored site-wide) ----------
+  let primeUrl = '';
+  function applyPrimeLink(){
+    const btn  = document.getElementById('primeBtn');
+    const tip  = document.getElementById('primeTip');
+    const teas = document.getElementById('primeTeaser');
+    if(btn) btn.href = primeUrl || '#';
+    // show the section + hero teaser once a link exists; before that, only the owner sees it
+    const visible = !!primeUrl || isAdmin;
+    if(tip)  tip.style.display  = visible ? '' : 'none';
+    if(teas && teas.parentElement) teas.parentElement.style.display = visible ? '' : 'none';
+    const lf = document.getElementById('primeLinkFab');
+    if(lf) lf.textContent = primeUrl ? 'Prime Link ✓' : 'Set Prime Link';
+  }
+  (function initPrimeLink(){
+    const lf = document.getElementById('primeLinkFab');
+    if(lf){
+      lf.addEventListener('click', async ()=>{
+        const v = prompt('Paste your Amazon Prime referral link (leave blank to hide the section):', primeUrl || '');
+        if(v === null) return;
+        primeUrl = v.trim();
+        applyPrimeLink();
+        try{ await setDoc(SETTINGS_DOC, { primeUrl }, { merge:true }); }
+        catch(e){ alert('Could not save the link — try again.'); }
+      });
+    }
+    const teaser = document.getElementById('primeTeaser');
+    if(teaser){
+      teaser.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const t = document.getElementById('primeTip');
+        if(t) window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 16, behavior:'smooth' });
+      });
+    }
+  })();
+
   // ---------- price visibility (owner toggle, site-wide, data untouched) ----------
   let pricesHidden = false;
   function applyPriceVisibility(){
@@ -2554,13 +2601,16 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       catch(e){ /* visual state already applied; will re-sync on next load */ }
     });
   })();
-  // load the saved setting for everyone on boot
+  // load the saved settings for everyone on boot
   (async ()=>{
     try{
       const snap = await getDoc(SETTINGS_DOC);
-      pricesHidden = !!(snap.exists() && snap.data().hidePrices);
-    }catch(e){ pricesHidden = false; }
+      const d = snap.exists() ? snap.data() : {};
+      pricesHidden = !!d.hidePrices;
+      primeUrl = d.primeUrl || '';
+    }catch(e){ pricesHidden = false; primeUrl = ''; }
     applyPriceVisibility();
+    applyPrimeLink();
   })();
 
   // ---------- intro / boot ----------
