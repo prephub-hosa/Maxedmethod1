@@ -2576,7 +2576,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       teaser.addEventListener('click', (e)=>{
         e.preventDefault();
         const t = document.getElementById('primeTip');
-        if(t) window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 16, behavior:'smooth' });
+        if(t) t.scrollIntoView({ behavior:'smooth', block:'center' });
       });
     }
   })();
