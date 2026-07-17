@@ -229,9 +229,12 @@
   .pt-btn:hover{transform:translateY(-1px);background:#d8b169;}
   @keyframes pt-glow{0%,100%{box-shadow:0 0 10px rgba(201,161,90,.35), 0 0 0 rgba(201,161,90,0);}50%{box-shadow:0 0 22px rgba(201,161,90,.75), 0 0 42px rgba(201,161,90,.4);}}
   @media (prefers-reduced-motion:reduce){ .pt-btn{animation:none;} }
-  .prime-teaser{margin-top:14px;}
-  .prime-teaser a{font-family:var(--font-body);font-size:13px;font-weight:600;color:#C9A15A;border-bottom:1px solid rgba(201,161,90,.4);padding-bottom:1px;transition:border-color .15s,color .15s;cursor:pointer;}
-  .prime-teaser a:hover{color:#d8b169;border-color:#d8b169;}
+  .prime-teaser{margin-top:16px;}
+  .prime-teaser a{font-family:var(--font-body);font-size:14px;font-weight:500;color:#C9A15A;letter-spacing:.01em;transition:color .15s;cursor:pointer;}
+  .prime-teaser a b{color:var(--text);font-weight:700;}
+  .prime-teaser a .pt-arrow{display:inline-block;transition:transform .15s;}
+  .prime-teaser a:hover{color:#d8b169;}
+  .prime-teaser a:hover .pt-arrow{transform:translateX(3px);}
   .pt-note{font-family:var(--font-body);font-size:12px;line-height:1.55;color:var(--text-dim);margin:16px 0 0;max-width:580px;}
   .pt-fine{font-family:var(--font-body);font-size:11px;line-height:1.5;color:var(--text-dim);opacity:.8;margin:14px 0 0;}
   @media (max-width:560px){ .prime-tip-inner{padding:26px 22px;} }
@@ -603,7 +606,7 @@
       <div class="eyebrow">Curated fits, fully shoppable</div>
       <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
       <p class="amazon-note">Every piece links to Amazon — for the best prices, trusted checkout, and the most size &amp; color options in one place.</p>
-      <p class="prime-teaser"><a href="#" id="primeTeaser">Before you shop — get every fit cheaper &amp; shipped free →</a></p>
+      <p class="prime-teaser"><a href="#" id="primeTeaser"><b>Before you shop:</b> get every fit cheaper &amp; shipped free <span class="pt-arrow">→</span></a></p>
       <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
     </div>
     <div class="squad-banner" id="squadBanner">
