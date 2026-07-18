@@ -230,13 +230,14 @@
   @keyframes pt-glow{0%,100%{box-shadow:0 0 10px rgba(201,161,90,.35), 0 0 0 rgba(201,161,90,0);}50%{box-shadow:0 0 22px rgba(201,161,90,.75), 0 0 42px rgba(201,161,90,.4);}}
   @media (prefers-reduced-motion:reduce){ .pt-btn{animation:none;} }
   .prime-teaser{margin-top:18px;}
-  .prime-teaser a{display:inline-flex;align-items:center;gap:9px;font-family:var(--font-body);font-size:13.5px;font-weight:500;color:#C9A15A;background:rgba(201,161,90,.08);border:1px solid rgba(201,161,90,.38);border-radius:100px;padding:9px 17px;cursor:pointer;transition:background .15s,border-color .15s;animation:teaser-pulse 2.6s ease-in-out infinite;}
+  .prime-teaser a{display:inline-block;max-width:100%;box-sizing:border-box;font-family:var(--font-body);font-size:13.5px;font-weight:500;color:#C9A15A;background:rgba(201,161,90,.08);border:1px solid rgba(201,161,90,.38);border-radius:16px;padding:10px 16px;line-height:1.5;cursor:pointer;transition:background .15s,border-color .15s;animation:teaser-pulse 2.6s ease-in-out infinite;}
   .prime-teaser a b{color:#E3B871;font-weight:700;}
-  .prime-teaser a .pt-arrow{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:100px;background:rgba(201,161,90,.9);color:#0C0C0B;font-size:12px;font-weight:700;transition:transform .15s;}
+  .prime-teaser a .pt-arrow{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:100px;background:rgba(201,161,90,.9);color:#0C0C0B;font-size:11px;font-weight:700;vertical-align:middle;margin-left:5px;transition:transform .15s;}
   .prime-teaser a:hover{background:rgba(201,161,90,.16);border-color:rgba(201,161,90,.6);}
   .prime-teaser a:hover .pt-arrow{transform:translateX(2px);}
   @keyframes teaser-pulse{0%,100%{box-shadow:0 0 0 rgba(201,161,90,0);}50%{box-shadow:0 0 16px rgba(201,161,90,.28);}}
   @media (prefers-reduced-motion:reduce){ .prime-teaser a{animation:none;} }
+  @media (max-width:560px){ .prime-teaser a{font-size:13px;padding:9px 14px;} }
   .pt-note{font-family:var(--font-body);font-size:12px;line-height:1.55;color:var(--text-dim);margin:16px 0 0;max-width:580px;}
   .pt-fine{font-family:var(--font-body);font-size:11px;line-height:1.5;color:var(--text-dim);opacity:.8;margin:14px 0 0;}
   @media (max-width:560px){ .prime-tip-inner{padding:26px 22px;} }
@@ -608,7 +609,7 @@
       <div class="eyebrow">Curated fits, fully shoppable</div>
       <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
       <p class="amazon-note">Every piece links to Amazon — for the best prices, trusted checkout, and the most size &amp; color options in one place.</p>
-      <p class="prime-teaser"><a href="#" id="primeTeaser"><b>Before you shop:</b> get every fit cheaper &amp; shipped free <span class="pt-arrow">→</span></a></p>
+      <p class="prime-teaser"><a href="#" id="primeTeaser"><b>Before you shop:</b> Click to get every fit cheaper &amp; shipped free <span class="pt-arrow">→</span></a></p>
       <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
     </div>
     <div class="squad-banner" id="squadBanner">
