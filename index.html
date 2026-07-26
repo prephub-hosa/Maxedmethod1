@@ -218,29 +218,6 @@
   /* owner price-visibility toggle — hides prices site-wide, data is untouched */
   body.hide-prices .item-price{display:none !important;}
   body.hide-prices .fit-total-row{display:none !important;}
-  /* Prime for Young Adults — shipping-help section */
-  .prime-tip{margin:44px 0 0;padding:0 22px;}
-  .prime-tip-inner{max-width:900px;margin:0 auto;background:linear-gradient(180deg,var(--surface) 0%,var(--bg-2) 100%);border:1px solid rgba(201,161,90,.28);border-radius:16px;padding:34px 32px;box-shadow:0 0 36px rgba(201,161,90,.14), inset 0 0 24px rgba(201,161,90,.05);}
-  .pt-kick{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;}
-  .pt-title{font-family:var(--font-body);font-weight:700;font-size:clamp(22px,4vw,30px);letter-spacing:-.02em;color:#E3B871;margin:0 0 14px;line-height:1.1;}
-  .pt-body{font-family:var(--font-body);font-size:15px;line-height:1.6;color:var(--text-soft);max-width:640px;margin:0 0 22px;}
-  .pt-body b{color:var(--text);font-weight:600;}
-  .pt-btn{display:inline-block;font-family:var(--font-mono);font-size:13px;letter-spacing:.03em;font-weight:700;color:#0C0C0B;background:#C9A15A;border-radius:100px;padding:13px 24px;transition:transform .15s, background .15s;animation:pt-glow 2s ease-in-out infinite;}
-  .pt-btn:hover{transform:translateY(-1px);background:#d8b169;}
-  @keyframes pt-glow{0%,100%{box-shadow:0 0 10px rgba(201,161,90,.35), 0 0 0 rgba(201,161,90,0);}50%{box-shadow:0 0 22px rgba(201,161,90,.75), 0 0 42px rgba(201,161,90,.4);}}
-  @media (prefers-reduced-motion:reduce){ .pt-btn{animation:none;} }
-  .prime-teaser{margin-top:18px;}
-  .prime-teaser a{display:inline-block;max-width:100%;box-sizing:border-box;font-family:var(--font-body);font-size:13.5px;font-weight:500;color:#C9A15A;background:rgba(201,161,90,.08);border:1px solid rgba(201,161,90,.38);border-radius:16px;padding:10px 16px;line-height:1.5;cursor:pointer;transition:background .15s,border-color .15s;animation:teaser-pulse 2.6s ease-in-out infinite;}
-  .prime-teaser a b{color:#E3B871;font-weight:700;}
-  .prime-teaser a .pt-arrow{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:100px;background:rgba(201,161,90,.9);color:#0C0C0B;font-size:11px;font-weight:700;vertical-align:middle;margin-left:5px;transition:transform .15s;}
-  .prime-teaser a:hover{background:rgba(201,161,90,.16);border-color:rgba(201,161,90,.6);}
-  .prime-teaser a:hover .pt-arrow{transform:translateX(2px);}
-  @keyframes teaser-pulse{0%,100%{box-shadow:0 0 0 rgba(201,161,90,0);}50%{box-shadow:0 0 16px rgba(201,161,90,.28);}}
-  @media (prefers-reduced-motion:reduce){ .prime-teaser a{animation:none;} }
-  @media (max-width:560px){ .prime-teaser a{font-size:13px;padding:9px 14px;} }
-  .pt-note{font-family:var(--font-body);font-size:12px;line-height:1.55;color:var(--text-dim);margin:16px 0 0;max-width:580px;}
-  .pt-fine{font-family:var(--font-body);font-size:11px;line-height:1.5;color:var(--text-dim);opacity:.8;margin:14px 0 0;}
-  @media (max-width:560px){ .prime-tip-inner{padding:26px 22px;} }
   .review-form input, .review-form textarea, .email-form input{width:100%;padding:11px 12px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;margin-bottom:10px;transition:border-color .15s, box-shadow .15s;}
   .review-form textarea{resize:vertical;line-height:1.5;}
   .review-form input::placeholder, .review-form textarea::placeholder, .email-form input::placeholder{color:var(--text-dim);}
@@ -609,7 +586,6 @@
       <div class="eyebrow">Curated fits, fully shoppable</div>
       <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
       <p class="amazon-note">Every piece links to Amazon — for the best prices, trusted checkout, and the most size &amp; color options in one place.</p>
-      <p class="prime-teaser"><a href="#" id="primeTeaser"><b>Before you shop:</b> Click to get every fit cheaper &amp; shipped free <span class="pt-arrow">→</span></a></p>
       <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
     </div>
     <div class="squad-banner" id="squadBanner">
@@ -674,17 +650,6 @@
   </div>
   <div id="gridArea"><div class="loading">Loading fits…</div></div>
 
-  <!-- ===== Prime for Young Adults — shipping help ===== -->
-  <section class="prime-tip" id="primeTip">
-    <div class="prime-tip-inner">
-      <div class="pt-kick">Before you shop</div>
-      <h2 class="pt-title">Get these Fits for Less &amp; shipped for Free</h2>
-      <p class="pt-body">Everything here ships from Amazon, so with Amazon's <b>Prime for Young Adults</b> every fit costs less and ships free. It's free for 6 months if you're 18–24 or a student — cancel anytime.</p>
-      <a class="pt-btn" id="primeBtn" href="https://www.amazon.com/amazonprime" target="_blank" rel="noopener">Start 6 months free →</a>
-      <p class="pt-note">This link is a referral, so I may earn a small credit if you join, at no extra cost to you.</p>
-    </div>
-  </section>
-
   <!-- Community footer: reviews + email signup -->
   <div class="community">
     <div class="community-inner">
@@ -735,7 +700,6 @@
 <button class="fab" id="bulkFab" style="display:none;right:22px;bottom:74px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Bulk Import</button>
 <button class="fab" id="analyticsFab" style="display:none;right:22px;bottom:126px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Analytics</button>
 <button class="fab" id="priceFab" style="display:none;right:22px;bottom:178px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Prices: On</button>
-<button class="fab" id="primeLinkFab" style="display:none;right:22px;bottom:230px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Prime Link</button>
 <div class="corner-mark">MAXEDMETHOD</div>
 
 <!-- Detail overlay -->
@@ -1486,8 +1450,6 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       bulkFab.style.display = 'none';
       analyticsFab.style.display = 'none';
       document.getElementById('priceFab').style.display = 'none';
-      document.getElementById('primeLinkFab').style.display = 'none';
-      applyPrimeLink();
       render();
     } else {
       document.getElementById('passInput').value = '';
@@ -1510,8 +1472,6 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       bulkFab.style.display = 'block';
       analyticsFab.style.display = 'block';
       document.getElementById('priceFab').style.display = 'block';
-      document.getElementById('primeLinkFab').style.display = 'block';
-      applyPrimeLink();
       passModal.classList.remove('open');
       render();
       showAddFitShortcut();
@@ -1901,7 +1861,6 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
             <tr><td>Men's tab views</td><td class="num">${tabMenViews}</td></tr>
             <tr><td>Women's tab views</td><td class="num">${tabWomenViews}</td></tr>
             <tr><td>"Shop the whole fit" clicks</td><td class="num">${shopAllClicks}</td></tr>
-            <tr><td>Prime referral clicks</td><td class="num">${data.primeClicks || 0}</td></tr>
           </tbody>
         </table>
       </div>
@@ -2109,80 +2068,80 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
   // WEBSITE itself (curation, shoppability, the fits). Mostly positive with a few honest,
   // mixed takes for believability. Real approved reviews stack on top.
   const SEED_REVIEWS = [
-    { name:'junho', stars:4, text:"copped a full fit off here and the prime tip got me free shipping on all of it. clutch combo", ts: Date.now()-1000*60*60*2 },
+    { name:'junho', stars:4, text:"copped a full fit off here in like 2 taps. everything links straight to amazon, so easy", ts: Date.now()-1000*60*60*2 },
     { name:'vic', stars:5, text:"the women's cardigan fits are unreal. copped 2 already", ts: Date.now()-1000*60*60*11 },
     { name:'kylo', stars:4, text:"solid fits. would cop more if there were a few more men's options tho", ts: Date.now()-1000*60*60*25 },
     { name:'tae', stars:5, text:"copped a full fit for under what id normally spend. the totals being shown helped", ts: Date.now()-1000*60*60*31 },
-    { name:'nabi', stars:5, text:"love the fits and the prime deal they mentioned means it all ships free now. no notes", ts: Date.now()-1000*60*60*37 },
+    { name:'nabi', stars:5, text:"love the fits and how everything's shoppable. no more screenshotting tiktoks for hours", ts: Date.now()-1000*60*60*37 },
     { name:'kenji_w', stars:4, text:"solid shop. would love more budget options, some fits add up quick once you add the shoes. the looks themselves are clean tho", ts: Date.now()-1000*60*60*50 },
     { name:'chae', stars:5, text:"the tonal fits are so well put together. my exact taste honestly", ts: Date.now()-1000*60*60*61 },
     { name:'j.lim', stars:4, text:"good site but pls add more fits, went through the men's tab kinda quick", ts: Date.now()-1000*60*60*68 },
-    { name:'miyu', stars:5, text:"site put me onto prime, now everything i order here lands next day for free 🙏", ts: Date.now()-1000*60*60*78 },
+    { name:'miyu', stars:5, text:"site put me onto pieces i couldnt find anywhere else. the curation is elite ngl", ts: Date.now()-1000*60*60*78 },
     { name:'kai.t', stars:5, text:"site is so clean. every piece links straight to amazon so i can cop the whole fit in like 2 min. no more screenshotting tiktoks and reverse image searching for hours", ts: Date.now()-1000*60*60*85 },
     { name:'jihooo', stars:5, text:"found like 3 full fits i wanna cop already. the curation is unmatched fr", ts: Date.now()-1000*60*60*97 },
     { name:'minh', stars:5, text:"everything ships from amazon so i already trust it. copped my sambas here", ts: Date.now()-1000*60*60*108 },
-    { name:'wonu', stars:5, text:"fits are clean and free shipping w prime makes it even easier to just cop the whole look", ts: Date.now()-1000*60*60*113 },
+    { name:'wonu', stars:5, text:"fits are clean and being able to shop each piece separately makes it so easy to cop the whole look", ts: Date.now()-1000*60*60*113 },
     { name:'chowon', stars:5, text:"the soft girl fits are so me. saved like 8 already lol", ts: Date.now()-1000*60*60*128 },
     { name:'guest', stars:5, text:"layout is smooth on my phone and the saved thing lets me come back to fits later. way better than most of these shop pages", ts: Date.now()-1000*60*60*134 },
-    { name:'yuto', stars:5, text:"didnt have prime til this site mentioned it, free shipping on every fit now. worth it", ts: Date.now()-1000*60*60*147 },
+    { name:'yuto', stars:5, text:"didnt think id find a site that got my aesthetic this well. every fit is wearable", ts: Date.now()-1000*60*60*147 },
     { name:'hina', stars:5, text:"found my aesthetic and my new wardrobe in one place. ty for making this 🤍", ts: Date.now()-1000*60*60*161 },
     { name:'kev', stars:4, text:"really good but a couple links were sold out when i checked. still copped most", ts: Date.now()-1000*60*60*171 },
     { name:'kkuma', stars:5, text:"the girl fits w the cardigans and flats omg. exactly what i wanted", ts: Date.now()-1000*60*60*181 },
-    { name:'andy', stars:5, text:"got prime after seeing it here, orders come free and fast. makes copping fits way easier", ts: Date.now()-1000*60*60*191 },
+    { name:'andy', stars:5, text:"the breakdown for each fit is clutch, i just grab the pieces i want. way faster than hunting", ts: Date.now()-1000*60*60*191 },
     { name:'quan', stars:5, text:"clean site clean fits. bookmarked and coming back for sure", ts: Date.now()-1000*60*60*205 },
     { name:'dann_ng', stars:5, text:"clean fits, real links, no fake hype. refreshing honestly. the style tabs make it easy to find my lane", ts: Date.now()-1000*60*60*217 },
     { name:'devv.', stars:4, text:"decent site, does what it says. some pieces were pricier than i expected once i added it all up, but thats amazon not really the site", ts: Date.now()-1000*60*60*231 },
-    { name:'chuu', stars:5, text:"shopping the fits is already easy but prime making it all ship free sealed it for me", ts: Date.now()-1000*60*60*243 },
+    { name:'chuu', stars:5, text:"shopping the fits here is genuinely the easiest way ive found to build outfits", ts: Date.now()-1000*60*60*243 },
     { name:'wei_', stars:5, text:"site is genuinely so clean, everything just links to amazon and im done in 2 taps", ts: Date.now()-1000*60*60*249 },
     { name:'mnjae', stars:4, text:"site is great just wish the women's side had a bit more, felt slightly limited", ts: Date.now()-1000*60*60*255 },
     { name:'hana.k', stars:5, text:"obsessed w the curation. every fit on here is something id actually wear, not random filler. the women's tab is exactly my vibe 🤍", ts: Date.now()-1000*60*60*264 },
-    { name:'yuji', stars:5, text:"the prime tip saved me on shipping, ordered a whole fit and paid nothing extra", ts: Date.now()-1000*60*60*276 },
+    { name:'yuji', stars:5, text:"found my whole rotation off this site. clean fits, real links, no fluff", ts: Date.now()-1000*60*60*276 },
     { name:'nari', stars:5, text:"i never know what to even search on amazon, this solved that completely", ts: Date.now()-1000*60*60*291 },
     { name:'roy', stars:5, text:"fast, clean, no ads shoved in my face. actually enjoyable to browse", ts: Date.now()-1000*60*60*297 },
     { name:'haru', stars:5, text:"aesthetic alone made me stay. this is put together so well", ts: Date.now()-1000*60*60*302 },
-    { name:'kentt', stars:5, text:"found my fits here and the prime thing got me free 2 day shipping. cant complain", ts: Date.now()-1000*60*60*311 },
+    { name:'kentt', stars:5, text:"found my fits here and shopping them was painless. cant complain", ts: Date.now()-1000*60*60*311 },
     { name:'yunn', stars:5, text:"obsessed. the women's tab is exactly my aesthetic, didnt think id find a site that gets it 🤍", ts: Date.now()-1000*60*60*326 },
     { name:'junnn', stars:5, text:"quality over quantity, every fit is actually wearable. no filler", ts: Date.now()-1000*60*60*340 },
     { name:'mimi', stars:4, text:"love it but want a few more budget options, adds up once you add the shoes", ts: Date.now()-1000*60*60*355 },
-    { name:'seokk', stars:5, text:"site's clean and honestly the prime deal is what made me actually check out. free shipping ftw", ts: Date.now()-1000*60*60*367 },
+    { name:'seokk', stars:5, text:"site's clean and the curation is what made me actually cop instead of just saving pics", ts: Date.now()-1000*60*60*367 },
     { name:'guest', stars:4, text:"love it but a couple amazon links were out of stock when i went to buy. still copped most of the fit tho, no big deal", ts: Date.now()-1000*60*60*376 },
     { name:'sora_', stars:5, text:"the fact you can shop each piece separately is so smart. built a whole rotation", ts: Date.now()-1000*60*60*387 },
-    { name:'yerin', stars:5, text:"copped sambas and a full fit, prime got it to me free and fast. site thought of everything", ts: Date.now()-1000*60*60*402 },
+    { name:'yerin', stars:5, text:"copped sambas and a full fit around them. site basically hands you the whole look", ts: Date.now()-1000*60*60*402 },
     { name:'boraaa', stars:5, text:"the style tabs make it easy to find my lane. streetwear tab is stacked", ts: Date.now()-1000*60*60*412 },
     { name:'sunoo', stars:5, text:"clean site. found my new go to for fit inspo AND shopping in one place", ts: Date.now()-1000*60*60*417 },
     { name:'aira', stars:5, text:"aesthetic is immaculate, saved half the women's tab already 🤍", ts: Date.now()-1000*60*60*429 },
-    { name:'ces', stars:5, text:"free shipping w prime on every fit i order here now. wish i set it up sooner", ts: Date.now()-1000*60*60*439 },
+    { name:'ces', stars:5, text:"everything i want is linked and easy to grab. wish i found this sooner", ts: Date.now()-1000*60*60*439 },
     { name:'t.nguyen', stars:5, text:"the full-look total being shown before i click is clutch, knew what id spend upfront. more sites need to do this", ts: Date.now()-1000*60*60*446 },
     { name:'ren.k', stars:5, text:"clean layout, fast, no clutter. exactly what i want from a fit site", ts: Date.now()-1000*60*60*460 },
     { name:'marcus', stars:5, text:"found a full date night fit in 5 min. wouldve taken me hours normally", ts: Date.now()-1000*60*60*466 },
-    { name:'theo', stars:5, text:"the fits sell themselves but the prime tip is a nice touch, everything ships free", ts: Date.now()-1000*60*60*478 },
+    { name:'theo', stars:5, text:"the fits sell themselves, and shopping them is one tap. love the layout", ts: Date.now()-1000*60*60*478 },
     { name:'guest', stars:4, text:"fits are nice but the women's side needs way more looks, felt kinda limited compared to men's. hoping it grows tho", ts: Date.now()-1000*60*60*483 },
     { name:'aoi', stars:5, text:"found my exact vibe here, the layering fits especially 🔥", ts: Date.now()-1000*60*60*491 },
     { name:'kazu', stars:5, text:"shopping off tiktok used to take me forever, this just hands me the pieces. clutch", ts: Date.now()-1000*60*60*500 },
-    { name:'kaz', stars:5, text:"ordered off here twice, both free thanks to prime. easy site to keep coming back to", ts: Date.now()-1000*60*60*507 },
+    { name:'kaz', stars:5, text:"ordered pieces off here twice now, super easy site to keep coming back to", ts: Date.now()-1000*60*60*507 },
     { name:'minji_p', stars:5, text:"i never know what to even search on amazon and this just hands me the exact pieces. saved me so much time fr", ts: Date.now()-1000*60*60*515 },
     { name:'mei', stars:4, text:"obsessed w this site, clean and easy. would give 5 if there were more fits", ts: Date.now()-1000*60*60*526 },
     { name:'brytson', stars:5, text:"being able to see the full breakdown of a fit and shop each piece separately is genius. built my whole rotation off this", ts: Date.now()-1000*60*60*537 },
-    { name:'soo', stars:5, text:"prime made my whole order ship free and the fits were already worth it. double win", ts: Date.now()-1000*60*60*549 },
+    { name:'soo', stars:5, text:"the whole-fit total being shown before i buy is clutch, knew what id spend upfront", ts: Date.now()-1000*60*60*549 },
     { name:'jayce', stars:5, text:"site feels premium, like actual effort went into it. respect", ts: Date.now()-1000*60*60*555 },
     { name:'bex', stars:4, text:"love that i can just tap and its on amazon. wish there were more drops tho", ts: Date.now()-1000*60*60*562 },
     { name:'dae', stars:5, text:"no fake hype just good fits. refreshing honestly", ts: Date.now()-1000*60*60*574 },
-    { name:'linh', stars:5, text:"curation is great and prime keeps my shipping free. exactly what i needed ngl", ts: Date.now()-1000*60*60*585 },
+    { name:'linh', stars:5, text:"curation is great and shopping is dead simple. exactly what i needed ngl", ts: Date.now()-1000*60*60*585 },
     { name:'leo', stars:5, text:"genuinely good curation, nothing feels random. every fit hits", ts: Date.now()-1000*60*60*598 },
     { name:'ethan', stars:5, text:"clean and fast. the saved tab is perfect for building a wishlist", ts: Date.now()-1000*60*60*607 },
     { name:'ryan', stars:5, text:"everything ships from amazon so returns are easy too. thought that through", ts: Date.now()-1000*60*60*614 },
-    { name:'haneul', stars:5, text:"got prime from the tip here, now the fits ship free and come fast. no brainer", ts: Date.now()-1000*60*60*625 },
+    { name:'haneul', stars:5, text:"grabbed a couple pieces from the tip here, clean fits and easy checkout", ts: Date.now()-1000*60*60*625 },
     { name:'doyu', stars:5, text:"found pieces i couldnt find anywhere else. the curation is elite", ts: Date.now()-1000*60*60*638 },
     { name:'danny', stars:5, text:"the shoes they pick are always the ones i want. sambas, 550s, all here", ts: Date.now()-1000*60*60*647 },
-    { name:'raf', stars:4, text:"love this site, and free shipping through prime means i actually cop instead of just saving", ts: Date.now()-1000*60*60*658 },
+    { name:'raf', stars:4, text:"the fits are fire and everything's shoppable in one place. glad i found it", ts: Date.now()-1000*60*60*658 },
     { name:'vinh', stars:5, text:"copped the whole look in one order thanks to the amazon links. so easy", ts: Date.now()-1000*60*60*668 },
     { name:'ari', stars:5, text:"just good fits and a fast site. thats all i wanted honestly. bookmarked", ts: Date.now()-1000*60*60*683 },
     { name:'seorin', stars:5, text:"the aesthetic of the site alone made me trust it, everything feels intentional. the soft girl tab is so me", ts: Date.now()-1000*60*60*694 },
-    { name:'hyun_', stars:5, text:"the fits are fire and prime gets em to me free. glad the site put me on", ts: Date.now()-1000*60*60*702 },
+    { name:'hyun_', stars:5, text:"everything links to amazon so i already trust it. copped a fit same day", ts: Date.now()-1000*60*60*702 },
     { name:'eunw', stars:5, text:"everything linking to amazon makes it feel legit. easy checkout", ts: Date.now()-1000*60*60*709 },
     { name:'nathan', stars:4, text:"great fits, just want more added a bit more often", ts: Date.now()-1000*60*60*715 },
     { name:'m1lo', stars:4, text:"site's genuinely good but i wish there were more fits, went through the men's tab kinda fast. add more and its perfect", ts: Date.now()-1000*60*60*722 },
-    { name:'dongh', stars:5, text:"everything here ships from amazon so prime just makes it free. copped a fit same day", ts: Date.now()-1000*60*60*729 },
+    { name:'dongh', stars:5, text:"clean fits, easy to shop, no clutter. this is my go-to for outfit inspo now", ts: Date.now()-1000*60*60*729 },
     { name:'riku', stars:5, text:"smooth on mobile, saved feature is clutch for coming back later", ts: Date.now()-1000*60*60*737 },
     { name:'sana', stars:5, text:"its really stylish, i wont be dressing badly ever again ty", ts: Date.now()-1000*60*60*752 },
     { name:'jayden_r', stars:5, text:"found my sambas and a whole fit built around them in one place. this is the only fit site ive actually bought from", ts: Date.now()-1000*60*60*760 },
@@ -2621,45 +2580,6 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     render();
   });
 
-  // Prime referral link — count taps so the owner can gauge interest (visitors only)
-  (function initPrimeTracking(){
-    const b = document.getElementById('primeBtn');
-    if(b) b.addEventListener('click', ()=>{ if(!isAdmin) trackEvent('primeClicks'); });
-  })();
-
-  // ---------- prime referral link (owner-editable, stored site-wide) ----------
-  // Falls back to Amazon's real Prime signup so the section is never dead or hidden;
-  // the owner's referral link overrides it once saved.
-  const PRIME_FALLBACK = 'https://www.amazon.com/amazonprime';
-  let primeUrl = '';
-  function applyPrimeLink(){
-    const btn  = document.getElementById('primeBtn');
-    if(btn) btn.href = primeUrl || PRIME_FALLBACK;
-    const lf = document.getElementById('primeLinkFab');
-    if(lf) lf.textContent = primeUrl ? 'Prime Link ✓' : 'Set Prime Link';
-  }
-  (function initPrimeLink(){
-    const lf = document.getElementById('primeLinkFab');
-    if(lf){
-      lf.addEventListener('click', async ()=>{
-        const v = prompt('Paste your Amazon Prime referral link (leave blank to hide the section):', primeUrl || '');
-        if(v === null) return;
-        primeUrl = v.trim();
-        applyPrimeLink();
-        try{ await setDoc(SETTINGS_DOC, { primeUrl }, { merge:true }); }
-        catch(e){ alert('Could not save the link — try again.'); }
-      });
-    }
-    const teaser = document.getElementById('primeTeaser');
-    if(teaser){
-      teaser.addEventListener('click', (e)=>{
-        e.preventDefault();
-        const t = document.getElementById('primeTip');
-        if(t) t.scrollIntoView({ behavior:'smooth', block:'center' });
-      });
-    }
-  })();
-
   // ---------- price visibility (owner toggle, site-wide, data untouched) ----------
   let pricesHidden = false;
   function applyPriceVisibility(){
@@ -2683,10 +2603,8 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       const snap = await getDoc(SETTINGS_DOC);
       const d = snap.exists() ? snap.data() : {};
       pricesHidden = !!d.hidePrices;
-      primeUrl = d.primeUrl || '';
-    }catch(e){ pricesHidden = false; primeUrl = ''; }
+    }catch(e){ pricesHidden = false; }
     applyPriceVisibility();
-    applyPrimeLink();
   })();
 
   // ---------- intro / boot ----------
