@@ -218,6 +218,23 @@
   /* owner price-visibility toggle — hides prices site-wide, data is untouched */
   body.hide-prices .item-price{display:none !important;}
   body.hide-prices .fit-total-row{display:none !important;}
+  /* ===== Vault (premium supporters) ===== */
+  .tab-vault{color:#C9A15A !important;}
+  .tab-vault.active{color:#E3B871 !important;border-bottom-color:#C9A15A !important;}
+  .tag-early{background:rgba(245,243,237,.94);color:#0C0C0B;}
+  .tag-exclusive{background:linear-gradient(180deg,#E3B871,#C9A15A);color:#0C0C0B;border-color:rgba(201,161,90,.5);}
+  .vault-modal-box{position:relative;text-align:center;border-color:rgba(201,161,90,.35);box-shadow:0 24px 60px rgba(0,0,0,.5), 0 0 40px rgba(201,161,90,.12);}
+  .vault-lock-icon{font-size:30px;color:#C9A15A;margin-bottom:8px;}
+  .vault-modal-box .modal-title{color:#E3B871;margin-bottom:10px;}
+  .vault-modal-sub{font-family:var(--font-body);font-size:13.5px;line-height:1.55;color:var(--text-soft);margin:0 0 20px;}
+  .vault-support-btn{display:inline-block;background:linear-gradient(180deg,#E3B871,#C9A15A) !important;color:#0C0C0B !important;border:none !important;font-weight:700;animation:pt-glow-vault 2.4s ease-in-out infinite;}
+  @keyframes pt-glow-vault{0%,100%{box-shadow:0 0 10px rgba(201,161,90,.3);}50%{box-shadow:0 0 22px rgba(201,161,90,.6);}}
+  @media (prefers-reduced-motion:reduce){ .vault-support-btn{animation:none;} }
+  .vault-code-row{display:flex;gap:8px;margin-top:18px;}
+  .vault-code-row input{flex:1;padding:11px 12px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;}
+  .vault-code-row .btn{flex:0 0 auto;}
+  .vault-modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;line-height:1;}
+  .vault-modal-close:hover{color:var(--text);}
   .review-form input, .review-form textarea, .email-form input{width:100%;padding:11px 12px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;margin-bottom:10px;transition:border-color .15s, box-shadow .15s;}
   .review-form textarea{resize:vertical;line-height:1.5;}
   .review-form input::placeholder, .review-form textarea::placeholder, .email-form input::placeholder{color:var(--text-dim);}
@@ -639,6 +656,7 @@
     <div class="tabs">
       <button class="tab active" data-cat="men">Men</button>
       <button class="tab" data-cat="women">Women</button>
+      <button class="tab tab-vault" data-cat="vault">✦ Vault</button>
     </div>
     <span class="count" id="fitCount"></span>
   </div>
@@ -700,6 +718,7 @@
 <button class="fab" id="bulkFab" style="display:none;right:22px;bottom:74px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Bulk Import</button>
 <button class="fab" id="analyticsFab" style="display:none;right:22px;bottom:126px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Analytics</button>
 <button class="fab" id="priceFab" style="display:none;right:22px;bottom:178px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Prices: On</button>
+<button class="fab" id="vaultFab" style="display:none;right:22px;bottom:230px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Vault Setup</button>
 <div class="corner-mark">MAXEDMETHOD</div>
 
 <!-- Detail overlay -->
@@ -730,6 +749,22 @@
       <button class="btn btn-ghost" id="passCancel">Cancel</button>
       <button class="btn btn-primary" id="passSubmit">Unlock</button>
     </div>
+  </div>
+</div>
+
+<!-- Vault supporter gate modal -->
+<div class="modal-backdrop" id="vaultModal">
+  <div class="modal-box vault-modal-box">
+    <div class="vault-lock-icon">✦</div>
+    <h3 class="modal-title">For Premium Supporters Only</h3>
+    <p class="vault-modal-sub">The Vault is early-access &amp; exclusive fits for supporters. Become one to unlock it — pay what you want, and you'll get a code.</p>
+    <a class="btn btn-primary vault-support-btn" id="vaultSupportBtn" href="#" target="_blank" rel="noopener">Become a supporter →</a>
+    <div class="vault-code-row">
+      <input type="text" id="vaultCodeInput" placeholder="Already have a code? Enter it" autocomplete="off">
+      <button class="btn btn-ghost" id="vaultCodeSubmit">Unlock</button>
+    </div>
+    <div class="error-text" id="vaultCodeError" style="display:none;">That code isn't valid.</div>
+    <button class="vault-modal-close" id="vaultModalClose" aria-label="Close">✕</button>
   </div>
 </div>
 
@@ -807,6 +842,22 @@ OUTER | Cream Cardigan | https://..."></textarea>
       <div class="hint">Which style tab this fit appears under. Leave as None and it only shows under "All".</div>
     </div>
     <div class="field">
+      <label>Vault (premium supporters)</label>
+      <div class="cat-select">
+        <button type="button" class="cat-opt active" id="fitVaultOff" data-vault="off">Public</button>
+        <button type="button" class="cat-opt" id="fitVaultOn" data-vault="on">Vault only</button>
+      </div>
+      <div class="field" id="fitVaultTagField" style="margin-top:10px;display:none;">
+        <label>Vault tag</label>
+        <select id="fitVaultTagInput">
+          <option value="exclusive">Premium Exclusive</option>
+          <option value="early">Early Access</option>
+        </select>
+        <div class="hint">"Early Access" = coming to the public tabs later. "Premium Exclusive" = supporters only, forever.</div>
+      </div>
+      <div class="hint">Vault-only fits are hidden from Men/Women and only show in the ✦ Vault tab for supporters.</div>
+    </div>
+    <div class="field">
       <label>Cover / thumbnail image URL</label>
       <input type="text" id="fitCoverInput" placeholder="https://...">
       <div class="hint">This shows on the grid card. Use the same model shot from your carousel cover slide. Imgur links must start with i.imgur.com (right-click the full-size image → "Copy image address"), not imgur.com/a/... page links.</div>
@@ -863,6 +914,11 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
   // again — even after refreshes, and even while just browsing (not in edit mode).
   let ownerDevice = false;
   try{ ownerDevice = localStorage.getItem('mm-owner') === '1'; }catch(e){}
+  // Vault: premium supporter area. Unlock flag persists in the browser once a valid code is entered.
+  let vaultUnlocked = false;
+  try{ vaultUnlocked = localStorage.getItem('mm-vault') === '1'; }catch(e){}
+  let vaultCode = '';      // shared supporter code (owner-set, stored in settings)
+  let supporterUrl = '';   // Gumroad "become a supporter" link (owner-set)
   let editingId = null; // id of fit currently being edited, null = new
   let itemDraft = [];
   let activeCat = 'men'; // which tab is showing
@@ -903,8 +959,15 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     return (fit.style || '') === activeStyle;
   }
   function getFiltered(){
+    if(activeCat === 'vault'){
+      // Vault tab: only vault-flagged fits, still respects the style sub-tabs
+      return fits.map((f,gi)=>({f,gi}))
+        .filter(x=> x.f.vault)
+        .filter(x=>styleMatches(x.f));
+    }
+    // Normal tabs: this gender's fits, but never the vault-only ones
     return fits.map((f,gi)=>({f,gi}))
-      .filter(x=>catOf(x.f)===activeCat)
+      .filter(x=>catOf(x.f)===activeCat && !x.f.vault)
       .filter(x=>styleMatches(x.f));
   }
 
@@ -1102,7 +1165,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     if(countEl) animateCount(countEl, filtered.length);
 
     if(filtered.length === 0){
-      const label = activeCat === 'women' ? "Women's" : "Men's";
+      const label = activeCat === 'women' ? "Women's" : activeCat === 'vault' ? "Vault" : "Men's";
       if(showSaved){
         gridArea.innerHTML = `<div class="empty-state"><h2 class="title">No saved fits</h2><p>Tap the ♡ on any fit to save it here for later.</p></div>`;
         return;
@@ -1191,6 +1254,12 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       // a fit can legitimately earn several badges — they stack cleanly rather than fighting
       // for one slot. Order below is the visual order on the card.
       const badges = [];
+      // Vault fits carry their supporter tag (shown to everyone browsing the vault)
+      if(fit.vault && fit.vaultTag){
+        const label = fit.vaultTag === 'early' ? 'Early access' : 'Premium exclusive';
+        const cls   = fit.vaultTag === 'early' ? 'tag-early' : 'tag-exclusive';
+        badges.push(`<span class="tag ${cls}">${label}</span>`);
+      }
       if(!isAdmin){
         if(mostShoppedTitle && (fit.title||'').trim().toLowerCase() === mostShoppedTitle){
           badges.push('<span class="tag tag-shopped">Most shopped</span>');
@@ -1450,6 +1519,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       bulkFab.style.display = 'none';
       analyticsFab.style.display = 'none';
       document.getElementById('priceFab').style.display = 'none';
+      document.getElementById('vaultFab').style.display = 'none';
       render();
     } else {
       document.getElementById('passInput').value = '';
@@ -1472,6 +1542,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       bulkFab.style.display = 'block';
       analyticsFab.style.display = 'block';
       document.getElementById('priceFab').style.display = 'block';
+      document.getElementById('vaultFab').style.display = 'block';
       passModal.classList.remove('open');
       render();
       showAddFitShortcut();
@@ -1525,6 +1596,16 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
   }
   document.getElementById('fitCatMen').addEventListener('click', ()=> setFitCatToggle('men'));
   document.getElementById('fitCatWomen').addEventListener('click', ()=> setFitCatToggle('women'));
+  function setFitVaultToggle(on){
+    document.getElementById('fitVaultOff').classList.toggle('active', !on);
+    document.getElementById('fitVaultOn').classList.toggle('active', !!on);
+    document.getElementById('fitVaultTagField').style.display = on ? '' : 'none';
+  }
+  function getFitVaultToggle(){
+    return document.getElementById('fitVaultOn').classList.contains('active');
+  }
+  document.getElementById('fitVaultOff').addEventListener('click', ()=> setFitVaultToggle(false));
+  document.getElementById('fitVaultOn').addEventListener('click', ()=> setFitVaultToggle(true));
   function openFitForm(id){
     editingId = id;
     document.getElementById('fitFormError').style.display = 'none';
@@ -1536,6 +1617,8 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       document.getElementById('fitPhotoInput').value = fit.photo || '';
       setFitCatToggle(fit.cat || 'men'); // reflects the fit's REAL category, so mistakes are visible & fixable
       document.getElementById('fitStyleInput').value = fit.style || '';
+      setFitVaultToggle(!!fit.vault);
+      document.getElementById('fitVaultTagInput').value = fit.vaultTag || 'exclusive';
       itemDraft = (fit.items||[]).map(it => ({...it}));
     } else {
       document.getElementById('fitFormTitle').textContent = 'Add a fit — ' + (activeCat === 'women' ? "Women's" : "Men's");
@@ -1544,6 +1627,8 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       document.getElementById('fitPhotoInput').value = '';
       setFitCatToggle(activeCat);
       document.getElementById('fitStyleInput').value = (activeStyle !== 'all') ? activeStyle : '';
+      setFitVaultToggle(activeCat === 'vault');
+      document.getElementById('fitVaultTagInput').value = 'exclusive';
       itemDraft = [ { id: uid(), label:'OUTER', name:'', price:'', url:'' } ];
     }
     renderItemDraft();
@@ -1687,7 +1772,9 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     }
 
     const fitData = { title, cover, photo: photo || cover, items: cleanItems, cat: getFitCatToggle(),
-                      style: document.getElementById('fitStyleInput').value || '' };
+                      style: document.getElementById('fitStyleInput').value || '',
+                      vault: getFitVaultToggle(),
+                      vaultTag: getFitVaultToggle() ? document.getElementById('fitVaultTagInput').value : '' };
 
     const prevFits = fits.map(f => ({...f}));
     if(editingId){
@@ -1757,6 +1844,9 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     const shopAllClicks = data.shopAllClicks || 0;
     const tabMenViews = data.tabMenViews || 0;
     const tabWomenViews = data.tabWomenViews || 0;
+    const supporterClicks = data.supporterClicks || 0;
+    const vaultUnlocks = data.vaultUnlocks || 0;
+    const vaultViews = data.vaultViews || 0;
     // total opens across all fits
     const totalOpens = Object.keys(fitStats).reduce((s,id)=> s + (fitStats[id].opens||0), 0);
     // rates (guard divide-by-zero)
@@ -1863,6 +1953,18 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
             <tr><td>"Shop the whole fit" clicks</td><td class="num">${shopAllClicks}</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="cat-block">
+        <div class="cat-head">Vault / supporters</div>
+        <table class="stat-table">
+          <tbody>
+            <tr><td>"Become a supporter" clicks</td><td class="num">${supporterClicks}</td></tr>
+            <tr><td>Vault unlocks (codes entered)</td><td class="num">${vaultUnlocks}</td></tr>
+            <tr><td>Vault tab views</td><td class="num">${vaultViews}</td></tr>
+          </tbody>
+        </table>
+        <p class="analytics-note" style="margin-top:8px;">If "Vault unlocks" is much higher than the number of codes you've sold on Gumroad, the shared code is being passed around — time to rotate it in Vault Setup.</p>
       </div>
 
       ${tableHtml}
@@ -2028,8 +2130,16 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     tab.addEventListener('click', ()=>{
       const cat = tab.getAttribute('data-cat');
       if(cat === activeCat) return;
+      // Vault is gated: locked visitors get the supporter popup instead of the tab
+      if(cat === 'vault' && !vaultUnlocked && !isAdmin){
+        openVaultGate();
+        return;
+      }
       activeCat = cat;
-      if(!isAdmin) trackTabView(cat);
+      if(!isAdmin){
+        if(cat === 'vault') trackEvent('vaultViews');
+        else trackTabView(cat);
+      }
       render();
     });
   });
@@ -2603,8 +2713,60 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       const snap = await getDoc(SETTINGS_DOC);
       const d = snap.exists() ? snap.data() : {};
       pricesHidden = !!d.hidePrices;
+      vaultCode = (d.vaultCode || '').trim();
+      supporterUrl = d.supporterUrl || '';
+      applyVaultSupportLink();
     }catch(e){ pricesHidden = false; }
     applyPriceVisibility();
+  })();
+
+  // ---------- vault (premium supporter gate) ----------
+  const vaultModal = document.getElementById('vaultModal');
+  function applyVaultSupportLink(){
+    const b = document.getElementById('vaultSupportBtn');
+    if(b) b.href = supporterUrl || '#';
+  }
+  function openVaultGate(){
+    document.getElementById('vaultCodeError').style.display = 'none';
+    document.getElementById('vaultCodeInput').value = '';
+    applyVaultSupportLink();
+    vaultModal.classList.add('open');
+  }
+  function unlockVault(){
+    const entered = (document.getElementById('vaultCodeInput').value || '').trim();
+    const err = document.getElementById('vaultCodeError');
+    if(!vaultCode || entered.toLowerCase() !== vaultCode.toLowerCase()){
+      err.style.display = 'block';
+      return;
+    }
+    vaultUnlocked = true;
+    try{ localStorage.setItem('mm-vault','1'); }catch(e){}
+    if(!isAdmin) trackEvent('vaultUnlocks'); // a fresh unlock — compare against # of codes sold
+    vaultModal.classList.remove('open');
+    activeCat = 'vault';
+    if(!isAdmin) trackEvent('vaultViews');
+    render();
+  }
+  document.getElementById('vaultCodeSubmit').addEventListener('click', unlockVault);
+  document.getElementById('vaultCodeInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') unlockVault(); });
+  document.getElementById('vaultModalClose').addEventListener('click', ()=> vaultModal.classList.remove('open'));
+  vaultModal.addEventListener('click', (e)=>{ if(e.target === vaultModal) vaultModal.classList.remove('open'); });
+  document.getElementById('vaultSupportBtn').addEventListener('click', ()=>{ if(!isAdmin) trackEvent('supporterClicks'); });
+  // owner: set the supporter link + shared code
+  (function initVaultSetup(){
+    const vf = document.getElementById('vaultFab');
+    if(!vf) return;
+    vf.addEventListener('click', async ()=>{
+      const url = prompt('Gumroad "become a supporter" link (buyers land here):', supporterUrl || '');
+      if(url === null) return;
+      const code = prompt('Shared supporter unlock code (give this to buyers via Gumroad):', vaultCode || '');
+      if(code === null) return;
+      supporterUrl = url.trim();
+      vaultCode = code.trim();
+      applyVaultSupportLink();
+      try{ await setDoc(SETTINGS_DOC, { supporterUrl, vaultCode }, { merge:true }); vf.textContent = 'Vault Setup ✓'; }
+      catch(e){ alert('Could not save vault settings — try again.'); }
+    });
   })();
 
   // ---------- intro / boot ----------
