@@ -1003,11 +1003,12 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       if(sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key,'1');
       await setDoc(ANALYTICS_DOC, { [field]: increment(1) }, { merge:true });
-    }catch(e){}
+    }catch(e){ console.error('[analytics] write failed for "'+field+'":', e); }
   }
   async function trackEvent(field){
     if(ownerDevice) return;
-    try{ await setDoc(ANALYTICS_DOC, { [field]: increment(1) }, { merge:true }); }catch(e){}
+    try{ await setDoc(ANALYTICS_DOC, { [field]: increment(1) }, { merge:true }); }
+    catch(e){ console.error('[analytics] write failed for "'+field+'":', e); }
   }
   // fired when the visitor scrolls far enough to actually SEE the fit grid
   function initScrollTracking(){
@@ -1967,6 +1968,21 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
         <p class="analytics-note" style="margin-top:8px;">If "Vault unlocks" is much higher than the number of codes you've sold on Gumroad, the shared code is being passed around — time to rotate it in Vault Setup.</p>
       </div>
 
+      <div class="cat-block">
+        <div class="cat-head">This device (diagnostics)</div>
+        <table class="stat-table">
+          <tbody>
+            <tr><td>Does this device count in analytics?</td><td class="num">${ownerDevice ? 'NO — owner' : 'yes'}</td></tr>
+            <tr><td>Vault unlocked on this device?</td><td class="num">${vaultUnlocked ? 'yes' : 'no'}</td></tr>
+          </tbody>
+        </table>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+          <button class="mini-btn" id="testTrackBtn">Test analytics write</button>
+          <button class="mini-btn" id="clearOwnerBtn">Un-flag this device</button>
+        </div>
+        <p class="analytics-note" id="testTrackOut" style="margin-top:8px;"></p>
+      </div>
+
       ${tableHtml}
       <p class="analytics-note">Visits, "scrolled to fits", "opened a fit", and bounce each count once per browser session. Opens &amp; shop clicks count every tap. Your own admin activity isn't counted.</p>
       <div class="admin-section" id="reviewsAdmin"><div class="section-head">Reviews & Questions</div><div id="reviewsAdminBody"><div class="hint">Loading…</div></div></div>
@@ -1974,6 +1990,25 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     `;
     loadReviewsAdmin();
     loadSubsAdmin();
+
+    // --- diagnostics: prove whether Firestore is accepting writes from this browser ---
+    const out = document.getElementById('testTrackOut');
+    const testBtn = document.getElementById('testTrackBtn');
+    if(testBtn) testBtn.addEventListener('click', async ()=>{
+      out.textContent = 'Testing…';
+      try{
+        await setDoc(ANALYTICS_DOC, { trackingSelfTest: increment(1) }, { merge:true });
+        out.textContent = '✓ Write succeeded — Firestore accepts new fields. So if vault numbers stay at 0, the device you tested on was flagged as owner (owner activity is never counted).';
+      }catch(e){
+        out.textContent = '✗ Write BLOCKED: ' + ((e && e.message) ? e.message : String(e)) + ' — your Firestore rules are rejecting writes, which is why the new vault fields never appear.';
+      }
+    });
+    const clearBtn = document.getElementById('clearOwnerBtn');
+    if(clearBtn) clearBtn.addEventListener('click', ()=>{
+      try{ localStorage.removeItem('mm-owner'); }catch(e){}
+      ownerDevice = false;
+      out.textContent = 'This device now counts in analytics (until you unlock Owner mode again, which re-flags it).';
+    });
   });
 
   // ----- admin: reviews moderation -----
