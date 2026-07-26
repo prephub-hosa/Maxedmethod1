@@ -235,6 +235,15 @@
   .tab-vault.active{color:#E3B871 !important;border-bottom-color:#C9A15A !important;}
   .tag-early{background:rgba(245,243,237,.94);color:#0C0C0B;}
   .tag-exclusive{background:linear-gradient(180deg,#E3B871,#C9A15A);color:#0C0C0B;border-color:rgba(201,161,90,.5);}
+  /* locked vault teaser cards shown in the public grid */
+  .fit-card-locked{cursor:pointer;}
+  .fit-cover-blurred{filter:blur(16px) saturate(.9) brightness(.6) !important;transform:scale(1.1);}
+  .fit-card-locked:hover .fit-cover-blurred{transform:scale(1.13);}
+  .vault-lock-overlay{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;padding:16px;background:radial-gradient(circle at center, rgba(201,161,90,.12), rgba(12,12,11,.45));}
+  .vault-lock-overlay .vlo-star{font-size:30px;color:#E3B871;text-shadow:0 0 18px rgba(201,161,90,.6);line-height:1;margin-bottom:6px;}
+  .vault-lock-overlay .vlo-label{font-family:var(--font-display);font-weight:800;font-size:20px;letter-spacing:.02em;color:#F5F3ED;}
+  .vault-lock-overlay .vlo-sub{font-family:var(--font-mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(227,184,113,.9);margin-top:2px;}
+  .fit-card-locked:hover .vlo-star{text-shadow:0 0 26px rgba(201,161,90,.85);}
   .vault-modal-box{position:relative;text-align:center;border-color:rgba(201,161,90,.35);box-shadow:0 24px 60px rgba(0,0,0,.5), 0 0 40px rgba(201,161,90,.12);}
   .vault-lock-icon{font-size:30px;color:#C9A15A;margin-bottom:8px;}
   .vault-modal-box .modal-title{color:#E3B871;margin-bottom:10px;}
@@ -242,6 +251,8 @@
   .vault-support-btn{display:inline-block;background:linear-gradient(180deg,#E3B871,#C9A15A) !important;color:#0C0C0B !important;border:none !important;font-weight:700;animation:pt-glow-vault 2.4s ease-in-out infinite;}
   @keyframes pt-glow-vault{0%,100%{box-shadow:0 0 10px rgba(201,161,90,.3);}50%{box-shadow:0 0 22px rgba(201,161,90,.6);}}
   @media (prefers-reduced-motion:reduce){ .vault-support-btn{animation:none;} }
+  .vault-reviews-link{display:block;width:100%;margin-top:12px;background:none;border:none;font-family:var(--font-body);font-size:12.5px;color:var(--text-soft);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(155,153,144,.4);transition:color .15s;}
+  .vault-reviews-link:hover{color:#E3B871;text-decoration-color:rgba(227,184,113,.6);}
   .vault-code-row{display:flex;gap:8px;margin-top:18px;}
   .vault-code-row input{flex:1;padding:11px 12px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;}
   .vault-code-row .btn{flex:0 0 auto;}
@@ -771,6 +782,7 @@
     <h3 class="modal-title">For Premium Supporters Only</h3>
     <p class="vault-modal-sub">The Vault has early-access &amp; premium fits for supporters. Pay how much you want, and you'll get the code.</p>
     <a class="btn btn-primary vault-support-btn" id="vaultSupportBtn" href="#" target="_blank" rel="noopener">Become a supporter →</a>
+    <button type="button" class="vault-reviews-link" id="vaultReviewsLink">See what supporters are saying →</button>
     <div class="vault-code-row">
       <input type="text" id="vaultCodeInput" placeholder="Already have a code? Enter it" autocomplete="off">
       <button class="btn btn-ghost" id="vaultCodeSubmit">Unlock</button>
@@ -866,6 +878,14 @@ OUTER | Cream Cardigan | https://..."></textarea>
           <button type="button" class="cat-opt" id="fitTagPremium">Premium</button>
         </div>
         <div class="hint">Tap to toggle each on or off — a fit can have both, one, or neither. "Early Access" = coming to the public tabs later. "Premium" = supporters only.</div>
+      </div>
+      <div class="field" id="fitTeaseField" style="margin-top:10px;display:none;">
+        <label>Locked preview in public tabs</label>
+        <div class="cat-select">
+          <button type="button" class="cat-opt active" id="fitTeaseOff" data-tease="off">Hidden</button>
+          <button type="button" class="cat-opt" id="fitTeaseOn" data-tease="on">Show blurred teaser</button>
+        </div>
+        <div class="hint">"Show blurred teaser" puts a blurred, locked version of this fit in the Men's/Women's grid so free users can see there's exclusive stuff behind the wall — tapping it opens the supporter popup. It shows the fit's tags but never the image or links.</div>
       </div>
       <div class="hint">Vault-only fits are hidden from Men/Women and only show in the ✦ Vault tab for supporters.</div>
     </div>
@@ -986,9 +1006,15 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
         .filter(x=> x.f.vault)
         .filter(x=>styleMatches(x.f));
     }
-    // Normal tabs: this gender's fits, but never the vault-only ones
+    // Normal tabs: this gender's fits. Vault fits are excluded EXCEPT ones flagged to
+    // show a locked preview ("teasePublic") — and only for visitors who haven't unlocked,
+    // so supporters/owner don't see duplicates of what's already in their vault.
     return fits.map((f,gi)=>({f,gi}))
-      .filter(x=>catOf(x.f)===activeCat && !x.f.vault)
+      .filter(x=>{
+        if(catOf(x.f) !== activeCat) return false;
+        if(!x.f.vault) return true;
+        return x.f.teasePublic && !vaultUnlocked && !isAdmin;
+      })
       .filter(x=>styleMatches(x.f));
   }
 
@@ -1291,6 +1317,25 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
         if(isNew)                     badges.push('<span class="tag tag-new">New</span>');
       }
       const badgeStack = badges.length ? `<div class="badge-stack">${badges.join('')}</div>` : '';
+      // A vault fit appearing in a non-vault tab is a locked teaser (getFiltered only lets
+      // these through for locked visitors). Blur it, lock it, and route taps to the gate.
+      const isTeaser = fit.vault && activeCat !== 'vault';
+      if(isTeaser) card.classList.add('fit-card-locked');
+      if(isTeaser){
+        card.innerHTML = `
+          <img class="fit-cover fit-cover-blurred" src="${escapeAttr(fit.cover)}" alt="Vault fit — supporters only" onerror="this.style.background='#201F1D'">
+          ${badgeStack}
+          <div class="vault-lock-overlay">
+            <div class="vlo-star">✦</div>
+            <div class="vlo-label">Vault</div>
+            <div class="vlo-sub">Tap to unlock</div>
+          </div>
+          <div class="fit-card-footer"><span class="fit-tag">✦ VAULT</span></div>
+        `;
+        card.addEventListener('click', ()=> openVaultGate());
+        grid.appendChild(card);
+        return;
+      }
       card.innerHTML = `
         <img class="fit-cover" src="${escapeAttr(fit.cover)}" alt="${escapeAttr(fit.title)}" onerror="this.style.background='#201F1D'">
         ${badgeStack}
@@ -1620,12 +1665,21 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     document.getElementById('fitVaultOff').classList.toggle('active', !on);
     document.getElementById('fitVaultOn').classList.toggle('active', !!on);
     document.getElementById('fitVaultTagField').style.display = on ? '' : 'none';
+    document.getElementById('fitTeaseField').style.display = on ? '' : 'none';
   }
   function getFitVaultToggle(){
     return document.getElementById('fitVaultOn').classList.contains('active');
   }
   document.getElementById('fitVaultOff').addEventListener('click', ()=> setFitVaultToggle(false));
   document.getElementById('fitVaultOn').addEventListener('click', ()=> setFitVaultToggle(true));
+  // locked-preview toggle
+  function setFitTease(on){
+    document.getElementById('fitTeaseOff').classList.toggle('active', !on);
+    document.getElementById('fitTeaseOn').classList.toggle('active', !!on);
+  }
+  function getFitTease(){ return document.getElementById('fitTeaseOn').classList.contains('active'); }
+  document.getElementById('fitTeaseOff').addEventListener('click', ()=> setFitTease(false));
+  document.getElementById('fitTeaseOn').addEventListener('click', ()=> setFitTease(true));
   // vault tags toggle independently (not either/or)
   ['fitTagEarly','fitTagPremium'].forEach(id=>{
     document.getElementById(id).addEventListener('click', function(){ this.classList.toggle('active'); });
@@ -1653,6 +1707,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       document.getElementById('fitStyleInput').value = fit.style || '';
       setFitVaultToggle(!!fit.vault);
       setFitVaultTags(vaultTagsOf(fit));
+      setFitTease(!!fit.teasePublic);
       itemDraft = (fit.items||[]).map(it => ({...it}));
     } else {
       document.getElementById('fitFormTitle').textContent = 'Add a fit — ' + (activeCat === 'women' ? "Women's" : "Men's");
@@ -1663,6 +1718,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       document.getElementById('fitStyleInput').value = (activeStyle !== 'all') ? activeStyle : '';
       setFitVaultToggle(activeCat === 'vault');
       setFitVaultTags(['premium']);
+      setFitTease(false);
       itemDraft = [ { id: uid(), label:'OUTER', name:'', price:'', url:'' } ];
     }
     renderItemDraft();
@@ -1808,7 +1864,8 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     const fitData = { title, cover, photo: photo || cover, items: cleanItems, cat: getFitCatToggle(),
                       style: document.getElementById('fitStyleInput').value || '',
                       vault: getFitVaultToggle(),
-                      vaultTags: getFitVaultToggle() ? getFitVaultTags() : [] };
+                      vaultTags: getFitVaultToggle() ? getFitVaultTags() : [],
+                      teasePublic: getFitVaultToggle() ? getFitTease() : false };
 
     const prevFits = fits.map(f => ({...f}));
     if(editingId){
@@ -3289,6 +3346,11 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
   document.getElementById('vaultModalClose').addEventListener('click', ()=> vaultModal.classList.remove('open'));
   vaultModal.addEventListener('click', (e)=>{ if(e.target === vaultModal) vaultModal.classList.remove('open'); });
   document.getElementById('vaultSupportBtn').addEventListener('click', ()=>{ if(!isAdmin) trackEvent('supporterClicks'); });
+  document.getElementById('vaultReviewsLink').addEventListener('click', ()=>{
+    vaultModal.classList.remove('open');
+    const r = document.getElementById('reviewsAnchor');
+    if(r) r.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
   // owner: set the supporter link + shared code
   (function initVaultSetup(){
     const vf = document.getElementById('vaultFab');
