@@ -145,6 +145,7 @@
   @media (max-width:680px){.breakdown{order:2;padding:34px 24px 48px;}}
   .breakdown .eyebrow{margin-bottom:20px;}
   .detail-fit-title{font-family:var(--font-display);font-weight:800;font-size:34px;line-height:1;letter-spacing:-.03em;margin:0 0 30px;}
+  .breakdown .eyebrow{margin-bottom:30px;}
   .item-row{padding:18px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;}
   .item-row:last-child{border-bottom:1px solid var(--line);}
   .item-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--text-dim);}
@@ -729,7 +730,6 @@
       <div class="detail-photo"><img id="detailImg" src="" alt=""></div>
       <div class="breakdown">
         <div class="eyebrow">The Breakdown</div>
-        <h2 class="detail-fit-title" id="detailTitle"></h2>
         <div id="itemList"></div>
       </div>
     </div>
@@ -1275,7 +1275,6 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
         ${badgeStack}
         <div class="fit-card-footer">
           <span class="fit-tag">FIT ${String(i+1).padStart(2,'0')}</span>
-          <h3 class="fit-title">${escapeHtml(fit.title)}</h3>
           <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →</div>
         </div>
         ${!isAdmin ? `
@@ -1380,7 +1379,6 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
   // ---------- detail overlay ----------
   const detailOverlay = document.getElementById('detailOverlay');
   function openDetail(fit){
-    document.getElementById('detailTitle').textContent = fit.title;
     document.getElementById('detailImg').src = fit.photo || fit.cover;
     const list = document.getElementById('itemList');
     list.innerHTML = '';
