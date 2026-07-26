@@ -61,6 +61,13 @@
   .guide-note a{color:#B8935A;text-decoration:none;font-weight:600;border-bottom:1px solid rgba(184,147,90,.35);transition:border-color .15s;}
   .guide-note a:hover{border-color:#B8935A;}
   .status-badge{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:8px 14px;border:1px solid var(--line);border-radius:100px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--text-soft);}
+  .vault-nudge{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-family:var(--font-body);font-size:12.5px;font-weight:500;color:#E3B871;background:rgba(201,161,90,.09);border:1px solid rgba(201,161,90,.4);border-radius:100px;padding:8px 15px;cursor:pointer;animation:vault-nudge-glow 2.8s ease-in-out infinite;transition:background .15s,border-color .15s;}
+  .vault-nudge:hover{background:rgba(201,161,90,.16);border-color:rgba(201,161,90,.62);}
+  .vault-nudge .vn-star{color:#C9A15A;font-size:13px;}
+  .vault-nudge .vn-arrow{display:inline-block;transition:transform .15s;}
+  .vault-nudge:hover .vn-arrow{transform:translateX(3px);}
+  @keyframes vault-nudge-glow{0%,100%{box-shadow:0 0 0 rgba(201,161,90,0);}50%{box-shadow:0 0 15px rgba(201,161,90,.3);}}
+  @media (prefers-reduced-motion:reduce){ .vault-nudge{animation:none;} }
   .status-dot{width:6px;height:6px;border-radius:50%;background:#8BAE7C;flex-shrink:0;animation:pulse-dot 2s ease-in-out infinite;}
   @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.35;}}
 
@@ -609,6 +616,7 @@
       <h1 class="title">SHOP<br><span class="thin">THE FITS</span></h1>
       <p class="amazon-note">Every piece links to Amazon — for the best prices, trusted checkout, and the most size &amp; color options in one place.</p>
       <div class="status-badge"><span class="status-dot"></span>Currently adding more outfits</div>
+      <div><button class="vault-nudge" id="vaultNudge" type="button"><span class="vn-star">✦</span> psst — the best fits live in the Vault <span class="vn-arrow">→</span></button></div>
     </div>
     <div class="squad-banner" id="squadBanner">
       <div class="squad-slot" data-i="0" data-cat="men">
@@ -2186,6 +2194,19 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
   // Note: deliberately NOT re-fetching analytics on tab switch. Analytics is loaded once at
   // boot and kept up to date locally by bumpFitStat. An extra fetch here was overwriting the
   // cache mid-render and making click-based badges flicker out when switching sections.
+  // hero gold bubble → jump to the Vault (reuses the tab's gate/unlock logic)
+  (function initVaultNudge(){
+    const vn = document.getElementById('vaultNudge');
+    if(!vn) return;
+    vn.addEventListener('click', ()=>{
+      const vt = document.querySelector('.tab[data-cat="vault"]');
+      if(vt){
+        vt.click();
+        vt.scrollIntoView({ behavior:'smooth', block:'center' });
+      }
+    });
+  })();
+
   document.querySelectorAll('.tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
       const cat = tab.getAttribute('data-cat');
@@ -2765,7 +2786,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       const v = Math.max(0, Math.min(5, Math.round(n||5)));
       return `<span class="rs-on">${'★'.repeat(v)}</span><span class="rs-off">${'★'.repeat(5-v)}</span>`;
     };
-    listEl.innerHTML = combined.map(r=>{
+    const cardHTML = (r)=>{
       const s = (typeof r.stars === 'number') ? r.stars : 5;
       return `
       <div class="review-item">
@@ -2775,7 +2796,28 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
           <span class="r-name">${escapeHtml(r.name || 'Anonymous')}</span>
         </div>
       </div>`;
-    }).join('');
+    };
+    // ---- lazy render: only build a chunk of cards up front, append more as the
+    // ---- user scrolls near the end. Keeps 500+ reviews from all hitting the DOM at once.
+    const CHUNK = 60;
+    let rendered = 0;
+    const renderMore = ()=>{
+      if(rendered >= combined.length) return;
+      const next = combined.slice(rendered, rendered + CHUNK).map(cardHTML).join('');
+      listEl.insertAdjacentHTML('beforeend', next);
+      rendered += CHUNK;
+      if(window.__updateReviewArrows) window.__updateReviewArrows();
+    };
+    listEl.innerHTML = '';
+    rendered = 0;
+    renderMore();
+    // append the next chunk when the horizontal scroll gets within ~3 screens of the end.
+    // Replace any prior handler so re-loading reviews never stacks listeners (= no dupes).
+    if(listEl.__lazyHandler) listEl.removeEventListener('scroll', listEl.__lazyHandler);
+    listEl.__lazyHandler = ()=>{
+      if(listEl.scrollLeft + listEl.clientWidth * 3 >= listEl.scrollWidth) renderMore();
+    };
+    listEl.addEventListener('scroll', listEl.__lazyHandler, { passive:true });
     // aggregate line — fixed display rating for now
     const aggEl = document.getElementById('reviewsAgg');
     if(aggEl){
