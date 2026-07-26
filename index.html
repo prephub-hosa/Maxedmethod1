@@ -1879,6 +1879,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     const tabMenViews = data.tabMenViews || 0;
     const tabWomenViews = data.tabWomenViews || 0;
     const supporterClicks = data.supporterClicks || 0;
+    const vaultGateViews = data.vaultGateViews || 0;
     const vaultUnlocks = data.vaultUnlocks || 0;
     const vaultViews = data.vaultViews || 0;
     // total opens across all fits
@@ -1993,9 +1994,10 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
         <div class="cat-head">Vault / supporters</div>
         <table class="stat-table">
           <tbody>
+            <tr><td>Vault popup opened (interest)</td><td class="num">${vaultGateViews}</td></tr>
             <tr><td>"Become a supporter" clicks</td><td class="num">${supporterClicks}</td></tr>
             <tr><td>Vault unlocks (codes entered)</td><td class="num">${vaultUnlocks}</td></tr>
-            <tr><td>Vault tab views</td><td class="num">${vaultViews}</td></tr>
+            <tr><td>Vault tab views (supporters)</td><td class="num">${vaultViews}</td></tr>
           </tbody>
         </table>
         <p class="analytics-note" style="margin-top:8px;">If "Vault unlocks" is much higher than the number of codes you've sold on Gumroad, the shared code is being passed around — time to rotate it in Vault Setup.</p>
@@ -3263,6 +3265,9 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     document.getElementById('vaultCodeInput').value = '';
     applyVaultSupportLink();
     vaultModal.classList.add('open');
+    // someone tapped the vault (tab or hero bubble) and hit the gate — this is the
+    // top-of-funnel interest metric. trackEvent already excludes owner devices.
+    trackEvent('vaultGateViews');
   }
   function unlockVault(){
     const entered = (document.getElementById('vaultCodeInput').value || '').trim();
