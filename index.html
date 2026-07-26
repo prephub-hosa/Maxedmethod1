@@ -852,12 +852,12 @@ OUTER | Cream Cardigan | https://..."></textarea>
         <button type="button" class="cat-opt" id="fitVaultOn" data-vault="on">Vault only</button>
       </div>
       <div class="field" id="fitVaultTagField" style="margin-top:10px;display:none;">
-        <label>Vault tag</label>
-        <select id="fitVaultTagInput">
-          <option value="exclusive">Premium Exclusive</option>
-          <option value="early">Early Access</option>
-        </select>
-        <div class="hint">"Early Access" = coming to the public tabs later. "Premium Exclusive" = supporters only, forever.</div>
+        <label>Vault tags</label>
+        <div class="cat-select">
+          <button type="button" class="cat-opt" id="fitTagEarly">Early Access</button>
+          <button type="button" class="cat-opt" id="fitTagPremium">Premium</button>
+        </div>
+        <div class="hint">Tap to toggle each on or off — a fit can have both, one, or neither. "Early Access" = coming to the public tabs later. "Premium" = supporters only.</div>
       </div>
       <div class="hint">Vault-only fits are hidden from Men/Women and only show in the ✦ Vault tab for supporters.</div>
     </div>
@@ -956,6 +956,15 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
 
   // fits without a cat are treated as men's (preserves everything built before tabs existed)
   function catOf(fit){ return fit.cat || 'men'; }
+  // Vault tags. Stored as an array so a fit can carry both Early Access and Premium.
+  // Falls back to the older single-value `vaultTag` field so existing fits keep their tag.
+  function vaultTagsOf(fit){
+    if(Array.isArray(fit.vaultTags)) return fit.vaultTags;
+    if(fit.vaultTag === 'early') return ['early'];
+    if(fit.vaultTag) return ['premium'];   // legacy 'exclusive'
+    return [];
+  }
+  function vaultHasTag(fit, tag){ return vaultTagsOf(fit).indexOf(tag) !== -1; }
   // Fits carry an optional `style` field set manually in the admin editor. Unassigned fits
   // show only under "All", so a half-categorised catalog never looks broken.
   function styleMatches(fit){
@@ -1259,13 +1268,13 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       // a fit can legitimately earn several badges — they stack cleanly rather than fighting
       // for one slot. Order below is the visual order on the card.
       const badges = [];
-      // Vault fits carry their supporter tag (shown to everyone browsing the vault)
-      if(fit.vault && fit.vaultTag){
-        const label = fit.vaultTag === 'early' ? 'Early access' : 'Premium exclusive';
-        const cls   = fit.vaultTag === 'early' ? 'tag-early' : 'tag-exclusive';
-        badges.push(`<span class="tag ${cls}">${label}</span>`);
-      }
-      if(!isAdmin){
+      if(fit.vault){
+        // Vault fits show ONLY their supporter tags — the automatic badges
+        // (Most shopped / Creator's pick / New / Lowest price) are suppressed
+        // so premium cards stay clean.
+        if(vaultHasTag(fit,'early'))   badges.push('<span class="tag tag-early">Early Access</span>');
+        if(vaultHasTag(fit,'premium')) badges.push('<span class="tag tag-exclusive">Premium</span>');
+      } else if(!isAdmin){
         if(mostShoppedTitle && (fit.title||'').trim().toLowerCase() === mostShoppedTitle){
           badges.push('<span class="tag tag-shopped">Most shopped</span>');
         }
@@ -1609,6 +1618,20 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
   }
   document.getElementById('fitVaultOff').addEventListener('click', ()=> setFitVaultToggle(false));
   document.getElementById('fitVaultOn').addEventListener('click', ()=> setFitVaultToggle(true));
+  // vault tags toggle independently (not either/or)
+  ['fitTagEarly','fitTagPremium'].forEach(id=>{
+    document.getElementById(id).addEventListener('click', function(){ this.classList.toggle('active'); });
+  });
+  function setFitVaultTags(tags){
+    document.getElementById('fitTagEarly').classList.toggle('active', tags.indexOf('early') !== -1);
+    document.getElementById('fitTagPremium').classList.toggle('active', tags.indexOf('premium') !== -1);
+  }
+  function getFitVaultTags(){
+    const t = [];
+    if(document.getElementById('fitTagEarly').classList.contains('active')) t.push('early');
+    if(document.getElementById('fitTagPremium').classList.contains('active')) t.push('premium');
+    return t;
+  }
   function openFitForm(id){
     editingId = id;
     document.getElementById('fitFormError').style.display = 'none';
@@ -1621,7 +1644,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       setFitCatToggle(fit.cat || 'men'); // reflects the fit's REAL category, so mistakes are visible & fixable
       document.getElementById('fitStyleInput').value = fit.style || '';
       setFitVaultToggle(!!fit.vault);
-      document.getElementById('fitVaultTagInput').value = fit.vaultTag || 'exclusive';
+      setFitVaultTags(vaultTagsOf(fit));
       itemDraft = (fit.items||[]).map(it => ({...it}));
     } else {
       document.getElementById('fitFormTitle').textContent = 'Add a fit — ' + (activeCat === 'women' ? "Women's" : "Men's");
@@ -1631,7 +1654,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       setFitCatToggle(activeCat);
       document.getElementById('fitStyleInput').value = (activeStyle !== 'all') ? activeStyle : '';
       setFitVaultToggle(activeCat === 'vault');
-      document.getElementById('fitVaultTagInput').value = 'exclusive';
+      setFitVaultTags(['premium']);
       itemDraft = [ { id: uid(), label:'OUTER', name:'', price:'', url:'' } ];
     }
     renderItemDraft();
@@ -1777,7 +1800,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     const fitData = { title, cover, photo: photo || cover, items: cleanItems, cat: getFitCatToggle(),
                       style: document.getElementById('fitStyleInput').value || '',
                       vault: getFitVaultToggle(),
-                      vaultTag: getFitVaultToggle() ? document.getElementById('fitVaultTagInput').value : '' };
+                      vaultTags: getFitVaultToggle() ? getFitVaultTags() : [] };
 
     const prevFits = fits.map(f => ({...f}));
     if(editingId){
