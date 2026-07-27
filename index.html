@@ -2834,17 +2834,17 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     const skipBtn = document.getElementById('introSkip');
     const ctx = canvas.getContext('2d');
     let W, H, dpr = Math.min(window.devicePixelRatio||1, 2);
-    let particles = [];
     let raf = null, startTime = null, finished = false;
-    let imgReady = false, silBox = null, wordOnly = false, wordFontSize = 60;
+    let imgReady = false, silBox = null, wordFontSize = 60;
+    let bolts = [], lastBoltAt = -999;
 
-    // timeline (ms)
-    const T_FADEIN = 400;    // models fade into view
-    const T_HOLD = 100;      // very brief beat, then disperse
-    const T_DISPERSE = 1000; // drift into smoke (shadow aura) — a touch longer, less rushed
-    const T_REFORM = 650;    // particles migrate into the word
-    const T_SETTLE = 350;    // settle, bg fully black
-    const T_TOTAL = T_FADEIN + T_HOLD + T_DISPERSE + T_REFORM + T_SETTLE;
+    // timeline (ms) — silhouette holds, lightning cracks, word is just THERE on black
+    const T_FADEIN = 550;   // silhouette fades in
+    const T_HOLD   = 350;   // brief hold
+    const T_FLASH  = 340;   // lightning strike + white flash, content swaps mid-flash
+    const T_REVEAL = 620;   // MAXEDMETHOD on black, glow settles
+    const T_TOTAL  = T_FADEIN + T_HOLD + T_FLASH + T_REVEAL;
+    const CREAM = [245,243,237], DARK = [12,12,11];
 
     function resize(){
       W = window.innerWidth; H = window.innerHeight;
@@ -2858,7 +2858,6 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       if(finished) return; finished = true;
       if(raf) cancelAnimationFrame(raf);
       intro.classList.add('done');
-      // tell the squad banner the stage is clear
       window.dispatchEvent(new CustomEvent('mm-intro-done'));
       setTimeout(()=> intro.remove(), 1230);
     }
@@ -2872,182 +2871,99 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       const dw = img.width*scale, dh = img.height*scale;
       silBox = { x:(W-dw)/2, y:(H-dh)/2, w:dw, h:dh };
     }
-
-    // build the particle field FROM the placed image (dark pixels), plus word targets
-    function buildParticles(){
-      const off = document.createElement('canvas');
-      off.width = W; off.height = H;
-      const octx = off.getContext('2d');
-      // draw silhouette where it sits
-      octx.drawImage(img, silBox.x, silBox.y, silBox.w, silBox.h);
-      const sil = octx.getImageData(0,0,W,H).data;
-      const silPts = [];
-      const step = 2;
-      for(let y=0;y<H;y+=step){
-        for(let x=0;x<W;x+=step){
-          const idx=(y*W+x)*4;
-          if(sil[idx+3]<50) continue;
-          const lum=(sil[idx]+sil[idx+1]+sil[idx+2])/3;
-          if(lum<130) silPts.push({x,y});
-        }
-      }
-      // word points
-      octx.clearRect(0,0,W,H);
-      octx.fillStyle='#000';
-      let fs=Math.min(W*0.13,150);
-      octx.font=`${fs}px "Anton", sans-serif`;
-      octx.textAlign='center'; octx.textBaseline='middle';
-      while(octx.measureText('MAXEDMETHOD').width>W*0.9 && fs>10){ fs-=2; octx.font=`${fs}px "Anton", sans-serif`; }
+    function computeWordFont(){
+      let fs = Math.min(W*0.13, 150);
+      ctx.font = `${fs}px "Anton", sans-serif`;
+      while(ctx.measureText('MAXEDMETHOD').width > W*0.9 && fs > 10){ fs -= 2; ctx.font = `${fs}px "Anton", sans-serif`; }
       wordFontSize = fs;
-      octx.fillText('MAXEDMETHOD', W/2, H/2);
-      const wd = octx.getImageData(0,0,W,H).data;
-      const wordPts=[];
-      for(let y=0;y<H;y+=2){
-        for(let x=0;x<W;x+=2){
-          const idx=(y*W+x)*4;
-          if(wd[idx+3]>60) wordPts.push({x,y});
-        }
-      }
-      for(let i=wordPts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [wordPts[i],wordPts[j]]=[wordPts[j],wordPts[i]]; }
-      // enough particles to (a) fully shatter the figure AND (b) densely fill the word
-      const n = Math.max(silPts.length, wordPts.length);
-      particles=[];
-      for(let i=0;i<n;i++){
-        const s=silPts[i % silPts.length];
-        // map so EVERY word point is covered: cycle through word points evenly
-        const w=wordPts[i % wordPts.length];
-        particles.push({
-          sx:s.x, sy:s.y, wx:w.x, wy:w.y,
-          dx:(Math.random()-0.5)*W*1.0,
-          dy:(Math.random()-0.5)*H*1.0 - H*0.1,
-          size:1.1+Math.random()*1.2,
-          drift:Math.random()*Math.PI*2
-        });
-      }
     }
 
-    const easeOut = t => 1 - Math.pow(1-t, 3);
-    const easeIn = t => t*t*t;
-    const easeInOut = t => t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
-
-    function frame(now){
-      if(!startTime) startTime = now;
-      const t = now - startTime;
-
-      // background: white until reform, then flip to near-black
-      const flipStart = T_FADEIN + T_HOLD + T_DISPERSE + T_REFORM*0.4;
-      let bgP = t>flipStart ? Math.min(1,(t-flipStart)/(T_TOTAL-flipStart)) : 0;
-      const bgR=Math.round(245+(12-245)*bgP), bgG=Math.round(243+(12-243)*bgP), bgB=Math.round(237+(11-237)*bgP);
-      ctx.fillStyle=`rgb(${bgR},${bgG},${bgB})`;
-      ctx.fillRect(0,0,W,H);
-      skipBtn.classList.toggle('on-dark', bgP>0.5);
-
-      const tHoldEnd = T_FADEIN + T_HOLD;
-      const tDisperseEnd = tHoldEnd + T_DISPERSE;
-      const tReformEnd = tDisperseEnd + T_REFORM;
-
-      if(t < T_FADEIN){
-        // PHASE 0: models fade into view (no more frozen "virus" look)
-        const a = easeOut(t / T_FADEIN);
-        if(!wordOnly){ ctx.globalAlpha = a; ctx.drawImage(img, silBox.x, silBox.y, silBox.w, silBox.h); ctx.globalAlpha = 1; }
-        else { for(const p of particles){ ctx.fillStyle=`rgba(20,20,18,${a})`; ctx.fillRect(p.wx,p.wy,p.size,p.size); } }
-      } else if(t < tHoldEnd){
-        // PHASE 1: brief hold, fully visible
-        if(!wordOnly){ ctx.globalAlpha = 1; ctx.drawImage(img, silBox.x, silBox.y, silBox.w, silBox.h); }
-        else { for(const p of particles){ ctx.fillStyle='rgba(20,20,18,1)'; ctx.fillRect(p.wx,p.wy,p.size,p.size); } }
-      } else if(t < tDisperseEnd){
-        // PHASE 2: SLOW drift into smoke (shadow-king aura)
-        const k = (t - tHoldEnd)/T_DISPERSE;
-        const ek = easeIn(k) * 0.85; // gentle acceleration, particles don't rush off-screen
-        if(!wordOnly){
-          ctx.globalAlpha = Math.max(0, 1 - Math.max(0,(k-0.1))/0.5);
-          ctx.drawImage(img, silBox.x, silBox.y, silBox.w, silBox.h);
-          ctx.globalAlpha = 1;
-        }
-        for(const p of particles){
-          const px = p.sx + p.dx*ek + Math.sin(p.drift + t*0.002)*8*k;
-          const py = p.sy + p.dy*ek - 20*k; // slight upward smoke rise
-          // remember where this particle ended up, so reform starts exactly here (no jump)
-          p.lastX = px; p.lastY = py;
-          const g = Math.round(18 + 120*k);
-          const pAlpha = Math.min(1, ek*3);
-          ctx.fillStyle = `rgba(${g},${g},${g-4},${pAlpha})`;
-          ctx.fillRect(px, py, p.size, p.size);
-        }
-      } else if(t < tReformEnd){
-        // PHASE 3: particles fly back IN from EXACTLY where they dispersed, landing in the word
-        const k = easeInOut((t - tDisperseEnd)/T_REFORM);
-        // particles fade OUT over the last 25% while solid text fades IN — a clean handoff, no doubling
-        const particleAlpha = k < 0.75 ? 1 : Math.max(0, 1 - (k-0.75)/0.25);
-        const textAlpha = k < 0.75 ? 0 : (k-0.75)/0.25;
-        if(particleAlpha > 0.01){
-          for(const p of particles){
-            const fromX = (p.lastX !== undefined) ? p.lastX : p.sx + p.dx*0.85;
-            const fromY = (p.lastY !== undefined) ? p.lastY : p.sy + p.dy*0.85;
-            let px = fromX + (p.wx - fromX)*k;
-            let py = fromY + (p.wy - fromY)*k;
-            // wobble vanishes well before landing so particles sit tight on the letters
-            const wob = 12*(1-k)*(1-k)*(1-k);
-            px += Math.sin(p.drift + t*0.003)*wob;
-            py += Math.cos(p.drift + t*0.003)*wob;
-            const c = Math.round(90 + 165*k);
-            ctx.fillStyle = `rgba(${c},${c},${c},${particleAlpha})`;
-            ctx.fillRect(px, py, p.size, p.size);
-          }
-        }
-        // solid text fades in as particles fade out — same size, same position, seamless
-        if(textAlpha > 0){ drawSolidWord(textAlpha); }
-      } else {
-        // PHASE 4: crisp solid white word on black
-        drawSolidWord(1);
+    // a jagged lightning bolt from top to bottom, with an optional branch
+    function makeBolt(){
+      const x0 = W*(0.2+Math.random()*0.6), x1 = W*(0.2+Math.random()*0.6);
+      const disp = Math.min(W,H)*0.16, segs = 9;
+      const pts = [{x:x0,y:-20}];
+      for(let i=1;i<segs;i++){
+        const tt=i/segs;
+        pts.push({ x: x0+(x1-x0)*tt + (Math.random()-0.5)*disp, y: -20+(H+40)*tt + (Math.random()-0.5)*disp*0.35 });
       }
-
-      if(t >= T_TOTAL){ setTimeout(finish, 250); return; }
-      raf = requestAnimationFrame(frame);
+      pts.push({x:x1,y:H+20});
+      const branches=[];
+      if(Math.random()<0.75){
+        const bi=2+Math.floor(Math.random()*(segs-3)), bp=pts[bi];
+        let bx=bp.x, by=bp.y; const bpts=[{x:bx,y:by}];
+        const bs=3+Math.floor(Math.random()*3);
+        for(let i=0;i<bs;i++){ bx += (Math.random()-0.5)*disp*0.9; by += disp*0.45*Math.random(); bpts.push({x:bx,y:by}); }
+        branches.push(bpts);
+      }
+      return {main:pts, branches};
     }
-
-    function drawSolidWord(alpha){
+    function spawnBolts(){ bolts=[]; const n=2+Math.floor(Math.random()*2); for(let i=0;i<n;i++) bolts.push(makeBolt()); }
+    function drawBolts(alpha){
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = 'rgba(255,255,255,.95)';
+      ctx.lineWidth = 2.4; ctx.lineJoin='round'; ctx.lineCap='round';
+      ctx.shadowColor = 'rgba(150,190,255,.9)'; ctx.shadowBlur = 18;
+      const path = pts=>{ ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y); for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y); ctx.stroke(); };
+      bolts.forEach(b=>{ path(b.main); b.branches.forEach(path); });
+      ctx.restore();
+    }
+    function drawWord(alpha, glow){
+      ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = 'rgb(245,243,237)';
       ctx.font = `${wordFontSize}px "Anton", sans-serif`;
       ctx.textAlign='center'; ctx.textBaseline='middle';
+      if(glow>0){ ctx.shadowColor = `rgba(180,205,255,${glow})`; ctx.shadowBlur = 30*glow; }
       ctx.fillText('MAXEDMETHOD', W/2, H/2);
-      ctx.globalAlpha = 1;
+      ctx.restore();
     }
+    const easeOut = t => 1 - Math.pow(1-t, 3);
+    const lerp = (a,b,t) => a+(b-a)*t;
+    function setBg(rgb){ ctx.fillStyle = `rgb(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0})`; ctx.fillRect(0,0,W,H); }
 
-    function startWordOnly(){
-      wordOnly = true;
-      // fallback: no image — particles fly in from random spots to form the word
-      computeSilBox && (silBox = {x:0,y:0,w:W,h:H});
-      const off=document.createElement('canvas'); off.width=W; off.height=H;
-      const octx=off.getContext('2d');
-      octx.fillStyle='#000'; let fs=Math.min(W*0.13,150);
-      octx.font=`${fs}px "Anton", sans-serif`;
-      octx.textAlign='center'; octx.textBaseline='middle';
-      while(octx.measureText('MAXEDMETHOD').width>W*0.9 && fs>10){ fs-=2; octx.font=`${fs}px "Anton", sans-serif`; }
-      octx.fillText('MAXEDMETHOD', W/2, H/2);
-      const wd=octx.getImageData(0,0,W,H).data; const wordPts=[];
-      for(let y=0;y<H;y+=3){ for(let x=0;x<W;x+=3){ const idx=(y*W+x)*4; if(wd[idx+3]>60) wordPts.push({x,y}); } }
-      particles = wordPts.map(w=>({sx:Math.random()*W, sy:Math.random()*H, dx:0, dy:0, wx:w.x, wy:w.y, size:1.3+Math.random()*1.6, drift:Math.random()*Math.PI*2}));
-      // for fallback, treat sx/sy as the dispersed position directly
-      particles.forEach(p=>{ p.dx = p.sx - p.wx; p.dy = p.sy - p.wy; p.sx = p.wx; p.sy = p.wy; });
+    function frame(now){
+      if(!startTime) startTime = now;
+      const t = now - startTime;
+      const tHoldEnd  = T_FADEIN + T_HOLD;
+      const tFlashEnd = tHoldEnd + T_FLASH;
+      skipBtn.classList.toggle('on-dark', t >= tHoldEnd + T_FLASH*0.4);
+
+      if(t < T_FADEIN){
+        setBg(CREAM);
+        const a = easeOut(t/T_FADEIN);
+        if(imgReady){ ctx.globalAlpha=a; ctx.drawImage(img,silBox.x,silBox.y,silBox.w,silBox.h); ctx.globalAlpha=1; }
+      } else if(t < tHoldEnd){
+        setBg(CREAM);
+        if(imgReady) ctx.drawImage(img,silBox.x,silBox.y,silBox.w,silBox.h);
+      } else if(t < tFlashEnd){
+        const k = (t - tHoldEnd)/T_FLASH;
+        setBg([lerp(CREAM[0],DARK[0],k), lerp(CREAM[1],DARK[1],k), lerp(CREAM[2],DARK[2],k)]);
+        if(k < 0.42){ if(imgReady){ ctx.globalAlpha = 1 - k/0.42; ctx.drawImage(img,silBox.x,silBox.y,silBox.w,silBox.h); ctx.globalAlpha = 1; } }
+        else { drawWord(Math.min(1,(k-0.42)/0.3), 1); }
+        if(t - lastBoltAt > 65){ spawnBolts(); lastBoltAt = t; }
+        const boltAlpha = Math.max(0, 1 - Math.abs(k-0.3)/0.32);
+        if(boltAlpha > 0.02) drawBolts(boltAlpha);
+        const strobe = Math.max( Math.exp(-Math.pow((k-0.17)/0.10,2)), Math.exp(-Math.pow((k-0.44)/0.12,2))*0.75 );
+        ctx.save(); ctx.globalAlpha = Math.min(1,strobe); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H); ctx.restore();
+      } else {
+        setBg(DARK);
+        const k = Math.min(1,(t - tFlashEnd)/T_REVEAL);
+        drawWord(1, (1-k)*0.6);
+      }
+
+      if(t >= T_TOTAL){ setTimeout(finish, 180); return; }
       raf = requestAnimationFrame(frame);
     }
 
-    let safety = setTimeout(()=>{ if(!startTime && !finished) startWordOnly(); }, 3000);
-    img.onload = ()=>{
-      clearTimeout(safety);
-      try{
-        computeSilBox();
-        buildParticles();
-        if(particles.length < 50){ startWordOnly(); return; }
-        raf = requestAnimationFrame(frame);
-      }catch(e){ startWordOnly(); }
-    };
-    img.onerror = ()=>{ clearTimeout(safety); startWordOnly(); };
+    function begin(){ computeWordFont(); raf = requestAnimationFrame(frame); }
+    let safety = setTimeout(()=>{ if(!startTime && !finished){ imgReady=false; begin(); } }, 2500);
+    img.onload = ()=>{ clearTimeout(safety); try{ computeSilBox(); imgReady=true; }catch(e){ imgReady=false; } begin(); };
+    img.onerror = ()=>{ clearTimeout(safety); imgReady=false; begin(); };
     img.src = SILHOUETTE_URL;
 
-    window.addEventListener('resize', ()=>{ if(!finished) resize(); });
+    window.addEventListener('resize', ()=>{ if(!finished){ resize(); computeWordFont(); if(imgReady) computeSilBox(); } });
   })();
 
   // ---------- wishlist ----------
