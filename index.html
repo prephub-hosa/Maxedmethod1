@@ -2836,7 +2836,6 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
     let W, H, dpr = Math.min(window.devicePixelRatio||1, 2);
     let raf = null, startTime = null, finished = false;
     let imgReady = false, silBox = null, wordFontSize = 60;
-    let bolts = [], lastBoltAt = -999;
 
     // timeline (ms) — silhouette holds, lightning cracks, word is just THERE on black
     const T_FADEIN = 550;   // silhouette fades in
@@ -2878,37 +2877,6 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       wordFontSize = fs;
     }
 
-    // a jagged lightning bolt from top to bottom, with an optional branch
-    function makeBolt(){
-      const x0 = W*(0.2+Math.random()*0.6), x1 = W*(0.2+Math.random()*0.6);
-      const disp = Math.min(W,H)*0.16, segs = 9;
-      const pts = [{x:x0,y:-20}];
-      for(let i=1;i<segs;i++){
-        const tt=i/segs;
-        pts.push({ x: x0+(x1-x0)*tt + (Math.random()-0.5)*disp, y: -20+(H+40)*tt + (Math.random()-0.5)*disp*0.35 });
-      }
-      pts.push({x:x1,y:H+20});
-      const branches=[];
-      if(Math.random()<0.75){
-        const bi=2+Math.floor(Math.random()*(segs-3)), bp=pts[bi];
-        let bx=bp.x, by=bp.y; const bpts=[{x:bx,y:by}];
-        const bs=3+Math.floor(Math.random()*3);
-        for(let i=0;i<bs;i++){ bx += (Math.random()-0.5)*disp*0.9; by += disp*0.45*Math.random(); bpts.push({x:bx,y:by}); }
-        branches.push(bpts);
-      }
-      return {main:pts, branches};
-    }
-    function spawnBolts(){ bolts=[]; const n=2+Math.floor(Math.random()*2); for(let i=0;i<n;i++) bolts.push(makeBolt()); }
-    function drawBolts(alpha){
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.strokeStyle = 'rgba(255,255,255,.95)';
-      ctx.lineWidth = 2.4; ctx.lineJoin='round'; ctx.lineCap='round';
-      ctx.shadowColor = 'rgba(150,190,255,.9)'; ctx.shadowBlur = 18;
-      const path = pts=>{ ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y); for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y); ctx.stroke(); };
-      bolts.forEach(b=>{ path(b.main); b.branches.forEach(path); });
-      ctx.restore();
-    }
     function drawWord(alpha, glow){
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -2940,13 +2908,20 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       } else if(t < tFlashEnd){
         const k = (t - tHoldEnd)/T_FLASH;
         setBg([lerp(CREAM[0],DARK[0],k), lerp(CREAM[1],DARK[1],k), lerp(CREAM[2],DARK[2],k)]);
-        if(k < 0.42){ if(imgReady){ ctx.globalAlpha = 1 - k/0.42; ctx.drawImage(img,silBox.x,silBox.y,silBox.w,silBox.h); ctx.globalAlpha = 1; } }
-        else { drawWord(Math.min(1,(k-0.42)/0.3), 1); }
-        if(t - lastBoltAt > 65){ spawnBolts(); lastBoltAt = t; }
-        const boltAlpha = Math.max(0, 1 - Math.abs(k-0.3)/0.32);
-        if(boltAlpha > 0.02) drawBolts(boltAlpha);
-        const strobe = Math.max( Math.exp(-Math.pow((k-0.17)/0.10,2)), Math.exp(-Math.pow((k-0.44)/0.12,2))*0.75 );
-        ctx.save(); ctx.globalAlpha = Math.min(1,strobe); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H); ctx.restore();
+        // content swaps under the flash: silhouette out, word in — with a small settle-in motion
+        if(k < 0.5){ if(imgReady){ ctx.globalAlpha = 1 - k/0.5; ctx.drawImage(img,silBox.x,silBox.y,silBox.w,silBox.h); ctx.globalAlpha = 1; } }
+        else {
+          const wk = (k-0.5)/0.5;                 // 0..1 as the word comes in
+          ctx.save();
+          ctx.translate(W/2, H/2);
+          ctx.scale(lerp(1.06,1,easeOut(wk)), lerp(1.06,1,easeOut(wk))); // subtle punch-in
+          ctx.translate(-W/2, -H/2);
+          drawWord(Math.min(1, wk*1.6), 0.5*(1-wk));
+          ctx.restore();
+        }
+        // ONE soft, non-blinding white flash — peaks gently at the swap, no strobe
+        const flash = Math.exp(-Math.pow((k-0.5)/0.24,2)) * 0.72;
+        if(flash > 0.01){ ctx.save(); ctx.globalAlpha = flash; ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H); ctx.restore(); }
       } else {
         setBg(DARK);
         const k = Math.min(1,(t - tFlashEnd)/T_REVEAL);
