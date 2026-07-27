@@ -1006,16 +1006,31 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
         .filter(x=> x.f.vault)
         .filter(x=>styleMatches(x.f));
     }
-    // Normal tabs: this gender's fits. Vault fits are excluded EXCEPT ones flagged to
-    // show a locked preview ("teasePublic") — and only for visitors who haven't unlocked,
-    // so supporters/owner don't see duplicates of what's already in their vault.
-    return fits.map((f,gi)=>({f,gi}))
-      .filter(x=>{
-        if(catOf(x.f) !== activeCat) return false;
-        if(!x.f.vault) return true;
-        return x.f.teasePublic && !vaultUnlocked && !isAdmin;
-      })
+    // Normal tabs: this gender's fits, in order.
+    const all = fits.map((f,gi)=>({f,gi}))
+      .filter(x=> catOf(x.f) === activeCat)
       .filter(x=>styleMatches(x.f));
+    const reals = all.filter(x=> !x.f.vault);
+    // Locked vault teasers: shown to visitors who haven't unlocked, AND always to the owner
+    // (so they're visible/editable in Owner mode). Supporters see them only in the vault.
+    const teasers = all.filter(x=> x.f.vault && x.f.teasePublic && (isAdmin || !vaultUnlocked));
+    if(teasers.length === 0) return reals;
+    // Spread the teasers EVENLY through the real fits (never clustered, never leading at 0).
+    const R = reals.length, T = teasers.length, total = R + T;
+    const slotFor = {};
+    for(let i=0;i<T;i++){
+      let pos = Math.min(total-1, Math.max(1, Math.floor((i+1)*total/(T+1))));
+      while(slotFor[pos] !== undefined) pos++;          // nudge past collisions
+      if(pos > total-1){ pos = 0; while(slotFor[pos] !== undefined) pos++; }
+      slotFor[pos] = teasers[i];
+    }
+    const result = []; let ri = 0;
+    for(let pos=0; pos<total; pos++){
+      if(slotFor[pos] !== undefined) result.push(slotFor[pos]);
+      else if(ri < reals.length) result.push(reals[ri++]);
+    }
+    while(ri < reals.length) result.push(reals[ri++]);
+    return result;
   }
 
   const gridArea = document.getElementById('gridArea');
@@ -1289,13 +1304,15 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       creatorsPickId = filtered[(weekPeriod * 3 + 1) % filtered.length].f.id;
     }
 
+    let fitNum = 0; // FIT label counter — only real fits get a number, teasers don't consume one
     filtered.forEach((entry, i) => {
       const fit = entry.f;
+      const isTeaser = fit.vault && activeCat !== 'vault';
       const card = document.createElement('div');
-      card.className = 'fit-card';
+      card.className = 'fit-card' + (isTeaser ? ' fit-card-locked' : '');
       card.setAttribute('data-index', i); // filtered index
       card.style.animationDelay = (i * 90) + 'ms'; // sequential fade, no cap so order stays correct
-      if(isAdmin) card.setAttribute('draggable', 'true');
+      if(isAdmin && !isTeaser) card.setAttribute('draggable', 'true');
       const itemCount = (fit.items||[]).length;
       const isNew = fit.created && fit.created >= newCutoff;
       const saved = wishlist[fit.id];
@@ -1317,10 +1334,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
         if(isNew)                     badges.push('<span class="tag tag-new">New</span>');
       }
       const badgeStack = badges.length ? `<div class="badge-stack">${badges.join('')}</div>` : '';
-      // A vault fit appearing in a non-vault tab is a locked teaser (getFiltered only lets
-      // these through for locked visitors). Blur it, lock it, and route taps to the gate.
-      const isTeaser = fit.vault && activeCat !== 'vault';
-      if(isTeaser) card.classList.add('fit-card-locked');
+      // Locked vault teaser shown in a public tab.
       if(isTeaser){
         card.innerHTML = `
           <img class="fit-cover fit-cover-blurred" src="${escapeAttr(fit.cover)}" alt="Vault fit — supporters only" onerror="this.style.background='#201F1D'">
@@ -1328,19 +1342,25 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
           <div class="vault-lock-overlay">
             <div class="vlo-star">✦</div>
             <div class="vlo-label">Vault</div>
-            <div class="vlo-sub">Tap to unlock</div>
+            <div class="vlo-sub">${isAdmin ? 'Public teaser (owner view)' : 'Tap to unlock'}</div>
           </div>
-          <div class="fit-card-footer"><span class="fit-tag">✦ VAULT</span></div>
+          <div class="fit-card-footer"><span class="fit-tag">✦ VAULT${isAdmin ? ' · TEASER' : ''}</span></div>
+          ${isAdmin ? `
+          <div class="admin-controls">
+            <button class="admin-icon-btn" data-edit="${fit.id}" title="Edit">✎</button>
+            <button class="admin-icon-btn" data-delete="${fit.id}" title="Delete">🗑</button>
+          </div>` : ''}
         `;
-        card.addEventListener('click', ()=> openVaultGate());
+        if(!isAdmin) card.addEventListener('click', ()=> openVaultGate());
         grid.appendChild(card);
         return;
       }
+      fitNum++;
       card.innerHTML = `
         <img class="fit-cover" src="${escapeAttr(fit.cover)}" alt="${escapeAttr(fit.title)}" onerror="this.style.background='#201F1D'">
         ${badgeStack}
         <div class="fit-card-footer">
-          <span class="fit-tag">FIT ${String(i+1).padStart(2,'0')}</span>
+          <span class="fit-tag">FIT ${String(fitNum).padStart(2,'0')}</span>
           <div class="fit-shop-cue">Shop ${itemCount} ${itemCount === 1 ? 'piece' : 'pieces'} →</div>
         </div>
         ${!isAdmin ? `
