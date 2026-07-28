@@ -248,6 +248,7 @@
   .vault-lock-icon{font-size:30px;color:#C9A15A;margin-bottom:8px;}
   .vault-modal-box .modal-title{color:#E3B871;margin-bottom:10px;}
   .vault-modal-sub{font-family:var(--font-body);font-size:13.5px;line-height:1.55;color:var(--text-soft);margin:0 0 20px;}
+  .vault-modal-sub .vault-price{color:#E3B871;font-weight:700;}
   .vault-support-btn{display:inline-block;background:linear-gradient(180deg,#E3B871,#C9A15A) !important;color:#0C0C0B !important;border:none !important;font-weight:700;animation:pt-glow-vault 2.4s ease-in-out infinite;}
   @keyframes pt-glow-vault{0%,100%{box-shadow:0 0 10px rgba(201,161,90,.3);}50%{box-shadow:0 0 22px rgba(201,161,90,.6);}}
   @media (prefers-reduced-motion:reduce){ .vault-support-btn{animation:none;} }
@@ -780,8 +781,8 @@
   <div class="modal-box vault-modal-box">
     <div class="vault-lock-icon">✦</div>
     <h3 class="modal-title">For Premium Supporters Only</h3>
-    <p class="vault-modal-sub">The Vault has early-access &amp; premium fits for supporters. Pay how much you want, and you'll get the code.</p>
-    <a class="btn btn-primary vault-support-btn" id="vaultSupportBtn" href="#" target="_blank" rel="noopener">Become a supporter →</a>
+    <p class="vault-modal-sub">The Vault has early-access &amp; premium fits for supporters. Unlock it for as little as <b class="vault-price">$1.99</b> — pay what you want, and you'll get the code.</p>
+    <a class="btn btn-primary vault-support-btn" id="vaultSupportBtn" href="#" target="_blank" rel="noopener">Unlock the Vault — from $1.99 →</a>
     <button type="button" class="vault-reviews-link" id="vaultReviewsLink">See what supporters are saying →</button>
     <div class="vault-code-row">
       <input type="text" id="vaultCodeInput" placeholder="Already have a code? Enter it" autocomplete="off">
