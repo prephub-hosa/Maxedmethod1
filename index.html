@@ -251,6 +251,40 @@
   .vault-modal-sub .vault-price{color:#E3B871;font-weight:700;}
   .vault-count{display:inline-flex;align-items:center;gap:7px;margin:0 auto 18px;padding:7px 14px;border:1px solid rgba(201,161,90,.35);background:rgba(201,161,90,.08);border-radius:100px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:#E3B871;}
   .vault-count b{color:#F5F3ED;font-weight:700;}
+  /* requests & questions board */
+  .req-modal-box{position:relative;text-align:left;max-width:460px;}
+  .req-modal-box .vault-lock-icon{text-align:center;}
+  .req-modal-box .modal-title{text-align:center;}
+  .req-sub{font-family:var(--font-body);font-size:13px;line-height:1.55;color:var(--text-soft);margin:0 0 16px;text-align:center;}
+  .req-textarea,.req-name{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;margin-bottom:10px;resize:vertical;}
+  .req-textarea::placeholder,.req-name::placeholder{color:var(--text-dim);}
+  .req-thread-head{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:22px 0 10px;}
+  .req-thread{display:flex;flex-direction:column;gap:12px;max-height:34vh;overflow-y:auto;}
+  .req-msg{border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--bg-2);}
+  .req-msg .rm-you{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;}
+  .req-msg .rm-text{font-size:13.5px;line-height:1.5;color:var(--text);}
+  .req-reply{margin-top:9px;padding-top:9px;border-top:1px solid var(--line-soft);}
+  .req-reply .rm-you{color:#E3B871;}
+  .req-reply .rm-text{color:var(--text-soft);}
+  .req-await{margin-top:7px;font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);}
+  /* owner inbox */
+  .req-inbox-box{position:relative;text-align:left;max-width:560px;width:100%;}
+  .req-inbox-filters{display:flex;gap:8px;margin:4px 0 16px;}
+  .req-filter{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:100px;border:1px solid var(--line);background:var(--bg-2);color:var(--text-soft);cursor:pointer;}
+  .req-filter.active{background:var(--accent);color:#0C0C0B;border-color:var(--accent);}
+  .req-inbox-list{display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow-y:auto;}
+  .req-card{border:1px solid var(--line);border-radius:10px;padding:13px 14px;background:var(--bg-2);}
+  .req-card.done{opacity:.55;}
+  .req-card .rc-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:7px;}
+  .req-card .rc-text{font-size:14px;line-height:1.5;color:var(--text);margin-bottom:10px;}
+  .req-card .rc-existing{font-size:13px;line-height:1.5;color:#E3B871;background:rgba(201,161,90,.07);border-left:2px solid rgba(201,161,90,.5);padding:7px 10px;border-radius:4px;margin-bottom:10px;}
+  .req-card textarea{width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--line);background:var(--surface);font-family:var(--font-body);font-size:13px;color:var(--text);border-radius:8px;resize:vertical;margin-bottom:8px;}
+  .req-card .rc-actions{display:flex;gap:8px;}
+  .req-card .rc-actions .btn{font-size:12px;padding:8px 14px;}
+  .req-empty{font-size:13px;color:var(--text-dim);line-height:1.6;text-align:center;padding:20px;}
+  .fab-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:100px;background:#C9A15A;color:#0C0C0B;font-family:var(--font-mono);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .vault-req-bar{display:block;width:100%;box-sizing:border-box;margin-bottom:20px;padding:13px 18px;border:1px solid rgba(201,161,90,.4);background:rgba(201,161,90,.08);border-radius:12px;font-family:var(--font-body);font-size:13.5px;font-weight:500;color:#E3B871;cursor:pointer;text-align:left;transition:background .15s,border-color .15s;}
+  .vault-req-bar:hover{background:rgba(201,161,90,.15);border-color:rgba(201,161,90,.6);}
   .vault-support-btn{display:inline-block;background:linear-gradient(180deg,#E3B871,#C9A15A) !important;color:#0C0C0B !important;border:none !important;font-weight:700;animation:pt-glow-vault 2.4s ease-in-out infinite;}
   @keyframes pt-glow-vault{0%,100%{box-shadow:0 0 10px rgba(201,161,90,.3);}50%{box-shadow:0 0 22px rgba(201,161,90,.6);}}
   @media (prefers-reduced-motion:reduce){ .vault-support-btn{animation:none;} }
@@ -746,6 +780,7 @@
 <button class="fab" id="analyticsFab" style="display:none;right:22px;bottom:126px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Analytics</button>
 <button class="fab" id="priceFab" style="display:none;right:22px;bottom:178px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Prices: On</button>
 <button class="fab" id="vaultFab" style="display:none;right:22px;bottom:230px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Vault Setup</button>
+<button class="fab" id="requestsFab" style="display:none;right:22px;bottom:282px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Requests</button>
 <div class="corner-mark">MAXEDMETHOD</div>
 
 <!-- Detail overlay -->
@@ -783,7 +818,7 @@
   <div class="modal-box vault-modal-box">
     <div class="vault-lock-icon">✦</div>
     <h3 class="modal-title">For Premium Supporters Only</h3>
-    <p class="vault-modal-sub">The Vault has early-access &amp; premium fits for supporters. Unlock it for as little as <b class="vault-price">$1.99</b> — pay what you want, and you'll get the code.</p>
+    <p class="vault-modal-sub">The Vault has early-access &amp; premium fits for supporters — plus a direct line to request fits &amp; ask me anything. Unlock it for as little as <b class="vault-price">$1.99</b> — pay what you want, and you'll get the code.</p>
     <div class="vault-count" id="vaultCount" style="display:none;"></div>
     <a class="btn btn-primary vault-support-btn" id="vaultSupportBtn" href="#" target="_blank" rel="noopener">Unlock the Vault — from $1.99 →</a>
     <button type="button" class="vault-reviews-link" id="vaultReviewsLink">See what supporters are saying →</button>
@@ -793,6 +828,35 @@
     </div>
     <div class="error-text" id="vaultCodeError" style="display:none;">That code isn't valid.</div>
     <button class="vault-modal-close" id="vaultModalClose" aria-label="Close">✕</button>
+  </div>
+</div>
+
+<!-- Supporter: submit a request / question + see your own thread -->
+<div class="modal-backdrop" id="reqModal">
+  <div class="modal-box req-modal-box">
+    <button class="vault-modal-close" id="reqModalClose" aria-label="Close">✕</button>
+    <div class="vault-lock-icon">✦</div>
+    <h3 class="modal-title">Requests &amp; Questions</h3>
+    <p class="req-sub">Supporters get a direct line — request fit types, ask where something's from, or ask anything. I read every one and reply here.</p>
+    <textarea id="reqText" class="req-textarea" rows="3" maxlength="600" placeholder="Type your request or question…"></textarea>
+    <input type="text" id="reqName" class="req-name" maxlength="40" placeholder="Name (optional)">
+    <div class="error-text" id="reqError" style="display:none;"></div>
+    <button class="btn btn-primary" id="reqSubmit" style="width:100%;">Send</button>
+    <div class="req-thread-head" id="reqThreadHead" style="display:none;">Your messages</div>
+    <div class="req-thread" id="reqThread"></div>
+  </div>
+</div>
+
+<!-- Owner: requests inbox -->
+<div class="modal-backdrop" id="reqInboxModal">
+  <div class="modal-box req-inbox-box">
+    <button class="vault-modal-close" id="reqInboxClose" aria-label="Close">✕</button>
+    <h3 class="modal-title">Supporter Requests</h3>
+    <div class="req-inbox-filters">
+      <button class="req-filter active" data-reqfilter="open">Needs reply</button>
+      <button class="req-filter" data-reqfilter="all">All</button>
+    </div>
+    <div class="req-inbox-list" id="reqInboxList"><div class="hint">Loading…</div></div>
   </div>
 </div>
 
@@ -939,6 +1003,10 @@ const ANALYTICS_DOC = doc(db, "maxedmethod", "analytics");
 const REVIEWS_DOC = doc(db, "maxedmethod", "reviews");
 const SUBSCRIBERS_DOC = doc(db, "maxedmethod", "subscribers");
 const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
+const REQUESTS_DOC = doc(db, "maxedmethod", "requests");
+// stable per-browser id so a supporter sees their own thread + replies without any login
+let myUid = '';
+try{ myUid = localStorage.getItem('mm-uid') || ''; if(!myUid){ myUid = 'u_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); localStorage.setItem('mm-uid', myUid); } }catch(e){ myUid = 'u_' + Math.random().toString(36).slice(2,10); }
 
 (function(){
   const ADMIN_PASS = "\\\\\\"; // change this line to set your own passcode — this only gates the UI, see note in chat
@@ -1256,8 +1324,14 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       }
       return;
     }
-    gridArea.innerHTML = '<div class="fits-grid" id="fitsGrid"></div>';
+    // Supporters (unlocked, non-owner) get a "Requests & Questions" bar at the top of the Vault
+    const vaultReqBar = (activeCat === 'vault' && vaultUnlocked && !isAdmin)
+      ? '<button class="vault-req-bar" id="vaultReqBar">✦ Request a fit or ask a question — supporters get a direct line →</button>'
+      : '';
+    gridArea.innerHTML = vaultReqBar + '<div class="fits-grid" id="fitsGrid"></div>';
     const grid = document.getElementById('fitsGrid');
+    const vrb = document.getElementById('vaultReqBar');
+    if(vrb) vrb.addEventListener('click', openRequests);
 
     // ---- badges: every one is a fact we can actually verify. No fake urgency, no
     // "selling fast" (we can't see Amazon's stock), no emoji. Sentence case, quiet styling.
@@ -1609,6 +1683,7 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       analyticsFab.style.display = 'none';
       document.getElementById('priceFab').style.display = 'none';
       document.getElementById('vaultFab').style.display = 'none';
+      document.getElementById('requestsFab').style.display = 'none';
       render();
     } else {
       document.getElementById('passInput').value = '';
@@ -1632,6 +1707,8 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       analyticsFab.style.display = 'block';
       document.getElementById('priceFab').style.display = 'block';
       document.getElementById('vaultFab').style.display = 'block';
+      document.getElementById('requestsFab').style.display = 'block';
+      if(typeof updateReqBadge === 'function') updateReqBadge();
       passModal.classList.remove('open');
       render();
       showAddFitShortcut();
@@ -3089,6 +3166,123 @@ const SETTINGS_DOC = doc(db, "maxedmethod", "settings");
       catch(e){ alert('Could not save vault settings — try again.'); }
     });
   })();
+
+  // ---------- requests & questions board (async, supporter-only) ----------
+  const reqModal = document.getElementById('reqModal');
+  const reqInboxModal = document.getElementById('reqInboxModal');
+  let reqCache = null;        // cached items array
+  let reqInboxFilter = 'open';
+
+  async function loadRequests(force){
+    if(reqCache && !force) return reqCache;
+    try{ const snap = await getDoc(REQUESTS_DOC); reqCache = (snap.exists() && snap.data().items) ? snap.data().items : []; }
+    catch(e){ reqCache = []; }
+    return reqCache;
+  }
+
+  // ----- supporter side -----
+  function openRequests(){
+    reqModal.classList.add('open');
+    document.getElementById('reqError').style.display = 'none';
+    renderMyThread();
+  }
+  async function renderMyThread(){
+    const items = await loadRequests(true);
+    const mine = items.filter(r=> r.uid === myUid).sort((a,b)=> (b.ts||0)-(a.ts||0));
+    const head = document.getElementById('reqThreadHead');
+    const thread = document.getElementById('reqThread');
+    if(!mine.length){ head.style.display='none'; thread.innerHTML=''; return; }
+    head.style.display='';
+    thread.innerHTML = mine.map(r=>`
+      <div class="req-msg">
+        <div class="rm-you">You${r.name?(' · '+escapeHtml(r.name)):''}</div>
+        <div class="rm-text">${escapeHtml(r.text)}</div>
+        ${r.reply ? `<div class="req-reply"><div class="rm-you">MaxedMethod</div><div class="rm-text">${escapeHtml(r.reply)}</div></div>`
+                  : `<div class="req-await">Awaiting reply…</div>`}
+      </div>`).join('');
+  }
+  document.getElementById('reqSubmit').addEventListener('click', async ()=>{
+    const textEl = document.getElementById('reqText');
+    const nameEl = document.getElementById('reqName');
+    const err = document.getElementById('reqError');
+    const btn = document.getElementById('reqSubmit');
+    const text = textEl.value.trim();
+    if(!text){ err.textContent='Type something first.'; err.style.display='block'; return; }
+    err.style.display='none';
+    const item = { id: uid(), uid: myUid, name: nameEl.value.trim().slice(0,40), text: text.slice(0,600), reply:'', done:false, ts: Date.now() };
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try{
+      await setDoc(REQUESTS_DOC, { items: arrayUnion(item) }, { merge:true });
+      if(reqCache) reqCache.push(item);
+      textEl.value=''; nameEl.value='';
+      btn.textContent = 'Sent ✓';
+      renderMyThread();
+      setTimeout(()=>{ btn.disabled=false; btn.textContent='Send'; }, 1400);
+    }catch(e){ err.textContent='Could not send — try again.'; err.style.display='block'; btn.disabled=false; btn.textContent='Send'; }
+  });
+  document.getElementById('reqModalClose').addEventListener('click', ()=> reqModal.classList.remove('open'));
+  reqModal.addEventListener('click', e=>{ if(e.target===reqModal) reqModal.classList.remove('open'); });
+
+  // ----- owner inbox -----
+  async function openReqInbox(){
+    reqInboxModal.classList.add('open');
+    await renderReqInbox();
+  }
+  async function renderReqInbox(){
+    const list = document.getElementById('reqInboxList');
+    list.innerHTML = '<div class="hint">Loading…</div>';
+    const items = (await loadRequests(true)).slice().sort((a,b)=> (b.ts||0)-(a.ts||0));
+    const shown = reqInboxFilter==='open' ? items.filter(r=> !r.reply && !r.done) : items;
+    if(!shown.length){ list.innerHTML = `<div class="req-empty">${reqInboxFilter==='open'?'No requests need a reply. 🎉':'No requests yet.'}</div>`; return; }
+    list.innerHTML = shown.map(r=>{
+      const when = new Date(r.ts||0).toLocaleDateString();
+      return `<div class="req-card ${r.done?'done':''}" data-req="${r.id}">
+        <div class="rc-meta"><span>${r.name?escapeHtml(r.name):'Anonymous'} · ${when}</span><span>${r.done?'DONE':(r.reply?'REPLIED':'NEW')}</span></div>
+        <div class="rc-text">${escapeHtml(r.text)}</div>
+        ${r.reply?`<div class="rc-existing">Your reply: ${escapeHtml(r.reply)}</div>`:''}
+        <textarea data-reqreply="${r.id}" rows="2" placeholder="${r.reply?'Edit your reply…':'Write a reply…'}">${r.reply?escapeHtml(r.reply):''}</textarea>
+        <div class="rc-actions">
+          <button class="btn btn-primary" data-reqsend="${r.id}">${r.reply?'Update reply':'Send reply'}</button>
+          <button class="btn btn-ghost" data-reqdone="${r.id}">${r.done?'Reopen':'Mark done'}</button>
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-reqsend]').forEach(b=> b.addEventListener('click', ()=> saveReply(b.getAttribute('data-reqsend'))));
+    list.querySelectorAll('[data-reqdone]').forEach(b=> b.addEventListener('click', ()=> toggleDone(b.getAttribute('data-reqdone'))));
+  }
+  async function mutateRequest(id, fn){
+    const items = (await loadRequests(true)).map(r=> r.id===id ? fn({...r}) : r);
+    reqCache = items;
+    await setDoc(REQUESTS_DOC, { items }, { merge:true });
+  }
+  async function saveReply(id){
+    const ta = document.querySelector(`[data-reqreply="${id}"]`);
+    const val = (ta?ta.value:'').trim();
+    if(!val) return;
+    await mutateRequest(id, r=>{ r.reply=val.slice(0,800); r.replyTs=Date.now(); return r; });
+    renderReqInbox(); updateReqBadge();
+  }
+  async function toggleDone(id){
+    await mutateRequest(id, r=>{ r.done=!r.done; return r; });
+    renderReqInbox(); updateReqBadge();
+  }
+  document.querySelectorAll('.req-filter').forEach(b=> b.addEventListener('click', ()=>{
+    document.querySelectorAll('.req-filter').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); reqInboxFilter = b.getAttribute('data-reqfilter'); renderReqInbox();
+  }));
+  document.getElementById('reqInboxClose').addEventListener('click', ()=> reqInboxModal.classList.remove('open'));
+  reqInboxModal.addEventListener('click', e=>{ if(e.target===reqInboxModal) reqInboxModal.classList.remove('open'); });
+
+  const requestsFab = document.getElementById('requestsFab');
+  if(requestsFab) requestsFab.addEventListener('click', openReqInbox);
+  async function updateReqBadge(){
+    if(!requestsFab || !isAdmin) return;
+    const items = await loadRequests(true);
+    const open = items.filter(r=> !r.reply && !r.done).length;
+    let badge = requestsFab.querySelector('.fab-badge');
+    if(open>0){ if(!badge){ badge=document.createElement('span'); badge.className='fab-badge'; requestsFab.style.position='relative'; requestsFab.appendChild(badge); } badge.textContent=open; }
+    else if(badge){ badge.remove(); }
+  }
 
   // ---------- intro / boot ----------
   trackVisit();
