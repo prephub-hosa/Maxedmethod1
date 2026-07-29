@@ -820,7 +820,6 @@
     <div class="vault-lock-icon">✦</div>
     <h3 class="modal-title">For Premium Supporters Only</h3>
     <p class="vault-modal-sub">The Vault has <b>early-access</b> &amp; <b>premium fits</b> for supporters — plus a <b>direct line</b> to request fits &amp; ask me anything. Unlock it for as little as <b class="vault-price">$1.99</b> — pay what you want, and you'll get the code.</p>
-    <div class="vault-count" id="vaultCount" style="display:none;"></div>
     <a class="btn btn-primary vault-support-btn" id="vaultSupportBtn" href="#" target="_blank" rel="noopener">Unlock the Vault — from $1.99 →</a>
     <button type="button" class="vault-reviews-link" id="vaultReviewsLink">See what supporters are saying →</button>
     <div class="vault-code-row">
@@ -3114,13 +3113,6 @@ try{ myUid = localStorage.getItem('mm-uid') || ''; if(!myUid){ myUid = 'u_' + Da
     document.getElementById('vaultCodeError').style.display = 'none';
     document.getElementById('vaultCodeInput').value = '';
     applyVaultSupportLink();
-    // live count of real fits inside the vault — updates itself as you add them
-    const n = fits.filter(f=> f.vault).length;
-    const countEl = document.getElementById('vaultCount');
-    if(countEl){
-      if(n > 0){ countEl.innerHTML = `✦ <b>${n}</b> exclusive fit${n===1?'':'s'} inside`; countEl.style.display = ''; }
-      else { countEl.style.display = 'none'; }
-    }
     vaultModal.classList.add('open');
     // someone tapped the vault (tab or hero bubble) and hit the gate — this is the
     // top-of-funnel interest metric. trackEvent already excludes owner devices.
