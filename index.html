@@ -252,6 +252,33 @@
   .vault-modal-sub b{color:var(--text);font-weight:700;}
   .vault-count{display:inline-flex;align-items:center;gap:7px;margin:0 auto 18px;padding:7px 14px;border:1px solid rgba(201,161,90,.35);background:rgba(201,161,90,.08);border-radius:100px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:#E3B871;}
   .vault-count b{color:#F5F3ED;font-weight:700;}
+  /* ===== Hall of Supporters ===== */
+  .supporters{padding:52px 22px 40px;border-top:1px solid var(--line);background:radial-gradient(120% 100% at 50% 0%, rgba(201,161,90,.06), transparent 60%);}
+  .supporters-inner{max-width:900px;margin:0 auto;text-align:center;}
+  .sup-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#C9A15A;margin-bottom:12px;}
+  .sup-title{font-family:var(--font-body);font-weight:700;font-size:clamp(20px,3.4vw,26px);letter-spacing:-.02em;color:var(--text);margin:0 0 28px;}
+  .sup-list{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;}
+  .sup-card{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:120px;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:var(--bg-2);}
+  .sup-card .sup-rank{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--text-dim);}
+  .sup-card .sup-name{font-family:var(--font-body);font-weight:600;font-size:15px;color:var(--text);}
+  .sup-card .sup-amt{font-family:var(--font-mono);font-size:12px;color:var(--text-soft);letter-spacing:.04em;}
+  /* #1 gets the gold treatment */
+  .sup-card.sup-top{border-color:rgba(201,161,90,.5);background:linear-gradient(180deg, rgba(201,161,90,.12), var(--bg-2));box-shadow:0 0 26px rgba(201,161,90,.14);transform:scale(1.04);}
+  .sup-card.sup-top .sup-rank{color:#C9A15A;}
+  .sup-card.sup-top .sup-name{color:#F5F3ED;font-size:16px;}
+  .sup-card.sup-top .sup-amt{color:#E3B871;}
+  .sup-card.sup-top .sup-crown{font-size:16px;line-height:1;margin-bottom:2px;}
+  .sup-note{font-family:var(--font-body);font-size:12.5px;color:var(--text-dim);margin:26px 0 0;}
+  @media (max-width:560px){ .supporters{padding:40px 18px 32px;} .sup-card{min-width:0;flex:1 1 40%;padding:14px 12px;} }
+  /* owner editor */
+  .sup-edit-box{position:relative;text-align:left;max-width:460px;width:100%;}
+  .sup-edit-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+  .sup-edit-row input{padding:10px 11px;border:1px solid var(--line);background:var(--bg-2);font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:8px;}
+  .sup-edit-row .se-name{flex:1;}
+  .sup-edit-row .se-amt{width:90px;}
+  .sup-edit-row .se-del{flex:0 0 auto;background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;}
+  .sup-edit-row .se-del:hover{color:#c0554e;}
+  .sup-edit-list{max-height:44vh;overflow-y:auto;margin-bottom:14px;}
   /* requests & questions board */
   .req-modal-box{position:relative;text-align:left;max-width:460px;}
   .req-modal-box .vault-lock-icon{text-align:center;}
@@ -730,6 +757,16 @@
   </div>
   <div id="gridArea"><div class="loading">Loading fits…</div></div>
 
+  <!-- Hall of Supporters — top vault tippers (owner-managed) -->
+  <section class="supporters" id="topSupporters" style="display:none;">
+    <div class="supporters-inner">
+      <div class="sup-eyebrow">✦ Hall of Supporters</div>
+      <h2 class="sup-title">The ones keeping MaxedMethod going</h2>
+      <div class="sup-list" id="supList"></div>
+      <p class="sup-note">Tip a little extra when you grab Vault access and your name lands here 🤍</p>
+    </div>
+  </section>
+
   <!-- Community footer: reviews + email signup -->
   <div class="community">
     <div class="community-inner">
@@ -782,6 +819,7 @@
 <button class="fab" id="priceFab" style="display:none;right:22px;bottom:178px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Prices: On</button>
 <button class="fab" id="vaultFab" style="display:none;right:22px;bottom:230px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Vault Setup</button>
 <button class="fab" id="requestsFab" style="display:none;right:22px;bottom:282px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Requests</button>
+<button class="fab" id="supFab" style="display:none;right:22px;bottom:334px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);">Supporters</button>
 <div class="corner-mark">MAXEDMETHOD</div>
 
 <!-- Detail overlay -->
@@ -858,6 +896,22 @@
       <button class="req-filter" data-reqfilter="all">All</button>
     </div>
     <div class="req-inbox-list" id="reqInboxList"><div class="hint">Loading…</div></div>
+  </div>
+</div>
+
+<!-- Owner: Hall of Supporters editor -->
+<div class="modal-backdrop" id="supEditModal">
+  <div class="modal-box sup-edit-box">
+    <button class="vault-modal-close" id="supEditClose" aria-label="Close">✕</button>
+    <h3 class="modal-title">Hall of Supporters</h3>
+    <p class="req-sub" style="text-align:left;">Add your top tippers by name &amp; amount. Highest amount is featured as #1. Leave empty to hide the whole section.</p>
+    <div class="sup-edit-list" id="supEditList"></div>
+    <div class="sup-edit-row">
+      <input type="text" class="se-name" id="supNewName" maxlength="30" placeholder="Name">
+      <input type="text" class="se-amt" id="supNewAmt" maxlength="10" placeholder="$20">
+      <button class="btn btn-ghost" id="supAddBtn">Add</button>
+    </div>
+    <button class="btn btn-primary" id="supSaveBtn" style="width:100%;margin-top:12px;">Save &amp; publish</button>
   </div>
 </div>
 
@@ -1024,6 +1078,7 @@ try{ myUid = localStorage.getItem('mm-uid') || ''; if(!myUid){ myUid = 'u_' + Da
   try{ vaultUnlocked = localStorage.getItem('mm-vault') === '1'; }catch(e){}
   let vaultCode = '';      // shared supporter code (owner-set, stored in settings)
   let supporterUrl = '';   // Gumroad "become a supporter" link (owner-set)
+  let topSupporters = [];  // [{name, amount}] owner-managed Hall of Supporters
   let editingId = null; // id of fit currently being edited, null = new
   let itemDraft = [];
   let activeCat = 'men'; // which tab is showing
@@ -1685,6 +1740,7 @@ try{ myUid = localStorage.getItem('mm-uid') || ''; if(!myUid){ myUid = 'u_' + Da
       document.getElementById('priceFab').style.display = 'none';
       document.getElementById('vaultFab').style.display = 'none';
       document.getElementById('requestsFab').style.display = 'none';
+      document.getElementById('supFab').style.display = 'none';
       render();
     } else {
       document.getElementById('passInput').value = '';
@@ -1709,6 +1765,7 @@ try{ myUid = localStorage.getItem('mm-uid') || ''; if(!myUid){ myUid = 'u_' + Da
       document.getElementById('priceFab').style.display = 'block';
       document.getElementById('vaultFab').style.display = 'block';
       document.getElementById('requestsFab').style.display = 'block';
+      document.getElementById('supFab').style.display = 'block';
       if(typeof updateReqBadge === 'function') updateReqBadge();
       passModal.classList.remove('open');
       render();
@@ -3099,9 +3156,76 @@ try{ myUid = localStorage.getItem('mm-uid') || ''; if(!myUid){ myUid = 'u_' + Da
       pricesHidden = !!d.hidePrices;
       vaultCode = (d.vaultCode || '').trim();
       supporterUrl = d.supporterUrl || '';
+      topSupporters = Array.isArray(d.topSupporters) ? d.topSupporters : [];
       applyVaultSupportLink();
+      renderSupporters();
     }catch(e){ pricesHidden = false; }
     applyPriceVisibility();
+  })();
+
+  // ---------- Hall of Supporters ----------
+  function amtNum(a){ const n = parseFloat(String(a).replace(/[^0-9.]/g,'')); return isNaN(n)?0:n; }
+  function renderSupporters(){
+    const sec = document.getElementById('topSupporters');
+    const list = document.getElementById('supList');
+    if(!sec || !list) return;
+    const sorted = topSupporters.slice().filter(s=> s && s.name).sort((a,b)=> amtNum(b.amount)-amtNum(a.amount));
+    if(!sorted.length){ sec.style.display = 'none'; return; }
+    sec.style.display = '';
+    list.innerHTML = sorted.map((s,i)=>`
+      <div class="sup-card ${i===0?'sup-top':''}">
+        ${i===0?'<div class="sup-crown">👑</div>':''}
+        <div class="sup-rank">#${i+1}</div>
+        <div class="sup-name">${escapeHtml(s.name)}</div>
+        ${s.amount?`<div class="sup-amt">${escapeHtml(String(s.amount))}</div>`:''}
+      </div>`).join('');
+  }
+  // owner editor
+  const supEditModal = document.getElementById('supEditModal');
+  function renderSupEditList(){
+    const el = document.getElementById('supEditList');
+    el.innerHTML = topSupporters.map((s,i)=>`
+      <div class="sup-edit-row" data-supidx="${i}">
+        <input class="se-name" data-supname="${i}" maxlength="30" value="${escapeAttr(s.name||'')}" placeholder="Name">
+        <input class="se-amt" data-supamt="${i}" maxlength="10" value="${escapeAttr(String(s.amount||''))}" placeholder="$20">
+        <button class="se-del" data-supdel="${i}" title="Remove">✕</button>
+      </div>`).join('') || '<p class="req-sub" style="text-align:left;">No supporters yet — add one below.</p>';
+    el.querySelectorAll('[data-supdel]').forEach(b=> b.addEventListener('click', ()=>{
+      collectSupEdits(); topSupporters.splice(+b.getAttribute('data-supdel'),1); renderSupEditList();
+    }));
+  }
+  function collectSupEdits(){
+    document.querySelectorAll('[data-supname]').forEach(inp=>{ const i=+inp.getAttribute('data-supname'); if(topSupporters[i]) topSupporters[i].name = inp.value.trim(); });
+    document.querySelectorAll('[data-supamt]').forEach(inp=>{ const i=+inp.getAttribute('data-supamt'); if(topSupporters[i]) topSupporters[i].amount = inp.value.trim(); });
+  }
+  (function initSupEditor(){
+    const fab = document.getElementById('supFab');
+    if(fab) fab.addEventListener('click', ()=>{ renderSupEditList(); supEditModal.classList.add('open'); });
+    const close = document.getElementById('supEditClose');
+    if(close) close.addEventListener('click', ()=> supEditModal.classList.remove('open'));
+    if(supEditModal) supEditModal.addEventListener('click', e=>{ if(e.target===supEditModal) supEditModal.classList.remove('open'); });
+    const add = document.getElementById('supAddBtn');
+    if(add) add.addEventListener('click', ()=>{
+      collectSupEdits();
+      const name = document.getElementById('supNewName').value.trim();
+      const amount = document.getElementById('supNewAmt').value.trim();
+      if(!name) return;
+      topSupporters.push({ name, amount });
+      document.getElementById('supNewName').value=''; document.getElementById('supNewAmt').value='';
+      renderSupEditList();
+    });
+    const save = document.getElementById('supSaveBtn');
+    if(save) save.addEventListener('click', async ()=>{
+      collectSupEdits();
+      topSupporters = topSupporters.filter(s=> s && s.name);
+      save.disabled = true; save.textContent = 'Saving…';
+      try{
+        await setDoc(SETTINGS_DOC, { topSupporters }, { merge:true });
+        renderSupporters();
+        save.textContent = 'Saved ✓';
+        setTimeout(()=>{ save.disabled=false; save.textContent='Save & publish'; supEditModal.classList.remove('open'); }, 900);
+      }catch(e){ save.disabled=false; save.textContent='Save & publish'; alert('Could not save — try again.'); }
+    });
   })();
 
   // ---------- vault (premium supporter gate) ----------
