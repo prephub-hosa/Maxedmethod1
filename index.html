@@ -257,17 +257,17 @@
   .supporters-inner{max-width:900px;margin:0 auto;text-align:center;}
   .sup-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#C9A15A;margin-bottom:12px;}
   .sup-title{font-family:var(--font-body);font-weight:700;font-size:clamp(20px,3.4vw,26px);letter-spacing:-.02em;color:var(--text);margin:0 0 28px;}
-  .sup-list{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;}
-  .sup-card{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:120px;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:var(--bg-2);}
-  .sup-card .sup-rank{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--text-dim);}
-  .sup-card .sup-name{font-family:var(--font-body);font-weight:600;font-size:15px;color:var(--text);}
-  .sup-card .sup-amt{font-family:var(--font-mono);font-size:12px;color:var(--text-soft);letter-spacing:.04em;}
-  /* #1 gets the gold treatment */
-  .sup-card.sup-top{border-color:rgba(201,161,90,.5);background:linear-gradient(180deg, rgba(201,161,90,.12), var(--bg-2));box-shadow:0 0 26px rgba(201,161,90,.14);transform:scale(1.04);}
-  .sup-card.sup-top .sup-rank{color:#C9A15A;}
+  .sup-list{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;align-items:stretch;}
+  .sup-card{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:130px;padding:16px 22px;border:1px solid rgba(201,161,90,.28);border-radius:14px;background:linear-gradient(180deg, rgba(201,161,90,.05), var(--bg-2));box-shadow:0 0 16px rgba(201,161,90,.06);}
+  .sup-crown-slot{height:20px;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;}
+  .sup-card .sup-rank{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:#C9A15A;opacity:.8;}
+  .sup-card .sup-name{font-family:var(--font-body);font-weight:600;font-size:15px;color:var(--text);text-align:center;}
+  .sup-card .sup-amt{font-family:var(--font-mono);font-size:12px;color:var(--text-soft);letter-spacing:.04em;min-height:15px;}
+  /* #1 gets the full gold treatment; #2/#3 keep a quieter gold */
+  .sup-card.sup-top{border-color:rgba(201,161,90,.6);background:linear-gradient(180deg, rgba(201,161,90,.16), var(--bg-2));box-shadow:0 0 30px rgba(201,161,90,.2);}
+  .sup-card.sup-top .sup-rank{color:#E3B871;opacity:1;}
   .sup-card.sup-top .sup-name{color:#F5F3ED;font-size:16px;}
   .sup-card.sup-top .sup-amt{color:#E3B871;}
-  .sup-card.sup-top .sup-crown{font-size:16px;line-height:1;margin-bottom:2px;}
   .sup-note{font-family:var(--font-body);font-size:12.5px;color:var(--text-dim);margin:26px 0 0;}
   @media (max-width:560px){ .supporters{padding:40px 18px 32px;} .sup-card{min-width:0;flex:1 1 40%;padding:14px 12px;} }
   /* owner editor */
@@ -861,6 +861,7 @@
     <div class="vault-count">✦ <b>15+</b> outfits inside</div>
     <a class="btn btn-primary vault-support-btn" id="vaultSupportBtn" href="#" target="_blank" rel="noopener">Unlock the Vault — from $1.99 →</a>
     <button type="button" class="vault-reviews-link" id="vaultReviewsLink">See what supporters are saying →</button>
+    <button type="button" class="vault-reviews-link" id="vaultHallLink" style="display:none;">See the Hall of Supporters →</button>
     <div class="vault-code-row">
       <input type="text" id="vaultCodeInput" placeholder="Already have a code? Enter it" autocomplete="off">
       <button class="btn btn-ghost" id="vaultCodeSubmit">Unlock</button>
@@ -3174,10 +3175,10 @@ try{ myUid = localStorage.getItem('mm-uid') || ''; if(!myUid){ myUid = 'u_' + Da
     sec.style.display = '';
     list.innerHTML = sorted.map((s,i)=>`
       <div class="sup-card ${i===0?'sup-top':''}">
-        ${i===0?'<div class="sup-crown">👑</div>':''}
+        <div class="sup-crown-slot">${i===0?'👑':''}</div>
         <div class="sup-rank">#${i+1}</div>
         <div class="sup-name">${escapeHtml(s.name)}</div>
-        ${s.amount?`<div class="sup-amt">${escapeHtml(String(s.amount))}</div>`:''}
+        <div class="sup-amt">${s.amount?escapeHtml(String(s.amount)):''}</div>
       </div>`).join('');
   }
   // owner editor
@@ -3238,6 +3239,8 @@ try{ myUid = localStorage.getItem('mm-uid') || ''; if(!myUid){ myUid = 'u_' + Da
     document.getElementById('vaultCodeError').style.display = 'none';
     document.getElementById('vaultCodeInput').value = '';
     applyVaultSupportLink();
+    const hallLink = document.getElementById('vaultHallLink');
+    if(hallLink) hallLink.style.display = (topSupporters && topSupporters.filter(s=>s&&s.name).length) ? '' : 'none';
     vaultModal.classList.add('open');
     // someone tapped the vault (tab or hero bubble) and hit the gate — this is the
     // top-of-funnel interest metric. trackEvent already excludes owner devices.
@@ -3267,6 +3270,11 @@ try{ myUid = localStorage.getItem('mm-uid') || ''; if(!myUid){ myUid = 'u_' + Da
     vaultModal.classList.remove('open');
     const r = document.getElementById('reviewsAnchor');
     if(r) r.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+  document.getElementById('vaultHallLink').addEventListener('click', ()=>{
+    vaultModal.classList.remove('open');
+    const el = document.getElementById('topSupporters');
+    if(el) el.scrollIntoView({ behavior:'smooth', block:'center' });
   });
   // owner: set the supporter link + shared code
   (function initVaultSetup(){
